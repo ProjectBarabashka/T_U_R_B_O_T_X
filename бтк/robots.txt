@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://turbotx.acelerat.workers.dev/sitemap.xml
