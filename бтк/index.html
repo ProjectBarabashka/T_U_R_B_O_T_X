@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
-<meta name="google-site-verification" content="MgTsmcJaF3CSd5cykmfnX0GX3WD0NqBf-DugkeYV_Jo" />
+<meta name="google-site-verification" content="GGdg4V6Vlm_FP4Mr4wg2xE4XnUzX-ANB-Zo10Yrh9fQ" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- PRIMARY SEO -->
@@ -36,7 +36,7 @@
   "@context": "https://schema.org",
   "@type": "WebApplication",
   "name": "TurboTX Bitcoin Transaction Accelerator",
-  "url": "https://acelerat.vercel.app/",
+  "url": "https://acelerat.vercel.app",
   "description": "Сервис ускорения Bitcoin транзакций. Broadcast неподтверждённых транзакций в 15+ майнинг-пулов для быстрого включения в блок.",
   "applicationCategory": "FinanceApplication",
   "operatingSystem": "Any",
@@ -618,10 +618,18 @@ setInterval(() => {
 
 // ── PLAN SELECT ────────────────────────────────────────────────
 function pick(p) {
-  plan = p;
-  document.getElementById('of').classList.toggle('on', p==='free');
-  document.getElementById('op').classList.toggle('on', p==='premium');
-  if (p === 'premium') openM();
+  // Only set plan=premium after verified payment - not here
+  if (p === 'premium') {
+    // Reset UI back to free, open modal
+    document.getElementById('of').classList.add('on');
+    document.getElementById('op').classList.remove('on');
+    plan = 'free';
+    openM();
+    return;
+  }
+  plan = 'free';
+  document.getElementById('of').classList.add('on');
+  document.getElementById('op').classList.remove('on');
 }
 
 function onTx() {
@@ -661,7 +669,7 @@ async function go() {
   rb.style.display = 'none';
   pw.style.display = 'block';
 
-  const steps = plan === 'premium' ? PREM_S : FREE_S;
+  const steps = plan === 'premium_verified' ? PREM_S : FREE_S;
   sl.innerHTML = steps.map((s,i)=>`<div class="step" id="s${i}"><span class="step-ic">○</span><span>${s}</span></div>`).join('');
 
   for (let i = 0; i < steps.length; i++) {
@@ -678,13 +686,13 @@ async function go() {
       } catch(e) { window._txData = null; }
     }
 
-    await sleep(plan==='premium' ? 480 : 380);
+    await sleep(plan==='premium_verified' ? 480 : 380);
     el.className = 'step done';
     el.querySelector('.step-ic').textContent = '✓';
   }
 
   const d = window._txData;
-  const poolCount = plan==='premium' ? 15 : 5;
+  const poolCount = plan==='premium_verified' ? 15 : 5;
   const eta = plan==='premium' ? '15–30 мин' : '1–3 часа';
   const confirmed = d?.status?.confirmed;
   const feeRate = d ? (d.fee/d.size).toFixed(1) : '—';
@@ -703,13 +711,13 @@ async function go() {
     rb.innerHTML = `
       <div class="res-ok">✅ ОТПРАВЛЕНО В ${poolCount} ПУЛОВ</div>
       <div class="rr"><span class="rk">TXID</span><span class="rv">${txid.slice(0,14)}...${txid.slice(-8)}</span></div>
-      <div class="rr"><span class="rk">Режим</span><span class="rv a">${plan.toUpperCase()}</span></div>
+      <div class="rr"><span class="rk">Режим</span><span class="rv a">${(plan === 'premium_verified' ? 'PREMIUM' : 'FREE')}</span></div>
       <div class="rr"><span class="rk">Пулов получили</span><span class="rv a">${poolCount}</span></div>
       ${d ? `<div class="rr"><span class="rk">Комиссия</span><span class="rv">${d.fee} sat (${feeRate} sat/vB)</span></div>` : ''}
       <div class="rr"><span class="rk">Ожидаемое время</span><span class="rv a">${eta}</span></div>
       <div class="rr"><span class="rk">Время запроса</span><span class="rv">${new Date().toLocaleString('ru')}</span></div>
       <a class="mp-link" href="https://mempool.space/tx/${txid}" target="_blank">🔍 Отследить на mempool.space →</a>
-      ${plan==='free'?'<div style="color:var(--m);font-size:.7rem;margin-top:10px">💡 Premium ускоряет в 5× быстрее</div>':''}
+      ${plan!=='premium_verified'?'<div style="color:var(--m);font-size:.7rem;margin-top:10px">💡 Premium ускоряет в 5× быстрее</div>':''}
     `;
   }
 
@@ -760,7 +768,15 @@ async function chk() {
 
 // ── MODAL ──────────────────────────────────────────────────────
 function openM(){ document.getElementById('modal').classList.add('open') }
-function closeM(){ document.getElementById('modal').classList.remove('open') }
+function closeM(){
+  document.getElementById('modal').classList.remove('open');
+  // Reset to free if premium was not verified
+  if (plan !== 'premium_verified') {
+    plan = 'free';
+    document.getElementById('of').classList.add('on');
+    document.getElementById('op').classList.remove('on');
+  }
+}
 
 function sp(el, btc) {
   document.querySelectorAll('.popt').forEach(o=>o.classList.remove('on'));
@@ -868,7 +884,7 @@ async function verifyPayment() {
   const confirmed = tx.status && tx.status.confirmed;
 
   closeM();
-  plan = 'premium';
+  plan = 'premium_verified';
   document.getElementById('of').classList.remove('on');
   document.getElementById('op').classList.add('on');
 
