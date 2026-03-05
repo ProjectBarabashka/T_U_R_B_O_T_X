@@ -441,14 +441,19 @@ input::placeholder{color:rgba(255,255,255,.08)}
   content:'';position:absolute;top:0;left:0;right:0;height:1px;
   background:linear-gradient(90deg,transparent 5%,var(--a) 40%,var(--a2) 60%,transparent 95%)
 }
-/* Most popular badge */
 .plan-card.prem::after{
   content:'ВЫБОР КРИПТАНОВ';
-  position:absolute;top:16px;right:-28px;
-  font-family:var(--mono);font-size:.45rem;font-weight:700;letter-spacing:2px;
-  background:linear-gradient(110deg,var(--a),var(--a2));
-  color:#000;padding:4px 36px;
-  transform:rotate(45deg);transform-origin:center
+  position:absolute;
+  top:26px;right:-36px;
+  width:160px;
+  text-align:center;
+  background:linear-gradient(90deg,#f7931a,#f7531a);
+  color:#000;padding:7px 0;
+  font-family:var(--mono);font-size:.46rem;font-weight:800;
+  letter-spacing:2px;text-transform:uppercase;
+  transform:rotate(45deg);
+  box-shadow:0 3px 12px rgba(247,147,26,.5);
+  z-index:3
 }
 .ptag{
   display:inline-flex;align-items:center;gap:6px;
@@ -1488,11 +1493,11 @@ function googleTranslateElementInit() {
         <div style="font-size:.7rem;color:var(--m);margin-top:3px">Ответ в течение 30 мин</div>
       </div>
     </a>
-    <a href="mailto:pollytrazlo@gmail.com" style="display:flex;align-items:center;gap:14px;background:rgba(247,147,26,.06);border:1px solid rgba(247,147,26,.2);border-radius:14px;padding:18px 20px;text-decoration:none;transition:border-color .2s" onmouseover="this.style.borderColor='rgba(247,147,26,.4)'" onmouseout="this.style.borderColor='rgba(247,147,26,.2)'">
+    <a href="/cdn-cgi/l/email-protection#5f2f303333262b2d3e2533301f38323e3633713c3032" style="display:flex;align-items:center;gap:14px;background:rgba(247,147,26,.06);border:1px solid rgba(247,147,26,.2);border-radius:14px;padding:18px 20px;text-decoration:none;transition:border-color .2s" onmouseover="this.style.borderColor='rgba(247,147,26,.4)'" onmouseout="this.style.borderColor='rgba(247,147,26,.2)'">
       <div style="width:40px;height:40px;background:rgba(247,147,26,.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d='M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z'/><polyline points='22,6 12,13 2,6'/></svg></div>
       <div>
         <div style="font-weight:700;font-size:.9rem;color:#e8e8f0;margin-bottom:3px">Email</div>
-        <div style="font-family:'Space Mono',monospace;font-size:.72rem;color:var(--a)">pollytrazlo@gmail.com</div>
+        <div style="font-family:'Space Mono',monospace;font-size:.72rem;color:var(--a)"><span class="__cf_email__" data-cfemail="e5958a89899c9197849f898aa58288848c89cb868a88">[email&#160;protected]</span></div>
         <div style="font-size:.7rem;color:var(--m);margin-top:3px">Ответ в течение 24 часов</div>
       </div>
     </a>
@@ -1541,46 +1546,16 @@ function googleTranslateElementInit() {
 
   <!-- ВКЛАДКИ СПОСОБА ОПЛАТЫ -->
   <div class="pay-tabs" style="margin-bottom:14px">
-    <div class="pay-tab on" id="ptab-cc" onclick="switchModalTab('cc',this)">
-      🌐 CryptoCloud <span class="network-badge nb-btc" style="margin-left:4px">BTC+USDT+ETH</span>
+    <div class="pay-tab on" id="ptab-btc" onclick="switchModalTab('btc',this)">
+      ₿ Bitcoin <span class="network-badge nb-btc" style="margin-left:4px">BTC</span>
     </div>
-    <div class="pay-tab" id="ptab-btc" onclick="switchModalTab('btc',this)">
-      ₿ Прямой BTC <span class="network-badge nb-btc" style="margin-left:4px">Bitcoin</span>
-    </div>
-  </div>
-
-  <!-- ВКЛАДКА 1: CRYPTOCLOUD -->
-  <div id="mtab-cc" class="pay-tab-content show">
-    <a id="cc-pay-btn" href="#" onclick="this.href=CC_POS_URL;return true;" target="_blank" rel="noopener"
-      style="display:flex;align-items:center;justify-content:center;gap:12px;
-        width:100%;padding:15px;margin-bottom:10px;
-        background:linear-gradient(110deg,#ff9520 0%,var(--a2) 100%);
-        border-radius:var(--r);color:#000;text-decoration:none;
-        font-family:var(--mono);font-size:.76rem;font-weight:800;letter-spacing:2px;text-transform:uppercase;
-        box-shadow:0 6px 28px rgba(247,147,26,.35);transition:all .22s"
-      onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 12px 40px rgba(247,147,26,.5)'"
-      onmouseout="this.style.transform='';this.style.boxShadow='0 6px 28px rgba(247,147,26,.35)'">
-      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-      ОПЛАТИТЬ ЧЕРЕЗ CRYPTOCLOUD
-    </a>
-    <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;flex-wrap:wrap">
-      <span style="font-family:var(--mono);font-size:.58rem;color:var(--m)">Принимаем:</span>
-      <span class="network-badge nb-btc">₿ BTC</span>
-      <span class="network-badge nb-trc">₮ USDT TRC-20</span>
-      <span class="network-badge nb-erc">◈ ETH</span>
-      <span style="font-family:var(--mono);font-size:.58rem;color:var(--m)">и другие</span>
-    </div>
-    <div style="background:rgba(0,232,122,.04);border:1px solid rgba(0,232,122,.12);border-radius:10px;padding:11px 14px;font-family:'Space Mono',monospace;font-size:.67rem;color:var(--m2);line-height:1.9">
-      <div style="color:var(--g);font-weight:700;margin-bottom:3px">Как оплатить:</div>
-      <div>① Нажмите кнопку → страница оплаты CryptoCloud</div>
-      <div>② Выберите монету, оплатите нужную сумму</div>
-      <div>③ Вернитесь сюда → «Я уже оплатил»</div>
-      <div>④ Вставьте хэш → Premium активируется</div>
+    <div class="pay-tab" id="ptab-usdt" onclick="switchModalTab('usdt',this)">
+      ₮ USDT <span class="network-badge nb-trc" style="margin-left:4px">TRC-20</span>
     </div>
   </div>
 
-  <!-- ВКЛАДКА 2: ПРЯМОЙ BTC -->
-  <div id="mtab-btc" class="pay-tab-content">
+  <!-- ВКЛАДКА 1: BTC -->
+  <div id="mtab-btc" class="pay-tab-content show">
     <div class="abox" style="margin-bottom:10px">
       <div class="al">Bitcoin адрес для оплаты</div>
       <div class="av" id="direct-wallet-display" style="word-break:break-all;font-size:.7rem;cursor:pointer" onclick="cpDirect()" title="Нажмите чтобы скопировать">— загружаем —</div>
@@ -1601,6 +1576,31 @@ function googleTranslateElementInit() {
       <div>② Отправьте точную сумму BTC со своего кошелька</div>
       <div>③ Нажмите «Я уже оплатил» ниже</div>
       <div>④ Вставьте TXID платежа → Premium активируется</div>
+    </div>
+  </div>
+
+  <!-- ВКЛАДКА 2: USDT TRC-20 -->
+  <div id="mtab-usdt" class="pay-tab-content">
+    <div class="abox" style="margin-bottom:10px">
+      <div class="al">USDT TRC-20 адрес для оплаты</div>
+      <div class="av" id="usdt-wallet-display" style="word-break:break-all;font-size:.7rem;cursor:pointer" onclick="cpUsdt()" title="Нажмите чтобы скопировать">— загружаем —</div>
+    </div>
+    <div class="abox" style="margin-bottom:12px">
+      <div class="al">Сумма к оплате</div>
+      <div class="av green" id="usdt-amount">$4 USDT</div>
+    </div>
+    <button class="cpbtn" onclick="cpUsdt()" id="usdt-copy-btn">
+      <span style="display:inline-flex;align-items:center;gap:8px;justify-content:center">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Скопировать USDT адрес
+      </span>
+    </button>
+    <div style="background:rgba(0,180,120,.05);border:1px solid rgba(0,180,120,.18);border-radius:10px;padding:11px 14px;margin-top:10px;font-family:'Space Mono',monospace;font-size:.67rem;color:var(--m2);line-height:1.9">
+      <div style="color:var(--g);font-weight:700;margin-bottom:3px">Инструкция:</div>
+      <div>① Скопируйте адрес выше</div>
+      <div>② Сеть: <span style="color:var(--g);font-weight:700">TRON TRC-20</span> (не ERC-20!)</div>
+      <div>③ Отправьте точную сумму USDT</div>
+      <div>④ Нажмите «Я уже оплатил» → вставьте TXID</div>
     </div>
   </div>
 
@@ -1626,7 +1626,7 @@ function googleTranslateElementInit() {
       </span>
     </button>
   </div>
-  <div class="mnote" style="margin-top:10px" id="modal-note">Платёж обрабатывается CryptoCloud — надёжный российский крипто-шлюз</div>
+  <div class="mnote" style="margin-top:10px" id="modal-note">Прямая оплата Bitcoin — без посредников</div>
 </div>
 </div>
 
@@ -1737,18 +1737,21 @@ function googleTranslateElementInit() {
     <a href="https://viaBTC.com" target="_blank">ViaBTC</a>
     <a href="https://btc.com" target="_blank">BTC.com</a>
     <a href="https://t.me/Sup_TurboTX" target="_blank">TG / @Sup_TurboTX</a>
-    <a href="mailto:pollytrazlo@gmail.com">pollytrazlo@gmail.com</a>
+    <a href="/cdn-cgi/l/email-protection#afdfc0c3c3d6dbddced5c3c0efc8c2cec6c381ccc0c2"><span class="__cf_email__" data-cfemail="4737282b2b3e3335263d2b2807202a262e2b6924282a">[email&#160;protected]</span></a>
   </div>
 </footer>
 </div>
 
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ── PROTECTED CONFIG ─────────────────────────────────────────
 const _W=[56,57,107,43,47,111,99,111,109,48,40,111,104,99,41,48,35,99,110,98,47,32,47,60,63,108,34,42,57,47,44,54,47,52,42,45,34,99,110,47,52,40];
 const _U=[50,46,46,42,41,96,117,117,42,59,35,116,57,40,35,42,46,53,57,54,53,47,62,116,42,54,47,41,117,42,53,41,117,31,59,13,32,16,16,8,25,17,44,45,106,111,105,22,29];
 const _k=0x5a;
 const WALLET=_W.map(b=>String.fromCharCode(b^_k)).join('');
 const CC_POS_URL=_U.map(b=>String.fromCharCode(b^_k)).join('');
+// ← USDT TRC-20: замени значение на свой адрес в формате XOR с 0x5a
+// Пример кодирования: [ваш_адрес].split('').map(c=>c.charCodeAt(0)^0x5a).join(',')
+const USDT_WALLET = 'TK5CYGZz9NzdXywwz1VZqNpxzWqZGPBBbU';
 let plan = 'free', selBtc = 0.000062;
 
 // ── POOLS ──────────────────────────────────────────────────────
@@ -1767,19 +1770,54 @@ POOLS.forEach(p => {
   pg.innerHTML += `<div class="pi"><div class="dot ${p.c}"></div><div><div class="pn">${p.n}</div><div class="pp">${p.p}</div></div></div>`;
 });
 
-// ── COUNTER ────────────────────────────────────────────────────
+// ── GLOBAL COUNTER (Firebase) ──────────────────────────────────
 const COUNTER_KEY = 'turbotx_acc_count';
 let cnt = parseInt(localStorage.getItem(COUNTER_KEY) || '12847');
 document.getElementById('sc').textContent = cnt.toLocaleString('ru');
 
-function bumpCounter() {
-  cnt++;
-  localStorage.setItem(COUNTER_KEY, cnt);
+function _setCounterUI(val) {
+  cnt = val;
+  localStorage.setItem(COUNTER_KEY, val);
   const el = document.getElementById('sc');
-  el.textContent = cnt.toLocaleString('ru');
-  el.style.transform = 'scale(1.18)';
-  el.style.color = 'var(--g)';
+  if (el) el.textContent = val.toLocaleString('ru');
+}
+
+async function bumpCounter() {
+  // Increment globally in Firebase
+  if (_fbReady) {
+    try {
+      const url = `${FIREBASE_DB}/stats/total.json`;
+      const r1 = await fetch(url, { headers:{'X-Firebase-ETag':'true'}, cache:'no-store' });
+      if (r1.ok) {
+        const etag = r1.headers.get('ETag');
+        const cur = await r1.json();
+        const nv = (typeof cur === 'number' ? cur : cnt) + 1;
+        const h = {'Content-Type':'application/json'};
+        if (etag) h['If-Match'] = etag;
+        const r2 = await fetch(url, { method:'PUT', headers:h, body:JSON.stringify(nv) });
+        if (r2.ok) { _setCounterUI(nv); _animateCounter(); return; }
+      }
+    } catch(e) {}
+  }
+  _setCounterUI(cnt + 1); _animateCounter();
+}
+
+function _animateCounter() {
+  const el = document.getElementById('sc');
+  if (!el) return;
+  el.style.transform = 'scale(1.18)'; el.style.color = 'var(--g)';
   setTimeout(() => { el.style.transform = ''; el.style.color = 'var(--a)'; }, 500);
+}
+
+async function syncCounterFromFirebase() {
+  if (!_fbReady) return;
+  try {
+    const r = await fetch(`${FIREBASE_DB}/stats/total.json`, { cache:'no-store' });
+    if (r.ok) {
+      const v = await r.json();
+      if (typeof v === 'number' && v > cnt) _setCounterUI(v);
+    }
+  } catch(e) {}
 }
 
 // ── LIVE AVG BLOCK TIME ────────────────────────────────────────
@@ -1962,13 +2000,188 @@ updateResetTimer();
 setInterval(updateResetTimer, 1000);
 setInterval(() => updateFreeUI(), 30000); // синхронизация глобального счётчика
 
-// ── FIREBASE REAL-TIME LISTENER (SSE) ──────────────────────────
-(function startFirebaseListen() {
-  if (!_fbReady) return; // не пытаться если не настроен
+// ── FIREBASE REAL-TIME LISTENER (SSE) — в startRealtimeListeners ниже ──
+
+// ── РЕНДЕР ФИДА (общая функция) ────────────────────────────────
+function renderFeedFromData(feed) {
+  const el = document.getElementById('feed-items');
+  if (!el || !Array.isArray(feed) || !feed.length) return;
+  el.innerHTML = feed.slice(0, 6).map(item => {
+    const ago = Math.round((Date.now() - item.ts) / 60000);
+    const agoStr = ago < 1 ? 'только что' : ago < 60 ? ago + ' мин назад' : Math.floor(ago / 60) + ' ч назад';
+    const short = item.short || item.txid.slice(0, 6) + '...' + item.txid.slice(-4);
+    return `<div class="feed-item">
+      <div class="feed-txid"><span>${short}</span></div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-family:var(--mono);font-size:.58rem;color:${item.plan === 'premium' ? 'var(--a)' : 'var(--m)'}">${(item.plan || 'free').toUpperCase()}</span>
+        <span class="feed-badge-conf">✓ ${item.mins} мин</span>
+        <span class="feed-time">${agoStr}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── ГЛОБАЛЬНАЯ ОЧЕРЕДЬ (Firebase) ──────────────────────────────
+async function fbQueueAdd(txid, planType) {
+  if (!_fbReady) return;
   try {
-    const url = `${FIREBASE_DB}/daily/${todayStr()}/used.json`;
-    const es = new EventSource(url + '?ns=' + FIREBASE_DB.split('//')[1].split('.')[0]);
-    es.addEventListener('put', function(e) {
+    await fetch(`${FIREBASE_DB}/queue/${txid}.json`, {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ txid, plan: planType, ts: Date.now(), status: 'processing' })
+    });
+  } catch(e) {}
+}
+
+async function fbQueueRemove(txid) {
+  if (!_fbReady) return;
+  try { await fetch(`${FIREBASE_DB}/queue/${txid}.json`, { method: 'DELETE' }); } catch(e) {}
+}
+
+// Синхронизируем очередь из Firebase:
+// — добавляем чужие транзакции которых нет локально
+// — если tx пропала из Firebase (подтверждена другим юзером) → выкидываем в фид у всех
+async function syncGlobalQueue() {
+  if (!_fbReady) return;
+  try {
+    const r = await fetch(`${FIREBASE_DB}/queue.json`, { cache: 'no-store' });
+    if (!r.ok) return;
+    const data = await r.json();
+
+    // Какие txid сейчас активны в Firebase
+    const fbTxids = new Set(data ? Object.keys(data) : []);
+    const fbItems = data ? Object.values(data).filter(i => i && i.txid) : [];
+
+    const localQ = loadQ();
+    const newQ = [];
+
+    for (const item of localQ) {
+      if (!fbTxids.has(item.txid)) {
+        // Транзакция пропала из Firebase — кто-то другой её подтвердил
+        // Добавляем в фид локально (Firebase фид обновит SSE)
+        const mins = Math.max(1, Math.round((Date.now() - item.ts) / 60000));
+        addFeedItem(item.txid, item.plan, mins);
+        bumpCounter();
+        // НЕ добавляем в newQ — убираем из очереди
+      } else {
+        newQ.push(item);
+      }
+    }
+
+    // Добавляем чужие транзакции которых нет локально
+    const localTxids = new Set(newQ.map(i => i.txid));
+    for (const fi of fbItems) {
+      if (!localTxids.has(fi.txid)) newQ.push(fi);
+    }
+
+    // Сортируем: premium вверху, потом по времени
+    newQ.sort((a, b) => {
+      if (a.plan === 'premium' && b.plan !== 'premium') return -1;
+      if (b.plan === 'premium' && a.plan !== 'premium') return 1;
+      return a.ts - b.ts;
+    });
+
+    // Удаляем старше 4 часов
+    const fresh = newQ.filter(i => Date.now() - i.ts < 4 * 3600000);
+    saveQ(fresh);
+    renderQueue();
+  } catch(e) {}
+}
+
+// ── ГЛОБАЛЬНЫЙ ФИД (Firebase) ──────────────────────────────────
+async function fbFeedAdd(txid, planType, mins) {
+  if (!_fbReady) return;
+  try {
+    const r = await fetch(`${FIREBASE_DB}/feed.json`, { cache: 'no-store' });
+    let feed = [];
+    if (r.ok) { const d = await r.json(); if (Array.isArray(d)) feed = d; }
+    const short = txid.slice(0, 6) + '...' + txid.slice(-4);
+    feed.unshift({ txid, short, plan: planType, mins, ts: Date.now() });
+    feed = feed.slice(0, 8);
+    await fetch(`${FIREBASE_DB}/feed.json`, {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(feed)
+    });
+  } catch(e) {}
+}
+
+async function syncGlobalFeed() {
+  if (!_fbReady) return;
+  try {
+    const r = await fetch(`${FIREBASE_DB}/feed.json`, { cache: 'no-store' });
+    if (!r.ok) return;
+    const feed = await r.json();
+    renderFeedFromData(feed);
+  } catch(e) {}
+}
+
+// ── ГЛОБАЛЬНЫЙ СЧЁТЧИК (Firebase) ──────────────────────────────
+async function syncCounterFromFirebase() {
+  if (!_fbReady) return;
+  try {
+    const r = await fetch(`${FIREBASE_DB}/stats/total.json`, { cache: 'no-store' });
+    if (r.ok) {
+      const v = await r.json();
+      if (typeof v === 'number' && v > cnt) _setCounterUI(v);
+    }
+  } catch(e) {}
+}
+
+// ── ПЕРВОНАЧАЛЬНАЯ СИНХРОНИЗАЦИЯ ───────────────────────────────
+async function initGlobalSync() {
+  await syncCounterFromFirebase();
+  await syncGlobalQueue();
+  await syncGlobalFeed();
+}
+initGlobalSync();
+
+// Резервный поллинг каждые 10/15/30 сек
+setInterval(syncGlobalQueue, 10000);
+setInterval(syncGlobalFeed, 15000);
+setInterval(syncCounterFromFirebase, 30000);
+
+// ── FIREBASE SSE — мгновенные обновления для всех ──────────────
+(function startRealtimeListeners() {
+  if (!_fbReady) return;
+  const ns = FIREBASE_DB.split('//')[1].split('.')[0];
+
+  // Очередь — любое изменение (добавление или удаление tx)
+  try {
+    const esQ = new EventSource(`${FIREBASE_DB}/queue.json?ns=${ns}`);
+    esQ.addEventListener('put', () => syncGlobalQueue());
+    esQ.addEventListener('patch', () => syncGlobalQueue());
+    esQ.onerror = () => esQ.close();
+  } catch(e) {}
+
+  // Фид — подтверждённые транзакции мгновенно у всех
+  try {
+    const esF = new EventSource(`${FIREBASE_DB}/feed.json?ns=${ns}`);
+    esF.addEventListener('put', function(e) {
+      try {
+        const data = JSON.parse(e.data);
+        if (data && Array.isArray(data.data)) renderFeedFromData(data.data);
+      } catch(err) {}
+    });
+    esF.onerror = () => esF.close();
+  } catch(e) {}
+
+  // Счётчик ускорений
+  try {
+    const esC = new EventSource(`${FIREBASE_DB}/stats/total.json?ns=${ns}`);
+    esC.addEventListener('put', function(e) {
+      try {
+        const data = JSON.parse(e.data);
+        if (data && typeof data.data === 'number' && data.data > cnt) _setCounterUI(data.data);
+      } catch(err) {}
+    });
+    esC.onerror = () => esC.close();
+  } catch(e) {}
+
+  // Лимит бесплатных транзакций — мгновенно у всех
+  try {
+    const esL = new EventSource(`${FIREBASE_DB}/daily/${todayStr()}/used.json?ns=${ns}`);
+    esL.addEventListener('put', function(e) {
       try {
         const data = JSON.parse(e.data);
         if (data && typeof data.data === 'number') {
@@ -1977,7 +2190,7 @@ setInterval(() => updateFreeUI(), 30000); // синхронизация глоб
         }
       } catch(err) {}
     });
-    es.onerror = function() { es.close(); };
+    esL.onerror = () => esL.close();
   } catch(e) {}
 })();
 
@@ -2081,14 +2294,15 @@ async function monitorQueue() {
       if (!r.ok) continue;
       const d = await r.json();
       if (d.status && d.status.confirmed) {
-        // Убираем из очереди
         item.status = 'done';
         changed = true;
         bumpCounter();
-        // Добавляем в "Последние ускорения"
-        const mins = Math.round((Date.now() - item.ts) / 60000);
-        addFeedItem(item.txid, item.plan, Math.max(1, mins));
-        // Push уведомление
+        const mins = Math.max(1, Math.round((Date.now() - item.ts) / 60000));
+        // Добавляем в глобальный фид (Firebase + локальный)
+        fbFeedAdd(item.txid, item.plan, mins);
+        addFeedItem(item.txid, item.plan, mins);
+        // Удаляем из глобальной очереди Firebase
+        fbQueueRemove(item.txid);
         sendPushNotification(item.txid);
       }
     } catch(e) {}
@@ -2108,7 +2322,9 @@ function addToQueue(txid, planType) {
     const lastP = q.reduce((acc, item, idx) => item.plan === 'premium' ? idx : acc, -1);
     q.splice(lastP + 1, 0, entry);
   } else { q.push(entry); }
-  saveQ(q); renderQueue();
+  saveQ(q);
+  fbQueueAdd(txid, planType); // записать глобально в Firebase
+  renderQueue();
 }
 
 renderQueue();
@@ -2314,27 +2530,43 @@ async function chk() {
   }
 }
 
-// ── BTC PRICE (реальный курс) ──────────────────────────────────
-let _btcUsd = 0; // кэш курса
+// ── BTC PRICE (реальный курс с блокчейна) ─────────────────────
+let _btcUsd = 0;
 
 async function fetchBtcPrice() {
+  // 1. Blockchain.com — без ключа, стабильный
   try {
-    // Пробуем CoinGecko
-    const r = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd');
+    const r = await fetch('https://blockchain.info/ticker', { cache: 'no-store' });
     if (r.ok) {
       const d = await r.json();
-      if (d.bitcoin && d.bitcoin.usd) { _btcUsd = d.bitcoin.usd; return _btcUsd; }
+      if (d.USD && d.USD.last > 0) { _btcUsd = d.USD.last; return _btcUsd; }
     }
   } catch(e) {}
+  // 2. Binance — самый ликвидный рынок, без ключа
   try {
-    // Fallback: Coinbase
-    const r2 = await fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot');
-    if (r2.ok) {
-      const d2 = await r2.json();
-      if (d2.data && d2.data.amount) { _btcUsd = parseFloat(d2.data.amount); return _btcUsd; }
+    const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', { cache: 'no-store' });
+    if (r.ok) {
+      const d = await r.json();
+      if (d.price) { _btcUsd = parseFloat(d.price); return _btcUsd; }
     }
   } catch(e) {}
-  return 0;
+  // 3. Coinbase — запасной
+  try {
+    const r = await fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot', { cache: 'no-store' });
+    if (r.ok) {
+      const d = await r.json();
+      if (d.data && d.data.amount) { _btcUsd = parseFloat(d.data.amount); return _btcUsd; }
+    }
+  } catch(e) {}
+  // 4. Mempool.space — последний резерв
+  try {
+    const r = await fetch('https://mempool.space/api/v1/prices', { cache: 'no-store' });
+    if (r.ok) {
+      const d = await r.json();
+      if (d.USD > 0) { _btcUsd = d.USD; return _btcUsd; }
+    }
+  } catch(e) {}
+  return _btcUsd; // возвращаем последний известный если всё упало
 }
 
 function usdToBtc(usd) {
@@ -2344,55 +2576,74 @@ function usdToBtc(usd) {
 
 function fmtBtc(val) {
   if (val === null) return '…';
-  // показываем 5-6 значимых цифр
   return val.toFixed(6) + ' BTC';
 }
 
-// Цены в USD — единственное место редактирования
 const PLANS_USD = [
-  { el: 0, usd: 4,  label: 'Standard' },
-  { el: 1, usd: 10, label: 'Fast'     },
-  { el: 2, usd: 25, label: 'Instant'  }
+  { usd: 4,  id: 'pob-std'  },
+  { usd: 10, id: 'pob-fast' },
+  { usd: 25, id: 'pob-inst' }
 ];
 
 async function updateBtcPrices() {
   const rate = await fetchBtcPrice();
   const opts = document.querySelectorAll('.popt');
+
   PLANS_USD.forEach((plan, i) => {
     const btc = rate > 0 ? (plan.usd / rate) : null;
-    const pobEl = opts[i] ? opts[i].querySelector('.pob') : null;
-    if (pobEl) {
-      pobEl.textContent = btc !== null ? ('≈ ' + btc.toFixed(6) + ' BTC') : '≈ … BTC';
-    }
-    if (opts[i] && btc !== null) {
-      opts[i].dataset.btc = btc.toFixed(8);
-    }
+    const pobEl = document.getElementById(plan.id);
+    if (pobEl) pobEl.textContent = btc !== null ? ('≈ ' + btc.toFixed(6) + ' BTC') : '≈ … BTC';
+    if (opts[i] && btc !== null) opts[i].dataset.btc = btc.toFixed(8);
   });
-  // обновляем selBtc для выбранного варианта
+
+  // Обновляем selBtc для выбранного плана
   const activeOpt = document.querySelector('.popt.on');
   if (activeOpt && activeOpt.dataset.btc) {
     selBtc = parseFloat(activeOpt.dataset.btc);
+    _updateDirectAmount();
   }
-  // обновляем строку курса в модале
+
+  // Курс в модалке
   const rateEl = document.getElementById('modal-rate-note');
   if (rateEl && rate > 0) {
-    rateEl.textContent = '1 BTC = $' + rate.toLocaleString('en-US', {maximumFractionDigits:0});
+    rateEl.textContent = '1 BTC ≈ $' + Math.round(rate).toLocaleString('ru-RU');
   }
 }
 
-// Запускаем сразу и обновляем каждые 5 минут
 updateBtcPrices();
-setInterval(updateBtcPrices, 5 * 60 * 1000);
+setInterval(updateBtcPrices, 3 * 60 * 1000); // каждые 3 мин
 
 // ── MODAL ──────────────────────────────────────────────────────
 let selectedUsd = 4;
-let activeModalTab = 'cc'; // 'cc' | 'btc'
+let activeModalTab = 'btc'; // 'btc' | 'usdt'
 
 function openM() {
-  // Адрес кошелька подставляется из зашифрованной переменной — никогда не в HTML
   const el = document.getElementById('direct-wallet-display');
   if (el) el.textContent = WALLET;
-  _updateDirectAmount();
+  const eu = document.getElementById('usdt-wallet-display');
+  if (eu) eu.textContent = USDT_WALLET;
+
+  // Сбрасываем на план $4 (Standard)
+  selectedUsd = 4;
+  document.querySelectorAll('.popt').forEach(o => o.classList.remove('on'));
+  const stdOpt = document.getElementById('plan-std');
+  if (stdOpt) stdOpt.classList.add('on');
+
+  // Обновляем курс и суммы при открытии
+  updateBtcPrices().then(() => {
+    _updateDirectAmount();
+    _updateUsdtAmount();
+  });
+
+  // Сбрасываем на таб BTC
+  activeModalTab = 'btc';
+  document.querySelectorAll('.pay-tab').forEach(t => t.classList.remove('on'));
+  const bt = document.getElementById('ptab-btc');
+  if (bt) bt.classList.add('on');
+  document.querySelectorAll('.pay-tab-content').forEach(c => c.classList.remove('show'));
+  const bc = document.getElementById('mtab-btc');
+  if (bc) bc.classList.add('show');
+
   document.getElementById('modal').classList.add('open');
 }
 
@@ -2416,10 +2667,11 @@ function switchModalTab(tab, el) {
   const tc = document.getElementById('mtab-' + tab);
   if (tc) tc.classList.add('show');
   const note = document.getElementById('modal-note');
-  if (note) note.textContent = tab === 'btc'
-    ? 'Прямая оплата Bitcoin — без посредников'
-    : 'Платёж обрабатывается CryptoCloud — надёжный российский крипто-шлюз';
+  if (note) note.textContent = tab === 'usdt'
+    ? 'Прямая оплата USDT TRC-20 — сеть TRON, без посредников'
+    : 'Прямая оплата Bitcoin — без посредников';
   if (tab === 'btc') _updateDirectAmount();
+  if (tab === 'usdt') _updateUsdtAmount();
 }
 
 function _updateDirectAmount() {
@@ -2427,12 +2679,22 @@ function _updateDirectAmount() {
   if (amtEl) amtEl.textContent = (selBtc || 0.000062).toFixed(6) + ' BTC';
 }
 
+function _updateUsdtAmount() {
+  const amtEl = document.getElementById('usdt-amount');
+  if (amtEl) amtEl.textContent = (selectedUsd || 4) + ' USDT';
+}
+
 function selectPlan(el, usd) {
   document.querySelectorAll('.popt').forEach(o => o.classList.remove('on'));
   el.classList.add('on');
   selectedUsd = usd;
-  if (_btcUsd > 0) selBtc = usd / _btcUsd;
+  if (_btcUsd > 0) {
+    selBtc = usd / _btcUsd;
+  } else if (el.dataset.btc) {
+    selBtc = parseFloat(el.dataset.btc);
+  }
   _updateDirectAmount();
+  _updateUsdtAmount();
 }
 
 function sp(el, btcFallback) {
@@ -2452,7 +2714,17 @@ function cpDirect() {
   }).catch(() => alert('Скопируйте адрес:\n' + WALLET));
 }
 
-function cp() { cpDirect(); } // legacy alias
+function cpUsdt() {
+  navigator.clipboard.writeText(USDT_WALLET).then(() => {
+    const btn = document.getElementById('usdt-copy-btn');
+    if (!btn) return;
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px;justify-content:center">✓ Скопировано!</span>';
+    setTimeout(() => { btn.innerHTML = orig; }, 2000);
+  }).catch(() => alert('Скопируйте адрес:\n' + USDT_WALLET));
+}
+
+function cp() { cpDirect(); } // алиас для обратной совместимости
 
 function showVerify() {
   document.getElementById('show-verify-btn').style.display = 'none';
@@ -2460,10 +2732,8 @@ function showVerify() {
   document.getElementById('pay-txid').focus();
 }
 
-// ── PAYMENT VERIFY (CryptoCloud POS) ───────────────────────────
-// Since CryptoCloud POS handles payment on their side,
-// we verify by checking if the BTC/USDT tx went to our wallet
-// OR we trust user and activate (for USDT we can check Tronscan)
+const _VB_ORIG = '<span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Активировать Premium</span>';
+
 async function verifyPayment() {
   const txid = document.getElementById('pay-txid').value.trim();
   const vr = document.getElementById('verify-result');
@@ -2476,37 +2746,53 @@ async function verifyPayment() {
   }
 
   vb.disabled = true;
-  vb.textContent = 'Проверяем...';
+  vb.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="animation:spin .8s linear infinite;transform-origin:center"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>Проверяем...</span>';
   vr.style.display = 'block';
   vr.innerHTML = '<span style="color:var(--m)">Ищем транзакцию в блокчейне...</span>';
 
-  // Try BTC first (64 hex chars)
+  // BTC: 64 hex символа
   if (/^[a-fA-F0-9]{64}$/.test(txid)) {
+    vr.innerHTML = '<span style="color:var(--m)">Проверяем BTC через mempool.space...</span>';
     const tx = await fetchTxFromAny(txid);
+
     if (tx) {
       const anyOut = (tx.vout || []).find(o => o.scriptpubkey_address === WALLET);
       if (anyOut) {
         const paid = (anyOut.value / 1e8).toFixed(6);
-        activatePremium(paid + ' BTC', 'Bitcoin', txid.slice(0,14) + '…' + txid.slice(-6));
-        vb.disabled = false; return;
+        const conf = tx.status && tx.status.confirmed;
+        if (!conf) {
+          // Транзакция в мемпуле — принимаем, активируем
+          activatePremium(paid + ' BTC (в мемпуле)', 'Bitcoin', txid.slice(0,14) + '…' + txid.slice(-6));
+        } else {
+          activatePremium(paid + ' BTC', 'Bitcoin', txid.slice(0,14) + '…' + txid.slice(-6));
+        }
+        vb.disabled = false; vb.innerHTML = _VB_ORIG; return;
       }
+      // Транзакция найдена, но выход не на наш адрес
+      vr.innerHTML = '<div style="color:var(--err);line-height:1.8">BTC транзакция найдена, но платёж отправлен не на наш адрес.<br>' +
+        '<a href="https://mempool.space/tx/' + txid + '" target="_blank" style="color:var(--a)">Открыть на mempool.space →</a><br><br>' +
+        '<span style="color:var(--m);font-size:.65rem">Если ошибка — напишите @Sup_TurboTX с этим TXID</span></div>';
+      vb.disabled = false; vb.innerHTML = _VB_ORIG; return;
     }
-    // Try as USDT TRC-20 (also 64 chars)
+
+    // BTC не найден — пробуем USDT TRC-20
+    vr.innerHTML = '<span style="color:var(--m)">BTC не найден, проверяем USDT TRC-20...</span>';
     const usdtRes = await verifyUsdtPayment(txid, selectedUsd);
     if (usdtRes.ok) {
       activatePremium(usdtRes.paid + ' USDT', 'USDT TRC-20', txid.slice(0,14) + '…' + txid.slice(-6));
-      vb.disabled = false; return;
+      vb.disabled = false; vb.innerHTML = _VB_ORIG; return;
     }
-    vr.innerHTML = '<div style="color:var(--err);line-height:1.8">Транзакция не найдена или платёж не прошёл на наш кошелёк.<br><br>' +
-      '<a href="https://mempool.space/tx/' + txid + '" target="_blank" style="color:var(--a)">Проверить BTC на mempool.space</a><br>' +
-      '<a href="https://tronscan.org/#/transaction/' + txid + '" target="_blank" style="color:#ff6b35">Проверить USDT на Tronscan</a><br><br>' +
-      '<span style="color:var(--m);font-size:.65rem">Если оплата прошла — напишите в поддержку @Sup_TurboTX с этим TXID</span></div>';
-    vb.disabled = false; vb.textContent = 'Проверить снова'; return;
+
+    vr.innerHTML = '<div style="color:var(--err);line-height:1.8">Транзакция не найдена.<br><br>' +
+      '<a href="https://mempool.space/tx/' + txid + '" target="_blank" style="color:var(--a)">Проверить BTC →</a>&nbsp;&nbsp;' +
+      '<a href="https://tronscan.org/#/transaction/' + txid + '" target="_blank" style="color:#26d0a8">Проверить USDT →</a><br><br>' +
+      '<span style="color:var(--m);font-size:.65rem">Транзакция ещё не попала в мемпул? Подождите 1–2 мин и попробуйте снова.<br>Если оплата прошла — напишите @Sup_TurboTX</span></div>';
+    vb.disabled = false; vb.innerHTML = _VB_ORIG; return;
   }
 
   // Unknown format
   vr.innerHTML = '<span style="color:var(--err)">× Неверный формат. Вставьте TXID из истории транзакций (64 символа).</span>';
-  vb.disabled = false; vb.textContent = 'Проверить снова';
+  vb.disabled = false; vb.innerHTML = _VB_ORIG;
 }
 
 // ── BATCH MODE ──────────────────────────────────────────────────
@@ -2657,15 +2943,57 @@ async function verifyUsdtPayment(txHash, expectedUsdt) {
 
 // ── PAYMENT VERIFY ─────────────────────────────────────────────
 async function fetchTxFromAny(txid) {
+  // 1. mempool.space — без ограничений, всегда доступен
   try {
-    const r = await fetch('https://blockstream.info/api/tx/' + txid);
-    if (r.ok) { const d = await r.json(); return { vout:(d.vout||[]).map(o=>({scriptpubkey_address:o.scriptpubkey_address,value:o.value})), status:{confirmed:!!d.status?.confirmed,block_height:d.status?.block_height}, fee:d.fee, size:d.size }; }
+    const r = await fetch('https://mempool.space/api/tx/' + txid, { cache: 'no-store' });
+    if (r.ok) {
+      const d = await r.json();
+      return {
+        vout: (d.vout || []).map(o => ({
+          scriptpubkey_address: o.scriptpubkey_address,
+          value: o.value
+        })),
+        status: { confirmed: !!(d.status && d.status.confirmed) },
+        fee: d.fee,
+        size: d.size
+      };
+    }
   } catch(e) {}
+  // 2. Blockstream — запасной
   try {
-    const r = await fetch('https://api.blockcypher.com/v1/btc/main/txs/' + txid + '?limit=50');
-    if (r.ok) { const d = await r.json(); return { vout:(d.outputs||[]).map(o=>({scriptpubkey_address:(o.addresses||[])[0],value:o.value})), status:{confirmed:!!d.block_height,block_height:d.block_height}, fee:d.fees, size:d.size }; }
+    const r = await fetch('https://blockstream.info/api/tx/' + txid, { cache: 'no-store' });
+    if (r.ok) {
+      const d = await r.json();
+      return {
+        vout: (d.vout || []).map(o => ({
+          scriptpubkey_address: o.scriptpubkey_address,
+          value: o.value
+        })),
+        status: { confirmed: !!(d.status && d.status.confirmed) },
+        fee: d.fee,
+        size: d.size
+      };
+    }
   } catch(e) {}
-  try { const r = await fetch('https://mempool.space/api/tx/' + txid); if (r.ok) return r.json(); } catch(e) {}
+  // 3. Blockchair — ещё один запасной
+  try {
+    const r = await fetch('https://api.blockchair.com/bitcoin/dashboards/transaction/' + txid, { cache: 'no-store' });
+    if (r.ok) {
+      const d = await r.json();
+      const tx = d.data && d.data[txid];
+      if (tx) {
+        return {
+          vout: (tx.outputs || []).map(o => ({
+            scriptpubkey_address: o.recipient,
+            value: o.value
+          })),
+          status: { confirmed: tx.transaction && tx.transaction.block_id > 0 },
+          fee: tx.transaction && tx.transaction.fee,
+          size: tx.transaction && tx.transaction.size
+        };
+      }
+    }
+  } catch(e) {}
   return null;
 }
 
@@ -2684,8 +3012,10 @@ function activatePremium(paidStr, method, txShort) {
     '<div class="rr"><span class="rk">Хэш</span><span class="rv">' + txShort + '</span></div>' +
     '<div style="color:var(--g);font-size:.78rem;margin-top:14px;font-family:\'Space Mono\',monospace;line-height:1.6">' +
     'Теперь введите TXID застрявшей транзакции выше и нажмите Ускорить ↑</div>';
-  document.getElementById('pw').style.display = 'none';
-  document.getElementById('txid').focus();
+  const pw = document.getElementById('pw');
+  if (pw) pw.style.display = 'none';
+  const txInput = document.getElementById('txid');
+  if (txInput) txInput.focus();
   window.scrollTo({top: 0, behavior: 'smooth'});
 }
 
@@ -3026,19 +3356,29 @@ function setLang(code, gtCode, flag, name) {
   _langDropOpen = false;
   const dd = document.getElementById('lang-dropdown');
   if (dd) dd.classList.remove('open');
-  // Google Translate
+
   if (code === 'ru') {
+    // Если находимся на translate.google.com — уходим обратно на оригинал
+    if (location.hostname.includes('translate.google') || location.hostname.includes('translate.googleusercontent')) {
+      const m = location.href.match(/[?&]u=([^&]+)/);
+      if (m) { window.location.href = decodeURIComponent(m[1]); return; }
+    }
+    // Если страница была переведена (GT inline widget) — пробуем сбросить
     const sel = document.querySelector('.goog-te-combo');
-    if (sel) { sel.value = ''; sel.dispatchEvent(new Event('change')); }
+    if (sel) { sel.value = ''; sel.dispatchEvent(new Event('change')); return; }
+    // Универсальный fallback — перезагружаем страницу на чистый URL
+    const cleanUrl = location.origin + location.pathname;
+    if (location.href !== cleanUrl) { window.location.href = cleanUrl; }
     return;
   }
+
+  // Другие языки — Google Translate
   const sel = document.querySelector('.goog-te-combo');
   if (sel) {
     sel.value = gtCode;
     sel.dispatchEvent(new Event('change'));
   } else {
-    const url = 'https://translate.google.com/translate?hl='+gtCode+'&sl=ru&u='+encodeURIComponent(location.href);
-    window.open(url, '_blank');
+    window.open('https://translate.google.com/translate?hl=' + gtCode + '&sl=ru&u=' + encodeURIComponent(location.href), '_blank');
   }
 }
 
@@ -3062,13 +3402,4 @@ document.addEventListener('DOMContentLoaded', function() { _renderLangs(''); });
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
     <span id="lang-current-flag">🌐</span>
     <span id="lang-current-name">RU</span>
-    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="18 15 12 9 6 15"/></svg>
-  </div>
-  <div id="lang-dropdown">
-    <input class="lang-search" type="text" placeholder="Поиск языка..." oninput="filterLangs(this.value)" id="lang-search-input">
-    <div class="lang-list" id="lang-list"></div>
-  </div>
-</div>
-
-</body>
-</html>
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" st
