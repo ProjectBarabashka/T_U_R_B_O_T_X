@@ -12,11 +12,6 @@ Disallow: /cdn-cgi/
 # Основной sitemap
 Sitemap: https://acelerat.vercel.app/sitemap.xml
 
-# Ускоренная индексация для основных ботов
-User-agent: Googlebot
-Allow: /
-Crawl-delay: 1
-
 User-agent: Yandexbot
 Allow: /
 Crawl-delay: 2

@@ -1004,24 +1004,12 @@ textarea.batch-input::placeholder{color:rgba(255,255,255,.22)}
 .lang-flag { font-size: 1.1rem; flex-shrink: 0; line-height: 1; }
 .lang-name { flex: 1; }
 .lang-code { font-size: .58rem; color: var(--m); opacity: .7; }
-/* Hide Google Translate bar */
+/* Hide Google Translate bar if widget ever loads */
 .goog-te-banner-frame, .skiptranslate { display: none !important; }
-body { top: 0 !important; }
 .goog-te-gadget { font-size: 0 !important; }
 
 </style>
 
-<!-- Google Translate (hidden element) -->
-<div id="google_translate_element" style="display:none"></div>
-<script type="text/javascript">
-function googleTranslateElementInit() {
-  new google.translate.TranslateElement({
-    pageLanguage: 'ru',
-    autoDisplay: false
-  }, 'google_translate_element');
-}
-</script>
-<script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
 
 </head>
 <body>
@@ -1812,18 +1800,7 @@ function _animateCounter() {
   setTimeout(() => { el.style.transform = ''; el.style.color = 'var(--a)'; }, 500);
 }
 
-async function syncCounterFromFirebase() {
-  if (!_fbReady) return;
-  try {
-    const r = await fetch(`${FIREBASE_DB}/stats/total.json`, { cache:'no-store' });
-    if (r.ok) {
-      const v = await r.json();
-      if (typeof v === 'number' && v > cnt) _setCounterUI(v);
-    }
-  } catch(e) {}
-}
 
-// ── LIVE AVG BLOCK TIME ────────────────────────────────────────
 // ── LIVE STATS FROM MEMPOOL ───────────────────────────────────
 async function fetchLiveStats() {
   // 1. Avg block time → Premium ETA
@@ -1867,7 +1844,6 @@ async function fetchLiveStats() {
       }).length;
       // fallback: if cross-check gives too few, use min(activePools, total)
       if (ourOnline < 10) ourOnline = Math.min(activePools, total);
-      if (el2) el2.textContent = ourOnline + ' / ' + total;
       // update pool cards + dots + counter
       const poolItems = document.querySelectorAll('#pg .pi');
       let onlineCount = 0;
@@ -1876,23 +1852,17 @@ async function fetchLiveStats() {
           const n = pool.n.toLowerCase().replace(/[^a-z]/g,'');
           return an.replace(/[^a-z]/g,'').includes(n.slice(0,4)) || n.includes(an.slice(0,4));
         });
-        // определяем статус: нашли в топ-пулах = online, не нашли = degraded
-        // (реально offline крайне редко — делаем degraded вместо offline для UX)
-        const status = found ? 'online' : 'degraded';
         if (found) onlineCount++;
         const dot = poolItems[idx] ? poolItems[idx].querySelector('.dot') : null;
-        if (dot) {
-          dot.className = 'dot ' + (found ? 'g' : 'y');
-        }
+        if (dot) dot.className = 'dot ' + (found ? 'g' : 'y');
         if (poolItems[idx]) {
           poolItems[idx].classList.remove('degraded', 'offline');
           if (!found) poolItems[idx].classList.add('degraded');
-          // обновляем текст статуса (pp = ping/status строка)
           const pp = poolItems[idx].querySelector('.pp');
           if (pp) pp.textContent = found ? (pool.p || 'online') : 'degraded';
         }
       });
-      // обновляем счётчик кнопки наверху
+      // обновляем счётчик пулов наверху
       const el2 = document.getElementById('pools-online');
       if (el2) el2.textContent = onlineCount + ' / ' + POOLS.length;
     }
@@ -3255,12 +3225,8 @@ setInterval(function() {
 }, 60000);
 
 // При загрузке — показываем реальный фид из Firebase или пустое состояние
-(function initFeed() {
-  const el = document.getElementById('feed-items');
-  if (!el) return;
-  el.innerHTML = '<div class="feed-empty" style="font-family:var(--mono);font-size:.72rem;color:var(--m);text-align:center;padding:16px 0">Ещё нет ускорений — будьте первым</div>';
-  // syncGlobalFeed() подтянет реальные данные после инициализации Firebase
-})();
+// syncGlobalFeed() подтянет реальные данные после инициализации Firebase
+initFeed();
 
 // ── PUSH NOTIFICATIONS ─────────────────────────────────────────
 async function requestPush() {
@@ -3345,6 +3311,23 @@ const LANGS = [
 let currentLang = 'ru';
 let _langDropOpen = false;
 
+// При загрузке — определяем текущий язык из cookie googtrans
+(function() {
+  try {
+    const m = document.cookie.match(/googtrans=\/ru\/([^;]+)/);
+    if (m && m[1] && m[1] !== 'ru') {
+      currentLang = m[1].toLowerCase().replace('zh-cn','zh');
+      const lang = LANGS.find(l => l.gt === m[1] || l.code === currentLang);
+      if (lang) {
+        const flagEl = document.getElementById('lang-current-flag');
+        const nameEl = document.getElementById('lang-current-name');
+        if (flagEl) flagEl.textContent = lang.flag;
+        if (nameEl) nameEl.textContent = lang.code.toUpperCase();
+      }
+    }
+  } catch(e) {}
+})();
+
 function _renderLangs(filter) {
   const list = document.getElementById('lang-list');
   if (!list) return;
@@ -3377,15 +3360,6 @@ function toggleLangDropdown() {
 
 function filterLangs(val) { _renderLangs(val); }
 
-// Ждём появления Google Translate combo (грузится асинхронно)
-function _waitForGT(cb, tries) {
-  tries = tries || 0;
-  const sel = document.querySelector('.goog-te-combo');
-  if (sel) { cb(sel); return; }
-  if (tries > 30) return; // 3 секунды ждали — не появился
-  setTimeout(() => _waitForGT(cb, tries + 1), 100);
-}
-
 function setLang(code, gtCode, flag, name) {
   currentLang = code;
   const flagEl = document.getElementById('lang-current-flag');
@@ -3396,32 +3370,25 @@ function setLang(code, gtCode, flag, name) {
   const dd = document.getElementById('lang-dropdown');
   if (dd) dd.classList.remove('open');
 
+  const pageUrl = location.href.split('#')[0];
+
   if (code === 'ru') {
-    // Сброс перевода — несколько способов
-    _waitForGT(function(sel) {
-      sel.value = '';
-      sel.dispatchEvent(new Event('change'));
-    });
-    // Если iframe переводчика уже открыт — пробуем через cookie
-    try {
-      document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=' + location.hostname;
-    } catch(e) {}
-    // Через 300мс проверяем — если перевод не сбросился, перезагружаем
-    setTimeout(function() {
-      const body = document.body;
-      if (body && (body.classList.contains('translated-ltr') || body.classList.contains('translated-rtl'))) {
-        window.location.href = location.origin + location.pathname;
-      }
-    }, 300);
+    // Сброс перевода — удаляем cookie и перезагружаем
+    const cookieBase = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+    document.cookie = cookieBase + ';';
+    document.cookie = cookieBase + '; domain=' + location.hostname + ';';
+    document.cookie = cookieBase + '; domain=.' + location.hostname + ';';
+    window.location.href = pageUrl;
     return;
   }
 
-  // Другие языки
-  _waitForGT(function(sel) {
-    sel.value = gtCode;
-    sel.dispatchEvent(new Event('change'));
-  }, 0);
+  // Устанавливаем cookie и редиректим через Google Translate
+  const cookieVal = '/ru/' + gtCode;
+  document.cookie = 'googtrans=' + cookieVal + '; path=/';
+  document.cookie = 'googtrans=' + cookieVal + '; path=/; domain=' + location.hostname;
+  // Redirect через translate.google.com — 100% надёжный способ
+  const translateUrl = 'https://translate.google.com/translate?sl=ru&tl=' + gtCode + '&u=' + encodeURIComponent(pageUrl);
+  window.location.href = translateUrl;
 }
 
 document.addEventListener('click', function(e) {
@@ -3434,7 +3401,6 @@ document.addEventListener('click', function(e) {
 });
 
 document.addEventListener('DOMContentLoaded', function() { _renderLangs(''); });
-// ─────────────────────────────────────────────────────────────
 
 </script>
 
