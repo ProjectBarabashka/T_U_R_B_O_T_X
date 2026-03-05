@@ -691,6 +691,7 @@ footer a:hover{color:var(--a)}
   animation:blink-g 2s infinite
 }
 .feed-items{display:flex;flex-direction:column}
+@keyframes skeletonPulse{0%,100%{opacity:.35}50%{opacity:.18}}
 .feed-item{
   display:flex;align-items:center;justify-content:space-between;
   padding:10px 18px;border-bottom:1px solid rgba(255,255,255,.03);
@@ -3170,28 +3171,20 @@ async function analyzeTx(txid) {
 }
 
 // ── LIVE FEED ─────────────────────────────────────────────────
-const FEED_NAMES = ['a1b2c3','9f8e7d','4c5d6e','2a3b4c','7e8f9a','1b2c3d','5d6e7f','8a9b0c','3e4f5a','6b7c8d'];
-let _feedIdx = 0;
-const _feedTimes = [2,3,5,7,11,14,18,22,28,35];
-const _feedMins  = [12,18,9,24,15,31,8,19,27,14];
-const _feedPlans = ['PREMIUM','PREMIUM','FREE','PREMIUM','FREE','PREMIUM','PREMIUM','FREE','PREMIUM','FREE'];
-
 function initFeed() {
   const el = document.getElementById('feed-items');
   if (!el) return;
-  // показываем 5 последних
-  const items = FEED_NAMES.slice(0,5).map((id, i) => `
-    <div class="feed-item">
-      <div class="feed-txid"><span>${id}</span>...${(parseInt(id,16)%9999).toString(16).padStart(4,'0')}</div>
+  // Показываем скелетон до загрузки реальных данных из Firebase
+  el.innerHTML = [1,2,3].map(() => `
+    <div class="feed-item" style="opacity:.35;pointer-events:none;animation:skeletonPulse 1.6s ease-in-out infinite">
+      <div class="feed-txid"><span style="background:var(--b);color:transparent;border-radius:4px">a1b2c3...9f8e</span></div>
       <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-family:var(--mono);font-size:.58rem;color:${_feedPlans[i]==='PREMIUM'?'var(--a)':'var(--m)'}">${_feedPlans[i]}</span>
-        <span class="feed-badge-conf">✓ ${_feedMins[i]} мин</span>
-        <span class="feed-time">${_feedTimes[i]} мин назад</span>
+        <span style="background:var(--b);color:transparent;border-radius:4px;font-size:.58rem">FREE</span>
+        <span class="feed-badge-conf" style="background:var(--b);color:transparent;border:none">✓ 00 мин</span>
+        <span class="feed-time" style="background:var(--b);color:transparent;border-radius:4px">00 мин назад</span>
       </div>
     </div>`).join('');
-  el.innerHTML = items;
 }
-
 
 function addFeedItem(txid, planType, minutes) {
   const el = document.getElementById('feed-items');
