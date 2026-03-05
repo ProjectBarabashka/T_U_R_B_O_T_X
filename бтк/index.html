@@ -1965,7 +1965,11 @@ async function incrementGlobalUsed() {
     } catch(e) { /* тихий fallback */ }
   }
   // Fallback: localStorage
-  const used = parseInt(localStorage.getItem('turbotx_free_used') || '0') + 1;
+  const today = todayStr();
+  const lsDate = localStorage.getItem('turbotx_free_date');
+  const prevUsed = lsDate === today ? parseInt(localStorage.getItem('turbotx_free_used') || '0') : 0;
+  const used = prevUsed + 1;
+  localStorage.setItem('turbotx_free_date', today);
   localStorage.setItem('turbotx_free_used', used);
   return used;
 }
@@ -1977,10 +1981,13 @@ function getFreeLeft(used) { return Math.max(0, FL_MAX - (typeof used === 'numbe
 
 async function updateFreeUI(forceUsed) {
   const used = typeof forceUsed === 'number' ? forceUsed : await getGlobalUsed();
+  if (typeof used !== 'number') return;
   _lastKnownUsed = used;
+  // Синхронизируем localStorage чтобы локальное состояние не расходилось
+  localStorage.setItem('turbotx_free_date', todayStr());
+  localStorage.setItem('turbotx_free_used', used);
   const left = getFreeLeft(used);
   const el = document.getElementById('free-left-num'); if (!el) return;
-  // Снимаем skeleton
   el.style.opacity = '';
   el.style.animation = '';
   el.textContent = left;
@@ -2251,7 +2258,7 @@ function startRealtimeListeners() {
     esL.addEventListener('put', function(e) {
       try {
         const data = JSON.parse(e.data);
-        if (data && typeof data.data === 'number') {
+        if (data && typeof data.data === 'number' && data.data >= 0) {
           _lastKnownUsed = data.data;
           updateFreeUI(data.data);
         }
@@ -2435,7 +2442,14 @@ async function go() {
         if (d.status && d.status.confirmed) { results.push({ txid, ok: false, msg: 'уже подтверждена' }); continue; }
         addToQueue(txid, plan);
         setTxidCooldown(txid);
-        if (plan === 'free') { const newUsed = await incrementGlobalUsed(); updateFreeUI(newUsed); }
+        if (plan === 'free') {
+          // Мгновенно уменьшаем локально — не ждём Firebase
+          const localUsed = (_lastKnownUsed || 0) + 1;
+          _lastKnownUsed = localUsed;
+          updateFreeUI(localUsed);
+          // Записываем в Firebase асинхронно
+          incrementGlobalUsed().then(serverUsed => { if (serverUsed !== localUsed) updateFreeUI(serverUsed); });
+        }
         results.push({ txid, ok: true, msg: plan === 'premium' ? '15–30 мин' : '1–3 ч' });
       } catch(e) { results.push({ txid, ok: false, msg: 'ошибка соединения' }); }
       await sleep(200);
@@ -2534,7 +2548,14 @@ async function go() {
 
   addToQueue(txid, plan);
   setTxidCooldown(txid);
-  if (plan === 'free') { const newUsed = await incrementGlobalUsed(); await updateFreeUI(newUsed); }
+  if (plan === 'free') {
+    // Мгновенно уменьшаем локально — не ждём Firebase
+    const localUsed = (_lastKnownUsed || 0) + 1;
+    _lastKnownUsed = localUsed;
+    updateFreeUI(localUsed);
+    // Записываем в Firebase асинхронно
+    incrementGlobalUsed().then(serverUsed => { if (serverUsed !== localUsed) updateFreeUI(serverUsed); });
+  }
 
   rb.style.display = 'block'; rb.className = 'res-box';
   rb.innerHTML = `
