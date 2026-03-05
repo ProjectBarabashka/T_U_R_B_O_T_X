@@ -1005,9 +1005,16 @@ textarea.batch-input::placeholder{color:rgba(255,255,255,.22)}
 .lang-flag { font-size: 1.1rem; flex-shrink: 0; line-height: 1; }
 .lang-name { flex: 1; }
 .lang-code { font-size: .58rem; color: var(--m); opacity: .7; }
-/* Hide Google Translate bar if widget ever loads */
-.goog-te-banner-frame, .skiptranslate { display: none !important; }
-.goog-te-gadget { font-size: 0 !important; }
+/* Полностью скрываем Google Translate бар */
+.goog-te-banner-frame,
+.goog-te-banner-frame.skiptranslate,
+.skiptranslate,
+#goog-gt-tt,
+.goog-tooltip,
+.goog-tooltip:hover { display: none !important; visibility: hidden !important; }
+body { top: 0px !important; }
+.goog-te-gadget { font-size: 0 !important; height: 0 !important; overflow: hidden !important; }
+iframe.goog-te-banner-frame { display: none !important; }
 
 </style>
 
@@ -1072,15 +1079,15 @@ textarea.batch-input::placeholder{color:rgba(255,255,255,.22)}
 <!-- STATS -->
 <div class="stats">
   <a href="javascript:void(0)" class="stat-card" style="text-decoration:none;cursor:pointer" onclick="document.getElementById('queue-section').scrollIntoView({behavior:'smooth'});return false;">
-    <span class="stat-num" id="sc">12,847</span>
+    <span class="stat-num" id="sc" style="opacity:.3;animation:skeletonPulse 1.6s ease-in-out infinite">—</span>
     <div class="stat-lbl">Ускорено транзакций</div>
   </a>
   <a href="javascript:void(0)" class="stat-card" style="text-decoration:none;cursor:pointer" onclick="document.getElementById('status').scrollIntoView({behavior:'smooth'});return false;">
-    <span class="stat-num" id="avg-time">~18 мин</span>
+    <span class="stat-num" id="avg-time" style="opacity:.3;animation:skeletonPulse 1.6s ease-in-out infinite">—</span>
     <div class="stat-lbl">Среднее Premium</div>
   </a>
   <a href="javascript:void(0)" class="stat-card" style="text-decoration:none;cursor:pointer" onclick="document.getElementById('pools').scrollIntoView({behavior:'smooth'});return false;">
-    <span class="stat-num" id="pools-online">15 / 15</span>
+    <span class="stat-num" id="pools-online" style="opacity:.3;animation:skeletonPulse 1.6s ease-in-out infinite">—</span>
     <div class="stat-lbl">Пулов онлайн</div>
   </a>
 </div>
@@ -1105,10 +1112,10 @@ textarea.batch-input::placeholder{color:rgba(255,255,255,.22)}
         <div style="color:var(--a);display:flex;align-items:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x='3' y='11' width='18' height='11' rx='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg></div>
         <div>
           <div style="font-size:.78rem;color:var(--m);font-family:var(--mono)">Бесплатных ускорений сегодня осталось</div>
-          <div><span class="flb-count" id="free-left-num">100</span> <span style="font-family:var(--mono);font-size:.72rem;color:var(--m)">/ 100</span></div>
+          <div><span class="flb-count" id="free-left-num" style="opacity:.3;animation:skeletonPulse 1.6s ease-in-out infinite">—</span> <span style="font-family:var(--mono);font-size:.72rem;color:var(--m)">/ 100</span></div>
         </div>
       </div>
-      <div class="flb-bar-wrap"><div class="flb-bar-fill" id="free-bar-fill" style="width:100%"></div></div>
+      <div class="flb-bar-wrap"><div class="flb-bar-fill" id="free-bar-fill" style="width:0%"></div></div>
     </div>
     <div id="reset-timer-wrap" style="display:none;font-family:var(--mono);font-size:.72rem;color:var(--m);text-align:right;min-width:110px">Обновится через<br><span id="reset-countdown" style="color:var(--t);font-size:.82rem">—</span></div>
   </div>
@@ -1765,13 +1772,17 @@ POOLS.forEach(p => {
 // ── GLOBAL COUNTER (Firebase) ──────────────────────────────────
 const COUNTER_KEY = 'turbotx_acc_count';
 let cnt = parseInt(localStorage.getItem(COUNTER_KEY) || '12847');
-document.getElementById('sc').textContent = cnt.toLocaleString('ru');
+// Не показываем localStorage значение — ждём Firebase (skeleton уже в HTML)
 
 function _setCounterUI(val) {
   cnt = val;
   localStorage.setItem(COUNTER_KEY, val);
   const el = document.getElementById('sc');
-  if (el) el.textContent = val.toLocaleString('ru');
+  if (el) {
+    el.style.opacity = '';
+    el.style.animation = '';
+    el.textContent = val.toLocaleString('ru');
+  }
 }
 
 async function bumpCounter() {
@@ -1821,6 +1832,8 @@ async function fetchLiveStats() {
           const premLo = avgMin, premHi = Math.round(avgMin * 1.8);
           const el = document.getElementById('avg-time');
           if (el) {
+            el.style.opacity = '';
+            el.style.animation = '';
             el.textContent = '~' + premLo + '–' + premHi + ' мин';
             el.title = 'Средний интервал блока: ' + avgMin + ' мин (последние ' + count + ' блоков)';
           }
@@ -1865,7 +1878,11 @@ async function fetchLiveStats() {
       });
       // обновляем счётчик пулов наверху
       const el2 = document.getElementById('pools-online');
-      if (el2) el2.textContent = onlineCount + ' / ' + POOLS.length;
+      if (el2) {
+        el2.style.opacity = '';
+        el2.style.animation = '';
+        el2.textContent = onlineCount + ' / ' + POOLS.length;
+      }
     }
   } catch(e) {}
 }
@@ -1895,8 +1912,20 @@ async function _testFirebase() {
   return false;
 }
 
-// UTC-дата — одинакова для всех пользователей в мире
-function todayStr() { return new Date().toISOString().slice(0, 10); }
+// UTC-дата с учётом сброса в 22:00 UTC (01:00 МСК)
+// До 22:00 UTC — это "вчера" для нашего счётчика
+function todayStr() {
+  const now = new Date();
+  // Если текущее время UTC < 22:00, используем предыдущие сутки как ключ
+  const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 22, 0, 0));
+  if (now < d) {
+    // Ещё не наступил сброс — используем вчерашнюю дату как ключ периода
+    const prev = new Date(d);
+    prev.setUTCDate(prev.getUTCDate() - 1);
+    return prev.toISOString().slice(0, 10);
+  }
+  return now.toISOString().slice(0, 10);
+}
 
 // Получить текущий глобальный счётчик из Firebase
 async function getGlobalUsed() {
@@ -1956,6 +1985,9 @@ async function updateFreeUI(forceUsed) {
   _lastKnownUsed = used;
   const left = getFreeLeft(used);
   const el = document.getElementById('free-left-num'); if (!el) return;
+  // Снимаем skeleton
+  el.style.opacity = '';
+  el.style.animation = '';
   el.textContent = left;
   el.className = 'flb-count' + (left <= 10 ? ' low' : '');
   document.getElementById('free-bar-fill').style.width = (left / FL_MAX * 100) + '%';
@@ -1966,14 +1998,13 @@ async function updateFreeUI(forceUsed) {
   document.getElementById('reset-timer-wrap').style.display = empty ? 'block' : 'none';
 }
 
-// Таймер до сброса лимита — сброс всегда в 00:00 UTC (глобально)
+// Таймер до сброса лимита — сброс в 01:00 МСК = 22:00 UTC
 function updateResetTimer() {
   const now = new Date();
-  // Следующий UTC-полночь
-  const midnight = new Date(Date.UTC(
-    now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0
-  ));
-  const diff = midnight - now;
+  // Следующее 22:00 UTC
+  const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 22, 0, 0));
+  if (now >= next) next.setUTCDate(next.getUTCDate() + 1);
+  const diff = next - now;
   const h = Math.floor(diff / 3600000);
   const m = Math.floor((diff % 3600000) / 60000);
   const s = Math.floor((diff % 60000) / 1000);
@@ -1981,11 +2012,10 @@ function updateResetTimer() {
   if (el) el.textContent = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
 }
 
-// Периодический опрос Firebase каждые 30 сек
-updateFreeUI();
+// updateFreeUI вызывается только после initGlobalSync() → Firebase готов
 updateResetTimer();
 setInterval(updateResetTimer, 1000);
-setInterval(() => updateFreeUI(), 30000); // синхронизация глобального счётчика
+setInterval(() => updateFreeUI(), 30000);
 
 // ── FIREBASE REAL-TIME LISTENER (SSE) — в startRealtimeListeners ниже ──
 
@@ -2122,10 +2152,12 @@ async function syncCounterFromFirebase() {
 // Первоначальная синхронизация — сначала проверяем Firebase
 async function initGlobalSync() {
   await _testFirebase();
-  await syncCounterFromFirebase();
-  await syncGlobalQueue();
-  await syncGlobalFeed();
-  // Запускаем SSE только после успешного теста
+  await Promise.all([
+    syncCounterFromFirebase(),
+    syncGlobalQueue(),
+    syncGlobalFeed(),
+    updateFreeUI(),        // вызываем только после Firebase готов
+  ]);
   startRealtimeListeners();
 }
 initGlobalSync();
@@ -3304,23 +3336,7 @@ const LANGS = [
 let currentLang = 'ru';
 let _langDropOpen = false;
 
-// При загрузке — определяем текущий язык из cookie googtrans
-(function() {
-  try {
-    const m = document.cookie.match(/googtrans=\/ru\/([^;]+)/);
-    if (m && m[1] && m[1] !== 'ru') {
-      currentLang = m[1].toLowerCase().replace('zh-cn','zh');
-      const lang = LANGS.find(l => l.gt === m[1] || l.code === currentLang);
-      if (lang) {
-        const flagEl = document.getElementById('lang-current-flag');
-        const nameEl = document.getElementById('lang-current-name');
-        if (flagEl) flagEl.textContent = lang.flag;
-        if (nameEl) nameEl.textContent = lang.code.toUpperCase();
-      }
-    }
-  } catch(e) {}
-})();
-
+// При загрузке — рендерим список языков
 function _renderLangs(filter) {
   const list = document.getElementById('lang-list');
   if (!list) return;
@@ -3355,33 +3371,19 @@ function filterLangs(val) { _renderLangs(val); }
 
 function setLang(code, gtCode, flag, name) {
   currentLang = code;
-  const flagEl = document.getElementById('lang-current-flag');
-  const nameEl = document.getElementById('lang-current-name');
+  var flagEl = document.getElementById('lang-current-flag');
+  var nameEl = document.getElementById('lang-current-name');
   if (flagEl) flagEl.textContent = flag;
   if (nameEl) nameEl.textContent = code.toUpperCase();
   _langDropOpen = false;
-  const dd = document.getElementById('lang-dropdown');
+  var dd = document.getElementById('lang-dropdown');
   if (dd) dd.classList.remove('open');
 
-  const pageUrl = location.href.split('#')[0];
-
   if (code === 'ru') {
-    // Сброс перевода — удаляем cookie и перезагружаем
-    const cookieBase = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
-    document.cookie = cookieBase + ';';
-    document.cookie = cookieBase + '; domain=' + location.hostname + ';';
-    document.cookie = cookieBase + '; domain=.' + location.hostname + ';';
-    window.location.href = pageUrl;
+    _gtReset();
     return;
   }
-
-  // Устанавливаем cookie и редиректим через Google Translate
-  const cookieVal = '/ru/' + gtCode;
-  document.cookie = 'googtrans=' + cookieVal + '; path=/';
-  document.cookie = 'googtrans=' + cookieVal + '; path=/; domain=' + location.hostname;
-  // Redirect через translate.google.com — 100% надёжный способ
-  const translateUrl = 'https://translate.google.com/translate?sl=ru&tl=' + gtCode + '&u=' + encodeURIComponent(pageUrl);
-  window.location.href = translateUrl;
+  _gtSetLang(gtCode);
 }
 
 document.addEventListener('click', function(e) {
@@ -3397,10 +3399,62 @@ document.addEventListener('DOMContentLoaded', function() { _renderLangs(''); });
 
 </script>
 
-<!-- LANGUAGE SWITCHER -->
+<!-- LANGUAGE SWITCHER + GOOGLE TRANSLATE -->
+<!-- Скрытый контейнер для Google Translate Widget -->
+<div id="google_translate_element" style="display:none!important;visibility:hidden;position:absolute;top:-9999px"></div>
+
 <div id="lang-bar">
   <div id="lang-btn" onclick="toggleLangDropdown()">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
     <span id="lang-current-flag">🌐</span>
     <span id="lang-current-name">RU</span>
-    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" st
+    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
+  </div>
+  <div id="lang-dropdown">
+    <input class="lang-search" id="lang-search-input" type="text" placeholder="Поиск языка..." oninput="filterLangs(this.value)" autocomplete="off">
+    <div class="lang-list" id="lang-list"></div>
+  </div>
+</div>
+
+<script type="text/javascript">
+// ── GOOGLE TRANSLATE WIDGET INIT ──────────────────────────────
+function googleTranslateElementInit() {
+  new google.translate.TranslateElement({
+    pageLanguage: 'ru',
+    autoDisplay: false,
+    layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+  }, 'google_translate_element');
+}
+
+// Ждём пока GT widget создаст select и вызываем смену языка
+function _gtSetLang(langCode) {
+  var tries = 0;
+  function attempt() {
+    // GT widget создаёт select.goog-te-combo
+    var sel = document.querySelector('select.goog-te-combo');
+    if (sel) {
+      sel.value = langCode;
+      // Нужно триггернуть и change и input — GT слушает оба
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+      sel.dispatchEvent(new Event('input',  { bubbles: true }));
+      return;
+    }
+    if (tries++ < 50) setTimeout(attempt, 100); // ждём до 5 сек
+  }
+  attempt();
+}
+
+function _gtReset() {
+  // Сброс через cookie + перезагрузка — самый надёжный способ
+  var exp = 'expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
+  document.cookie = 'googtrans=; ' + exp;
+  document.cookie = 'googtrans=; ' + exp + '; domain=' + location.hostname;
+  document.cookie = 'googtrans=; ' + exp + '; domain=.' + location.hostname;
+  window.location.reload();
+}
+</script>
+<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
+
+</div><!-- /.w -->
+</body>
+</html>
