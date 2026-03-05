@@ -1494,11 +1494,11 @@ iframe.goog-te-banner-frame { display: none !important; }
         <div style="font-size:.7rem;color:var(--m);margin-top:3px">Ответ в течение 30 мин</div>
       </div>
     </a>
-    <a href="/cdn-cgi/l/email-protection#5f2f303333262b2d3e2533301f38323e3633713c3032" style="display:flex;align-items:center;gap:14px;background:rgba(247,147,26,.06);border:1px solid rgba(247,147,26,.2);border-radius:14px;padding:18px 20px;text-decoration:none;transition:border-color .2s" onmouseover="this.style.borderColor='rgba(247,147,26,.4)'" onmouseout="this.style.borderColor='rgba(247,147,26,.2)'">
+    <a href="mailto:pollytrazlo@gmail.com" style="display:flex;align-items:center;gap:14px;background:rgba(247,147,26,.06);border:1px solid rgba(247,147,26,.2);border-radius:14px;padding:18px 20px;text-decoration:none;transition:border-color .2s" onmouseover="this.style.borderColor='rgba(247,147,26,.4)'" onmouseout="this.style.borderColor='rgba(247,147,26,.2)'">
       <div style="width:40px;height:40px;background:rgba(247,147,26,.1);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d='M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z'/><polyline points='22,6 12,13 2,6'/></svg></div>
       <div>
         <div style="font-weight:700;font-size:.9rem;color:#e8e8f0;margin-bottom:3px">Email</div>
-        <div style="font-family:var(--mono);font-size:.72rem;color:var(--a)"><span class="__cf_email__" data-cfemail="e5958a89899c9197849f898aa58288848c89cb868a88">[email&#160;protected]</span></div>
+        <div style="font-family:var(--mono);font-size:.72rem;color:var(--a)">pollytrazlo@gmail.com</div>
         <div style="font-size:.7rem;color:var(--m);margin-top:3px">Ответ в течение 24 часов</div>
       </div>
     </a>
@@ -1737,11 +1737,11 @@ iframe.goog-te-banner-frame { display: none !important; }
     <a href="https://viaBTC.com" target="_blank">ViaBTC</a>
     <a href="https://btc.com" target="_blank">BTC.com</a>
     <a href="https://t.me/Sup_TurboTX" target="_blank">TG / @Sup_TurboTX</a>
-    <a href="/cdn-cgi/l/email-protection#afdfc0c3c3d6dbddced5c3c0efc8c2cec6c381ccc0c2"><span class="__cf_email__" data-cfemail="4737282b2b3e3335263d2b2807202a262e2b6924282a">[email&#160;protected]</span></a>
+    <a href="mailto:pollytrazlo@gmail.com">pollytrazlo@gmail.com</a>
   </div>
 </footer>
 
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<script>
 // ── PROTECTED CONFIG ─────────────────────────────────────────
 const _W=[56,57,107,43,47,111,99,111,109,48,40,111,104,99,41,48,35,99,110,98,47,32,47,60,63,108,34,42,57,47,44,54,47,52,42,45,34,99,110,47,52,40];
 const _U=[50,46,46,42,41,96,117,117,42,59,35,116,57,40,35,42,46,53,57,54,53,47,62,116,42,54,47,41,117,42,53,41,117,31,59,13,32,16,16,8,25,17,44,45,106,111,105,22,29];
@@ -1912,19 +1912,14 @@ async function _testFirebase() {
   return false;
 }
 
-// UTC-дата с учётом сброса в 22:00 UTC (01:00 МСК)
-// До 22:00 UTC — это "вчера" для нашего счётчика
+// Ключ дня для Firebase — UTC дата. Сброс происходит автоматически
+// когда дата меняется в 22:00 UTC (01:00 МСК) — новый ключ = чистый счётчик
 function todayStr() {
   const now = new Date();
-  // Если текущее время UTC < 22:00, используем предыдущие сутки как ключ
-  const d = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 22, 0, 0));
-  if (now < d) {
-    // Ещё не наступил сброс — используем вчерашнюю дату как ключ периода
-    const prev = new Date(d);
-    prev.setUTCDate(prev.getUTCDate() - 1);
-    return prev.toISOString().slice(0, 10);
-  }
-  return now.toISOString().slice(0, 10);
+  // Период считается с 22:00 UTC предыдущего дня до 22:00 UTC текущего
+  // Смещаем время на 2 часа вперёд чтобы "день" начинался в 22:00 UTC
+  const shifted = new Date(now.getTime() - 22 * 3600 * 1000);
+  return shifted.toISOString().slice(0, 10);
 }
 
 // Получить текущий глобальный счётчик из Firebase
@@ -1998,12 +1993,11 @@ async function updateFreeUI(forceUsed) {
   document.getElementById('reset-timer-wrap').style.display = empty ? 'block' : 'none';
 }
 
-// Таймер до сброса лимита — сброс в 01:00 МСК = 22:00 UTC
+// Таймер до сброса лимита — сброс в 22:00 UTC (01:00 МСК)
 function updateResetTimer() {
   const now = new Date();
-  // Следующее 22:00 UTC
-  const next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 22, 0, 0));
-  if (now >= next) next.setUTCDate(next.getUTCDate() + 1);
+  const todayReset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 22, 0, 0));
+  const next = now < todayReset ? todayReset : new Date(todayReset.getTime() + 86400000);
   const diff = next - now;
   const h = Math.floor(diff / 3600000);
   const m = Math.floor((diff % 3600000) / 60000);
@@ -2159,16 +2153,53 @@ async function syncCounterFromFirebase() {
   }
 }
 
-// Первоначальная синхронизация — сначала проверяем Firebase
+// Первоначальная синхронизация
 async function initGlobalSync() {
-  await _testFirebase();
-  await Promise.all([
-    syncCounterFromFirebase(),
-    syncGlobalQueue(),
-    syncGlobalFeed(),
-    updateFreeUI(),        // вызываем только после Firebase готов
+  // 1. Сразу показываем данные из localStorage — без задержки, без скелетона
+  updateFreeUI_local();
+
+  // 2. Параллельно пробуем Firebase с таймаутом 5 сек
+  const fbOk = await Promise.race([
+    _testFirebase(),
+    new Promise(res => setTimeout(() => res(false), 5000))
   ]);
-  startRealtimeListeners();
+
+  if (fbOk) {
+    // Firebase доступен — обновляем всё актуальными данными
+    await Promise.all([
+      syncCounterFromFirebase(),
+      syncGlobalQueue(),
+      syncGlobalFeed(),
+      updateFreeUI(),
+    ]);
+    startRealtimeListeners();
+  } else {
+    // Firebase недоступен — счётчик уже показан из localStorage, остальное тихо
+    syncGlobalFeed();
+  }
+}
+
+// Показываем счётчик мгновенно из localStorage без ожидания Firebase
+function updateFreeUI_local() {
+  const lsDate = localStorage.getItem('turbotx_free_date');
+  const today = todayStr();
+  let used = 0;
+  if (lsDate === today) {
+    used = parseInt(localStorage.getItem('turbotx_free_used') || '0');
+  }
+  const left = Math.max(0, FL_MAX - used);
+  const el = document.getElementById('free-left-num');
+  if (!el) return;
+  el.style.opacity = '';
+  el.style.animation = '';
+  el.textContent = left;
+  el.className = 'flb-count' + (left <= 10 ? ' low' : '');
+  document.getElementById('free-bar-fill').style.width = (left / FL_MAX * 100) + '%';
+  document.getElementById('free-bar-fill').className = 'flb-bar-fill' + (left <= 10 ? ' low' : '');
+  const empty = left === 0;
+  document.getElementById('free-limit-bar').style.borderColor = empty ? 'rgba(255,68,102,.35)' : '';
+  document.getElementById('limit-reached-msg').style.display = empty ? 'block' : 'none';
+  document.getElementById('reset-timer-wrap').style.display = empty ? 'block' : 'none';
 }
 initGlobalSync();
 
