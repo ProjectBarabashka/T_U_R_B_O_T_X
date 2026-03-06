@@ -6,12 +6,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
 <!-- PRIMARY SEO -->
-<title>Bitcoin Transaction Accelerator — Ускоритель BTC Транзакций | TurboTX</title>
-<meta name="description" content="Ускорьте застрявшую Bitcoin транзакцию бесплатно. Rebroadcast в 15 майнинг-пулов — ViaBTC, AntPool, F2Pool. Бесплатно 1–3 ч, Premium 15–30 мин. BTC transaction accelerator. Telegram-канал @TurboTXAcel.">
+<title>TurboTX — Ускоритель Bitcoin Транзакций | Бесплатно + Premium от $4</title>
+<meta name="description" content="Застряла Bitcoin транзакция? TurboTX ускоряет через rebroadcast в 15 майнинг-пулов: Foundry USA, AntPool, ViaBTC, F2Pool и другие. Бесплатно или Premium от $4. CPFP и RBF калькуляторы. Гарантия возврата.">
 <meta name="keywords" content="ускоритель транзакций биткоин, bitcoin transaction accelerator, btc accelerator, ускорить биткоин транзакцию, застрявшая транзакция btc, btc stuck transaction, mempool accelerator, ускорить транзакцию бесплатно, bitcoin accelerate, btc unconfirmed transaction, TurboTX телеграм, TurboTXAcel, TurboTXcoment, turbotx telegram канал, отзывы turbotx, биткоин телеграм канал">
-<meta name="robots" content="index, follow">
+<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
 <meta name="author" content="TurboTX">
 <link rel="canonical" href="https://acelerat.vercel.app/">
+<link rel="alternate" hreflang="ru" href="https://acelerat.vercel.app/">
+<link rel="alternate" hreflang="en" href="https://acelerat.vercel.app/">
+<link rel="alternate" hreflang="x-default" href="https://acelerat.vercel.app/">
 <meta name="language" content="Russian">
 <meta name="geo.region" content="RU">
 <meta name="theme-color" content="#f7931a">
@@ -104,6 +107,21 @@
       "acceptedAnswer": {
         "@type": "Answer",
         "text": "Bitcoin transaction accelerator — сервис который повторно отправляет (rebroadcast) вашу неподтверждённую транзакцию напрямую в майнинг-пулы, минуя переполненный mempool. Это увеличивает шанс быстрого включения транзакции в блок."
+      }
+    }
+    ,{
+      "@type": "Question",
+      "name": "Как работает CPFP и RBF для ускорения Bitcoin?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "CPFP (Child-Pays-for-Parent) — создание дочерней транзакции с высокой комиссией, которая тянет за собой застрявшую. RBF (Replace-By-Fee) — замена транзакции на новую с более высокой комиссией. TurboTX предоставляет бесплатные калькуляторы для обоих методов."
+      }
+    },{
+      "@type": "Question",
+      "name": "Есть ли гарантия возврата денег?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Да. Если Premium-ускорение не подтвердило транзакцию в течение 6 часов — возвращаем оплату полностью. Для возврата напишите в поддержку @Sup_TurboTX с TXID и номером платежа."
       }
     }
   ]
@@ -1705,6 +1723,17 @@ input[type=text]:focus {
   <div class="card-title"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Ускорить транзакцию</span></div>
   <div class="card-sub">Вставьте TXID из кошелька — мы займёмся остальным</div>
 
+  <!-- FEE HEALTH METER -->
+  <div id="fee-meter" style="display:flex;align-items:center;gap:10px;padding:10px 14px;margin-bottom:14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:var(--r);font-family:var(--mono);font-size:.65rem;color:var(--m2)">
+    <span style="width:8px;height:8px;border-radius:50%;background:var(--m);flex-shrink:0;transition:background .5s" id="fee-dot"></span>
+    <span id="fee-meter-text">Загружаем данные сети...</span>
+  </div>
+
+  <!-- DUP WARNING -->
+  <div id="dup-warn" style="display:none;align-items:center;gap:8px;padding:10px 14px;margin-bottom:10px;
+    background:rgba(255,209,102,.06);border:1px solid rgba(255,209,102,.2);border-radius:var(--r);
+    font-family:var(--mono);font-size:.68rem;color:#ffd166;line-height:1.6"></div>
+
   <!-- SMART DIAGNOSIS -->
   <div id="smart-diag" style="display:none;margin-bottom:16px;padding:14px 16px;background:rgba(247,147,26,.05);border:1px solid rgba(247,147,26,.18);border-radius:var(--r);animation:fadeup .3s ease">
     <div style="font-family:var(--mono);font-size:.6rem;letter-spacing:1.5px;color:var(--a);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px">
@@ -1736,7 +1765,7 @@ input[type=text]:focus {
     <label>Transaction ID (TXID)</label>
     <!-- Single mode -->
     <div id="single-mode">
-      <input type="text" id="txid" placeholder="a1b2c3d4e5f6... (64 hex символа)" maxlength="64" oninput="onTx()">
+      <input type="text" id="txid" placeholder="a1b2c3d4e5f6... (64 hex символа)" maxlength="64" oninput="onTxidDiag(this.value)">
     </div>
     <!-- Batch mode -->
     <div class="batch-area" id="batch-mode">
@@ -3502,11 +3531,36 @@ async function go() {
     <div class="rr"><span class="rk">Время запроса</span><span class="rv">${new Date().toLocaleTimeString('ru')}</span></div>
     ${plan === 'premium' ? '<div class="rr"><span class="rk">Повтор через</span><span class="rv" style="color:var(--m)">30 мин</span></div>' : ''}
     ${lowFee ? `<div style="background:rgba(255,147,0,.07);border:1px solid rgba(255,147,0,.2);border-radius:8px;padding:10px 12px;margin-top:12px;font-family:var(--mono);font-size:.68rem;color:rgba(255,147,0,.9);line-height:1.6">⚠ Комиссия очень низкая (${feeRate} sat/vB). Даже после ускорения майнеры могут не включить транзакцию сразу. Рекомендуем Premium.</div>` : ''}
-    <a class="mp-link" href="https://mempool.space/tx/${txid}" target="_blank" style="margin-top:16px">
+    <!-- CONFIRMATIONS TRACKER -->
+    <div id="conf-tracker" style="margin-top:14px;padding:12px 14px;background:rgba(0,232,122,.04);border:1px solid rgba(0,232,122,.1);border-radius:var(--r)">
+      <div style="font-family:var(--mono);font-size:.6rem;color:var(--m);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Подтверждения</div>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px">
+        <div class="conf-dot" id="conf-0" style="width:10px;height:10px;border-radius:50%;background:var(--b2);transition:background .5s"></div>
+        <div class="conf-dot" id="conf-1" style="width:10px;height:10px;border-radius:50%;background:var(--b2);transition:background .5s"></div>
+        <div class="conf-dot" id="conf-2" style="width:10px;height:10px;border-radius:50%;background:var(--b2);transition:background .5s"></div>
+        <span id="conf-text" style="font-family:var(--mono);font-size:.68rem;color:var(--m2);margin-left:4px">Ожидание включения в блок...</span>
+      </div>
+      <div style="font-size:.6rem;color:var(--m);font-family:var(--mono)">1 подтверждение = 1 блок (~10 мин) · 3 = безопасно для большинства платежей</div>
+    </div>
+    <a class="mp-link" href="https://mempool.space/tx/${txid}" target="_blank" style="margin-top:12px">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       Отследить на mempool.space
     </a>
-    ${plan === 'free' ? '<div style="color:var(--m);font-size:.68rem;margin-top:14px;font-family:var(--mono)">↑ Premium ускоряет в 15 пулов — в 3× быстрее</div>' : ''}`;
+    ${plan === 'free' ? '<div style="color:var(--m);font-size:.68rem;margin-top:14px;font-family:var(--mono)">↑ Premium ускоряет в 15 пулов — в 3× быстрее</div>' : ''}
+    <button onclick="
+      const url='https://mempool.space/tx/${txid}';
+      if(navigator.share){navigator.share({title:'TurboTX — ускорена TX',text:'Моя BTC транзакция ускорена',url:url})}
+      else{navigator.clipboard.writeText(url);this.textContent='✓ Скопировано';setTimeout(()=>this.textContent='Поделиться ссылкой',2000)}"
+      style="margin-top:10px;width:100%;padding:9px;border-radius:var(--r);
+             background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);
+             cursor:pointer;font-family:var(--mono);font-size:.65rem;color:var(--m2);
+             display:flex;align-items:center;justify-content:center;gap:8px;
+             transition:all .15s;touch-action:manipulation"
+      onmouseover="this.style.borderColor='rgba(255,255,255,.15)';this.style.color='var(--t)'"
+      onmouseout="this.style.borderColor='rgba(255,255,255,.08)';this.style.color='var(--m2)'">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      Поделиться ссылкой
+    </button>`;
 
   btn.disabled = false; btn.innerHTML = BTN_IDLE;
   const pp = document.getElementById('push-prompt');
@@ -3514,6 +3568,49 @@ async function go() {
   addFeedItem(txid, plan, plan === 'premium' ? 15 : 90);
   saveHistory(txid, plan);
   renderHistory();
+  startConfTracker(txid);
+}
+
+// ── CONFIRMATIONS TRACKER ──────────────────────────────────
+let _confInterval = null;
+async function startConfTracker(txid) {
+  if (_confInterval) clearInterval(_confInterval);
+  const tracker = document.getElementById('conf-tracker');
+  if (!tracker) return;
+  tracker.style.display = 'block';
+
+  async function checkConf() {
+    try {
+      const r = await fetch('https://mempool.space/api/tx/' + txid + '/status');
+      if (!r.ok) return;
+      const s = await r.json();
+      const confs = s.confirmed ? (s.block_height ? Math.max(0, await getCurrentHeight() - s.block_height + 1) : 1) : 0;
+      const dots = [document.getElementById('conf-0'), document.getElementById('conf-1'), document.getElementById('conf-2')];
+      const txt = document.getElementById('conf-text');
+      dots.forEach((d, i) => {
+        if (!d) return;
+        if (i < confs) d.style.background = confs >= 3 ? 'var(--g)' : 'var(--a)';
+        else d.style.background = 'var(--b2)';
+      });
+      if (txt) {
+        if (confs === 0) txt.textContent = 'Ожидание включения в блок...';
+        else if (confs === 1) { txt.innerHTML = '<span style="color:var(--a)">1 подтверждение</span> — включена в блок ✓'; }
+        else if (confs === 2) { txt.innerHTML = '<span style="color:var(--a)">2 подтверждения</span> — почти безопасно'; }
+        else { txt.innerHTML = '<span style="color:var(--g)">✓ ' + confs + ' подтверждения</span> — транзакция завершена'; clearInterval(_confInterval); }
+      }
+    } catch(e) {}
+  }
+
+  await checkConf();
+  _confInterval = setInterval(checkConf, 30000);
+}
+
+async function getCurrentHeight() {
+  try {
+    const r = await fetch('https://mempool.space/api/blocks/tip/height');
+    if (r.ok) return parseInt(await r.text());
+  } catch(e) {}
+  return 0;
 }
 
 function err(msg) {
@@ -4119,6 +4216,36 @@ async function fetchMempoolStats() {
 fetchMempoolStats();
 setInterval(fetchMempoolStats, 30000);
 
+// ── FEE HEALTH METER — обновляется с каждым вызовом fetchMempoolStats ──
+async function updateFeeMeter() {
+  try {
+    const [rFee, rMem] = await Promise.all([
+      fetch('https://mempool.space/api/v1/fees/recommended'),
+      fetch('https://mempool.space/api/mempool')
+    ]);
+    if (!rFee.ok || !rMem.ok) return;
+    const fees = await rFee.json();
+    const mem  = await rMem.json();
+    const dot  = document.getElementById('fee-dot');
+    const txt  = document.getElementById('fee-meter-text');
+    if (!dot || !txt) return;
+    const fast   = fees.fastestFee || fees.halfHourFee || 0;
+    const stuck  = mem.count || 0;
+    if (fast <= 5 && stuck < 15000) {
+      dot.style.background = 'var(--g)';
+      txt.innerHTML = '🟢 <strong style="color:var(--g)">Сеть свободна</strong> — хорошее время. Комиссия от <strong style="color:var(--t)">' + fast + ' sat/vB</strong>';
+    } else if (fast <= 25 && stuck < 50000) {
+      dot.style.background = '#ffd166';
+      txt.innerHTML = '🟡 <strong style="color:#ffd166">Умеренная нагрузка</strong> — ' + stuck.toLocaleString('ru') + ' TX в очереди · ' + fast + ' sat/vB. Ускорение поможет.';
+    } else {
+      dot.style.background = 'var(--err)';
+      txt.innerHTML = '🔴 <strong style="color:var(--err)">Высокая нагрузка</strong> — ' + stuck.toLocaleString('ru') + ' TX в очереди · ' + fast + ' sat/vB. <strong style="color:var(--a)">Рекомендуем Premium.</strong>';
+    }
+  } catch(e) {}
+}
+updateFeeMeter();
+setInterval(updateFeeMeter, 30000);
+
 // ── FEE CALCULATOR (при вводе TXID) ───────────────────────────
 let _feeCalcTimer = null;
 async function onTx() {
@@ -4509,6 +4636,25 @@ async function onTxidDiag(v) {
       document.getElementById('smart-diag') && (document.getElementById('smart-diag').style.display = 'none');
     }
   }, 600);
+
+  // Проверка дубля в истории
+  if (v.length === 64) {
+    try {
+      const hist = JSON.parse(localStorage.getItem('tx_history') || '[]');
+      const prev = hist.find(x => x.txid === v);
+      const dupWarn = document.getElementById('dup-warn');
+      if (prev && dupWarn) {
+        const ago = Math.round((Date.now() - prev.ts) / 60000);
+        const agoStr = ago < 60 ? ago + ' мин назад' : Math.floor(ago/60) + ' ч назад';
+        dupWarn.style.display = 'flex';
+        dupWarn.innerHTML = `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Вы уже ускоряли эту транзакцию <strong>${agoStr}</strong> (${prev.plan.toUpperCase()}).
+          <a href="https://mempool.space/tx/${v}" target="_blank" style="color:var(--a);margin-left:4px">Проверить статус →</a>`;
+      } else if (dupWarn) {
+        dupWarn.style.display = 'none';
+      }
+    } catch(e) {}
+  }
 }
 
 // ── ИСТОРИЯ УСКОРЕНИЙ ─────────────────────────────────────────
@@ -4535,21 +4681,28 @@ function renderHistory() {
       const ago = Math.round((Date.now() - item.ts) / 60000);
       const agoStr = ago < 1 ? 'только что' : ago < 60 ? ago + ' мин назад' : ago < 1440 ? Math.floor(ago/60) + ' ч назад' : Math.floor(ago/1440) + ' д назад';
       const isPrem = item.plan === 'premium';
-      return `<a href="https://mempool.space/tx/${item.txid}" target="_blank" title="Открыть ${item.txid} на mempool.space"
-        style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;
-               background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);
-               text-decoration:none;transition:all .15s;cursor:pointer"
-        onmouseover="this.style.borderColor='rgba(247,147,26,.25)';this.style.background='rgba(247,147,26,.04)'"
-        onmouseout="this.style.borderColor='rgba(255,255,255,.05)';this.style.background='rgba(255,255,255,.02)'">
-        <span style="font-family:var(--mono);font-size:.68rem;color:var(--m2);flex:1">${short}</span>
-        <span style="font-family:var(--mono);font-size:.58rem;padding:2px 8px;border-radius:4px;
-                     background:${isPrem ? 'rgba(247,147,26,.12)' : 'rgba(255,255,255,.05)'};
-                     color:${isPrem ? 'var(--a)' : 'var(--m)'}">${isPrem ? 'PREMIUM' : 'FREE'}</span>
-        <span style="font-family:var(--mono);font-size:.58rem;color:var(--m)">${agoStr}</span>
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--m)" stroke-width="2"
-             style="flex-shrink:0"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-             <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-      </a>`;
+      return `<div style="display:flex;align-items:center;gap:6px">
+        <a href="https://mempool.space/tx/${item.txid}" target="_blank" title="Открыть на mempool.space"
+          style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;flex:1;
+                 background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);
+                 text-decoration:none;transition:all .15s;min-width:0"
+          onmouseover="this.style.borderColor='rgba(247,147,26,.25)';this.style.background='rgba(247,147,26,.04)'"
+          onmouseout="this.style.borderColor='rgba(255,255,255,.05)';this.style.background='rgba(255,255,255,.02)'">
+          <span style="font-family:var(--mono);font-size:.68rem;color:var(--m2);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${short}</span>
+          <span style="font-family:var(--mono);font-size:.56rem;padding:2px 7px;border-radius:4px;flex-shrink:0;
+                       background:${isPrem ? 'rgba(247,147,26,.12)' : 'rgba(255,255,255,.05)'};
+                       color:${isPrem ? 'var(--a)' : 'var(--m)'}">${isPrem ? 'PREM' : 'FREE'}</span>
+          <span style="font-family:var(--mono);font-size:.56rem;color:var(--m);flex-shrink:0">${agoStr}</span>
+        </a>
+        <button onclick="document.getElementById('txid').value='${item.txid}';document.getElementById('txid').dispatchEvent(new Event('input'));document.querySelector('.card').scrollIntoView({behavior:'smooth'})"
+          title="Ускорить снова"
+          style="flex-shrink:0;padding:8px 10px;border-radius:8px;background:rgba(247,147,26,.08);
+                 border:1px solid rgba(247,147,26,.2);cursor:pointer;
+                 font-family:var(--mono);font-size:.58rem;color:var(--a);
+                 transition:all .15s;white-space:nowrap;touch-action:manipulation"
+          onmouseover="this.style.background='rgba(247,147,26,.15)'"
+          onmouseout="this.style.background='rgba(247,147,26,.08)'">↻</button>
+      </div>`;
     }).join('');
   } catch(e) {}
 }
