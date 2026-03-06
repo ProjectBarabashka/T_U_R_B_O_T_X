@@ -137,18 +137,23 @@
 ═══════════════════════════════════════════════════════════════ */
 
 :root{
-  --bg:#060608;
-  --s:#0b0b10;
-  --b:#16161f;
-  --b2:#1e1e2a;
+  --bg:#07070a;
+  --s:#0d0d14;
+  --b:#181824;
+  --b2:#222230;
   --a:#f7931a;
   --a2:#ff6b35;
+  --a3:#ffb347;
   --g:#00e87a;
-  --t:#e8e8f0;
-  --m:#4a4a68;
-  --m2:#6a6a8a;
+  --g2:#00c96a;
+  --t:#eeeef6;
+  --m:#50507a;
+  --m2:#7878a0;
   --err:#ff3355;
-  --r:10px;
+  --r:12px;
+  --r2:18px;
+  --shadow:0 4px 24px rgba(0,0,0,.4);
+  --shadow-a:0 4px 32px rgba(247,147,26,.15);
   --mono:'IBM Plex Mono',monospace;
   --display:'Outfit',sans-serif
 }
@@ -168,17 +173,24 @@ body{
 body::before{
   content:'';position:fixed;inset:0;z-index:0;pointer-events:none;
   background-image:
-    linear-gradient(rgba(247,147,26,.025) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(247,147,26,.025) 1px,transparent 1px);
-  background-size:60px 60px;
-  mask-image:radial-gradient(ellipse 100% 60% at 50% 0%,#000 30%,transparent 100%)
+    linear-gradient(rgba(247,147,26,.018) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(247,147,26,.018) 1px,transparent 1px);
+  background-size:52px 52px;
+  mask-image:radial-gradient(ellipse 100% 55% at 50% 0%,#000 20%,transparent 100%)
 }
 body::after{
-  content:'';position:fixed;top:-400px;left:50%;
+  content:'';position:fixed;top:-300px;left:50%;
   transform:translateX(-50%);
-  width:1000px;height:1000px;
-  background:radial-gradient(circle,rgba(247,147,26,.06) 0%,transparent 60%);
-  pointer-events:none;z-index:0
+  width:900px;height:900px;
+  background:
+    radial-gradient(circle at 30% 50%,rgba(247,147,26,.05) 0%,transparent 55%),
+    radial-gradient(circle at 70% 50%,rgba(0,232,122,.03) 0%,transparent 55%);
+  pointer-events:none;z-index:0;
+  animation:bgPulse 12s ease-in-out infinite alternate
+}
+@keyframes bgPulse{
+  from{opacity:.7;transform:translateX(-50%) scale(1)}
+  to{opacity:1;transform:translateX(-50%) scale(1.08)}
 }
 .w{position:relative;z-index:1;max-width:940px;margin:0 auto;padding:0 28px}
 
@@ -188,9 +200,10 @@ nav{
   display:flex;align-items:center;justify-content:space-between;
   padding:0 28px;height:60px;
   overflow:hidden;
-  background:rgba(6,6,8,.6);
-  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
-  border-bottom:1px solid rgba(255,255,255,.05);
+  background:rgba(7,7,10,.75);
+  backdrop-filter:blur(28px) saturate(180%);-webkit-backdrop-filter:blur(28px) saturate(180%);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  box-shadow:0 1px 0 rgba(247,147,26,.04),var(--shadow);
   margin:0 -28px;
   overflow:hidden;
 }
@@ -257,8 +270,14 @@ h1{
   letter-spacing:-2px;margin-bottom:20px
 }
 h1 span{
-  background:linear-gradient(110deg,var(--a) 10%,var(--a2) 90%);
-  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text
+  background:linear-gradient(110deg,var(--a) 0%,var(--a2) 50%,var(--a3) 100%);
+  background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  animation:shimmer 4s linear infinite
+}
+@keyframes shimmer{
+  0%{background-position:0% center}
+  100%{background-position:200% center}
 }
 .hero p{
   color:var(--m2);font-size:.95rem;max-width:440px;
@@ -760,9 +779,12 @@ footer a:hover{color:var(--a)}
 /* ── REVIEWS ── */
 .reviews-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:28px}
 .review-card{
-  background:var(--s);border:1px solid var(--b);border-radius:12px;
-  padding:18px;display:flex;flex-direction:column;gap:10px
+  background:linear-gradient(160deg,rgba(13,13,20,.95),rgba(10,10,16,.95));
+  border:1px solid rgba(255,255,255,.06);border-radius:var(--r2);
+  padding:18px;display:flex;flex-direction:column;gap:8px;
+  transition:border-color .2s,transform .2s
 }
+.review-card:hover{border-color:rgba(255,255,255,.1);transform:translateY(-2px)}
 .review-stars{color:var(--a);font-size:.8rem;letter-spacing:2px}
 .review-text{font-size:.75rem;color:var(--m2);line-height:1.65;font-style:italic;flex:1}
 .review-author{font-family:var(--mono);font-size:.6rem;color:var(--m);letter-spacing:.5px}
@@ -1350,6 +1372,99 @@ details summary svg { transition: transform .2s; }
 /* Comp wrap — убираем лишний отступ */
 .comp-wrap { margin-bottom: 24px; }
 
+/* ── ДОПОЛНИТЕЛЬНЫЕ УЛУЧШЕНИЯ ── */
+
+/* FAQ details стрелка */
+details[open] summary svg { transform: rotate(180deg); }
+details summary::-webkit-details-marker { display: none; }
+details { transition: all .2s; }
+details[open] { border-color: rgba(247,147,26,.18) !important; }
+details[open] summary { color: var(--a) !important; }
+
+/* Улучшенный input focus */
+input[type=text]:focus {
+  border-color: rgba(247,147,26,.5) !important;
+  box-shadow: 0 0 0 3px rgba(247,147,26,.08), 0 0 20px rgba(247,147,26,.06) !important;
+  outline: none;
+}
+
+/* Section headers — более акцентированные */
+.sh {
+  font-family: var(--mono);
+  font-size: .62rem; letter-spacing: 2.5px;
+  color: var(--m); text-transform: uppercase;
+  margin-bottom: 16px; margin-top: 8px;
+  display: flex; align-items: center; gap: 8px;
+}
+.sh::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, rgba(255,255,255,.06), transparent);
+}
+
+/* Guarantee block улучшение */
+.guarantee-block {
+  border-radius: var(--r2);
+  box-shadow: var(--shadow), 0 0 30px rgba(0,232,122,.04);
+}
+
+/* Dots в пулах — анимация */
+.dot.g { animation: blink-g 3s ease-in-out infinite; }
+
+/* Hover на nav links */
+.nav-link { transition: color .15s, background .15s; }
+
+/* Scroll indicator в hero */
+.hero-cta { 
+  background: rgba(255,255,255,.02);
+  backdrop-filter: blur(10px);
+}
+
+/* Прогресс бар — более яркий */
+.prog-fill {
+  background: linear-gradient(90deg, var(--a), var(--a2), var(--a3));
+  background-size: 200% auto;
+  animation: shimmer 2s linear infinite;
+}
+
+/* Компактные stats числа */
+.stat-num { 
+  background: linear-gradient(135deg, var(--t), rgba(232,232,240,.7));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Live feed — компактный стиль */
+.live-feed { border-radius: var(--r) !important; }
+
+/* Пул онлайн счётчик — выделить */
+#pools-online { color: var(--g) !important; }
+
+/* Urgency bar — более агрессивный */
+.urgency-bar {
+  border-radius: var(--r);
+  animation: urgencyPulse 4s ease-in-out infinite;
+}
+@keyframes urgencyPulse {
+  0%, 100% { border-color: rgba(255,51,85,.2); box-shadow: none; }
+  50% { border-color: rgba(255,51,85,.35); box-shadow: 0 0 20px rgba(255,51,85,.06); }
+}
+
+/* Discount badge */
+.discount-badge {
+  background: linear-gradient(110deg, var(--err), #ff6b6b);
+  animation: shimmer 3s linear infinite;
+  background-size: 200% auto;
+}
+
+/* Pools grid */
+.pools-grid { border-radius: var(--r2); overflow: hidden; border: 1px solid rgba(255,255,255,.05); }
+.pi { border-radius: 0 !important; border: none !important; border-bottom: 1px solid rgba(255,255,255,.04) !important; }
+.pi:last-child { border-bottom: none !important; }
+
+/* Comp table улучшение */
+.comp-table tr:hover td { background: rgba(247,147,26,.03) !important; }
+.comp-table .us { position: relative; }
+
 </style>
 
 
@@ -1377,40 +1492,43 @@ details summary svg { transition: transform .2s; }
   </div>
 </nav>
 
-<!-- MEMPOOL TICKER -->
-<div class="mempool-ticker" id="mempool-ticker">
-  <div class="ticker-item">
-    <span>Застряло в мемпуле</span>
-    <span class="ticker-val" id="tk-stuck">—</span>
-    <span>tx</span>
-  </div>
-  <span class="ticker-sep">|</span>
-  <div class="ticker-item">
-    <span>Мин. комиссия</span>
-    <span class="ticker-val" id="tk-minfee">—</span>
-    <span>sat/vB</span>
-  </div>
-  <span class="ticker-sep">|</span>
-  <div class="ticker-item">
-    <span>Следующий блок</span>
-    <span class="ticker-val" id="tk-nextfee">—</span>
-    <span>sat/vB</span>
-  </div>
-  <span class="ticker-sep">|</span>
-  <div class="ticker-item">
-    <span>Размер мемпула</span>
-    <span class="ticker-val" id="tk-size">—</span>
-    <span>MB</span>
-  </div>
-</div>
+
 
 <!-- HERO -->
 <section class="hero">
   <div class="hero-label" style="gap:10px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polygon points='13 2 3 14 12 14 11 22 21 10 12 10 13 2'/></svg> Bitcoin Accelerator</div>
   <h1>Застрявшая BTC<br><span>транзакция?</span></h1>
-  <p>Rebroadcast в 15+ майнинг-пулов напрямую.<br>Бесплатно за 1–3 ч · Premium за 15–30 мин.</p>
+  <p>Rebroadcast в 15 майнинг-пулов напрямую.<br>Бесплатно за 1–3 ч · Premium за 15–30 мин.</p>
+
+  <!-- HERO TRUST ROW -->
+  <div style="display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;margin-bottom:36px;margin-top:-12px">
+    <div style="display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.6rem;color:var(--m2)">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+      Гарантия возврата 6ч
+    </div>
+    <div style="width:3px;height:3px;border-radius:50%;background:var(--b2)"></div>
+    <div style="display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.6rem;color:var(--m2)">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--a)" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      15 пулов · BTC + USDT
+    </div>
+    <div style="width:3px;height:3px;border-radius:50%;background:var(--b2)"></div>
+    <div style="display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.6rem;color:var(--m2)">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      Бесплатно · Premium от $4
+    </div>
+  </div>
+
   <div class="hero-cta" onclick="document.querySelector('.card').scrollIntoView({behavior:'smooth'})">Ускорить сейчас <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
 </section>
+
+<!-- MEMPOOL ALERT BAR -->
+<div id="mempool-bar" style="display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 16px;margin-bottom:20px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:var(--r);font-family:var(--mono);font-size:.68rem;color:var(--m2)">
+  <span style="width:6px;height:6px;border-radius:50%;background:var(--g);flex-shrink:0;animation:livepulse 2s infinite"></span>
+  <span>Сейчас застряло в мемпуле:</span>
+  <span id="tk-stuck" style="font-weight:700;font-size:.82rem;color:var(--t)">—</span>
+  <span>транзакций</span>
+  <span style="margin-left:6px;padding:2px 10px;border-radius:20px;font-size:.6rem" id="tk-stuck-badge">·</span>
+</div>
 
 <!-- STATS -->
 <div class="stats">
@@ -1432,6 +1550,15 @@ details summary svg { transition: transform .2s; }
 <div class="card">
   <div class="card-title"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Ускорить транзакцию</span></div>
   <div class="card-sub">Вставьте TXID из кошелька — мы займёмся остальным</div>
+
+  <!-- SMART DIAGNOSIS -->
+  <div id="smart-diag" style="display:none;margin-bottom:16px;padding:14px 16px;background:rgba(247,147,26,.05);border:1px solid rgba(247,147,26,.18);border-radius:var(--r);animation:fadeup .3s ease">
+    <div style="font-family:var(--mono);font-size:.6rem;letter-spacing:1.5px;color:var(--a);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px">
+      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      Диагностика
+    </div>
+    <div id="diag-content" style="font-family:var(--mono);font-size:.7rem;color:var(--m2);line-height:1.9"></div>
+  </div>
 
   <div class="free-limit-bar" id="free-limit-bar">
     <div style="width:100%">
@@ -1488,7 +1615,7 @@ details summary svg { transition: transform .2s; }
       <div class="plan-opt" id="op" onclick="pick('premium')">
         <div class="po-title" style="display:flex;align-items:center;gap:7px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2'/></svg> Premium</div>
         <div class="po-desc">15 пулов + приоритет</div>
-        <div class="po-price"><span class="old-price">от $15</span> <span style="color:var(--a)">от $4</span> <span class="discount-badge">−73%</span></div>
+        <div class="po-price"><span class="old-price">от $15</span> <span style="color:var(--a)">от $4</span></div>
         <div class="sale-until"><span style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="9" cy="9" r="2"/><path d="M10.2 2.4L2.4 10.2a1 1 0 0 0 0 1.4l9.6 9.6a1 1 0 0 0 1.4 0l7.8-7.8a1 1 0 0 0 0-1.4l-9.6-9.6a1 1 0 0 0-1.4 0z"/></svg> Скидка до 31.08.2026</span></div>
       </div>
     </div>
@@ -1502,6 +1629,18 @@ details summary svg { transition: transform .2s; }
   </div>
 
   <div class="res-box" id="rb"></div>
+
+  <!-- ИСТОРИЯ УСКОРЕНИЙ -->
+  <div id="history-block" style="display:none;margin-top:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div style="font-family:var(--mono);font-size:.58rem;letter-spacing:2px;color:var(--m);text-transform:uppercase;display:flex;align-items:center;gap:6px">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Ваши ускорения
+      </div>
+      <button onclick="localStorage.removeItem('tx_history');renderHistory()" style="font-family:var(--mono);font-size:.58rem;color:var(--m);background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:4px" onmouseover="this.style.color='var(--err)'" onmouseout="this.style.color='var(--m)'">очистить</button>
+    </div>
+    <div id="history-list" style="display:flex;flex-direction:column;gap:4px"></div>
+  </div>
 
   <!-- LIVE FEED — соцдоказательство рядом с формой -->
   <div class="live-feed" id="live-feed-wrap" style="margin-top:20px">
@@ -1517,6 +1656,42 @@ details summary svg { transition: transform .2s; }
     <button class="push-btn" onclick="requestPush()">Включить уведомления</button>
   </div>
 </div>
+
+<!-- PLANS -->
+<div style="margin-bottom:28px">
+<div class="sh">Выберите план</div>
+<div class="plans">
+  <div class="plan-card">
+    <div class="ptag tf">FREE</div>
+    <div class="plan-price">$0 <em>/ бесплатно</em></div>
+    <div class="plan-desc">Rebroadcast через открытые API 5 пулов. Подходит для транзакций с нормальной комиссией.</div>
+    <ul class="fl">
+      <li><span class="fi ok">✓</span>Rebroadcast в 5 пулов</li>
+      <li><span class="fi ok">✓</span>ViaBTC + AntPool + F2Pool</li>
+      <li><span class="fi ok">✓</span>Проверка статуса онлайн</li>
+      <li><span class="fi na">—</span><span style="color:var(--m)">Приоритет в очереди</span></li>
+      <li><span class="fi na">—</span><span style="color:var(--m)">Повтор отправки</span></li>
+    </ul>
+    <button class="pbtn pbf" onclick="pick('free');document.getElementById('txid').focus()">Начать бесплатно</button>
+  </div>
+  <div class="plan-card prem">
+    <div class="ptag tp">PREMIUM</div>
+    <div class="plan-price"><span style="text-decoration:line-through;font-size:1.1rem;color:var(--m);font-weight:400">$15</span> <span style="color:var(--a)">$4</span> <em>/ разово</em> <span class="discount-badge">СКИДКА</span></div>
+    <div class="sale-until" style="margin-bottom:10px"><span style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="9" cy="9" r="2"/><path d="M10.2 2.4L2.4 10.2a1 1 0 0 0 0 1.4l9.6 9.6a1 1 0 0 0 1.4 0l7.8-7.8a1 1 0 0 0 0-1.4l-9.6-9.6a1 1 0 0 0-1.4 0z"/></svg> Специальная цена до 31.08.2026</span></div>
+    <div class="plan-desc">Приоритетный rebroadcast во все 15 пулов с повтором каждые 30 мин. Мониторинг до подтверждения.</div>
+    <ul class="fl">
+      <li><span class="fi ok">✓</span>Rebroadcast в 15+ пулов</li>
+      <li><span class="fi ok">✓</span>Приоритетная обработка</li>
+      <li><span class="fi ok">✓</span>Повтор каждые 30 минут</li>
+      <li><span class="fi ok">✓</span>Мониторинг до подтверждения</li>
+      <li><span class="fi ok">✓</span>Поддержка в случае проблем</li>
+    </ul>
+
+    <button class="pbtn pbp" onclick="openM()"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Купить Premium — от $4</span></button>
+  </div>
+</div>
+
+</div><!-- /plans-wrapper -->
 
 <!-- STATUS + TOOLS -->
 <div class="sh" style="margin-top:8px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> Инструменты</div>
@@ -1680,53 +1855,7 @@ details summary svg { transition: transform .2s; }
 </section>
 
 
-<!-- PLANS -->
-<div style="margin-bottom:28px">
-<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-  <div class="sh" style="margin-bottom:0">Выберите план</div>
-  <div style="font-family:var(--mono);font-size:.62rem;color:var(--m);display:flex;align-items:center;gap:6px">
-    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-    Гарантия возврата 6ч
-  </div>
-</div>
-<div class="plans">
-  <div class="plan-card">
-    <div class="ptag tf">FREE</div>
-    <div class="plan-price">$0 <em>/ бесплатно</em></div>
-    <div class="plan-desc">Rebroadcast через открытые API 5 пулов. Подходит для транзакций с нормальной комиссией.</div>
-    <ul class="fl">
-      <li><span class="fi ok">✓</span>Rebroadcast в 5 пулов</li>
-      <li><span class="fi ok">✓</span>ViaBTC + AntPool + F2Pool</li>
-      <li><span class="fi ok">✓</span>Проверка статуса онлайн</li>
-      <li><span class="fi na">—</span><span style="color:var(--m)">Приоритет в очереди</span></li>
-      <li><span class="fi na">—</span><span style="color:var(--m)">Повтор отправки</span></li>
-    </ul>
-    <button class="pbtn pbf" onclick="pick('free');document.getElementById('txid').focus()">Начать бесплатно</button>
-  </div>
-  <div class="plan-card prem">
-    <div class="ptag tp">PREMIUM</div>
-    <div class="plan-price"><span style="text-decoration:line-through;font-size:1.1rem;color:var(--m);font-weight:400">$15</span> <span style="color:var(--a)">$4</span> <em>/ разово</em> <span class="discount-badge">СКИДКА</span></div>
-    <div class="sale-until" style="margin-bottom:10px"><span style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="9" cy="9" r="2"/><path d="M10.2 2.4L2.4 10.2a1 1 0 0 0 0 1.4l9.6 9.6a1 1 0 0 0 1.4 0l7.8-7.8a1 1 0 0 0 0-1.4l-9.6-9.6a1 1 0 0 0-1.4 0z"/></svg> Специальная цена до 31.08.2026</span></div>
-    <div class="plan-desc">Приоритетный rebroadcast во все 15 пулов с повтором каждые 30 мин. Мониторинг до подтверждения.</div>
-    <ul class="fl">
-      <li><span class="fi ok">✓</span>Rebroadcast в 15+ пулов</li>
-      <li><span class="fi ok">✓</span>Приоритетная обработка</li>
-      <li><span class="fi ok">✓</span>Повтор каждые 30 минут</li>
-      <li><span class="fi ok">✓</span>Мониторинг до подтверждения</li>
-      <li><span class="fi ok">✓</span>Поддержка в случае проблем</li>
-    </ul>
-    <div class="urgency-bar" style="margin-top:0;margin-bottom:14px">
-      <div>
-        <div class="urgency-label">Скидка −73% истекает через</div>
-        <div class="urgency-timer" id="disc-timer">...</div>
-      </div>
-      <div class="urgency-spots" id="disc-spots">акция до 31.08.2026</div>
-    </div>
-    <button class="pbtn pbp" onclick="openM()"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>Купить Premium — от $4</span></button>
-  </div>
-</div>
 
-</div><!-- /plans-wrapper -->
 
 <!-- REVIEWS -->
 <div style="margin-bottom:36px">
@@ -1880,16 +2009,7 @@ details summary svg { transition: transform .2s; }
   <div class="pools-grid" id="pg"></div>
 </div>
 
-<!-- GUARANTEE -->
-<div class="guarantee-block">
-  <div class="guarantee-icon">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
-  </div>
-  <div>
-    <div class="guarantee-title">Гарантия возврата</div>
-    <div class="guarantee-text">Если Premium не ускорил вашу транзакцию в течение 6 часов — вернём оплату полностью. Без вопросов. Напишите в поддержку с TXID и номером платежа.</div>
-  </div>
-</div>
+
 
 <!-- SUPPORT SECTION -->
 <section id="support" style="background:var(--s);border:1px solid var(--b);border-radius:16px;padding:26px 28px;margin-bottom:28px">
@@ -3231,6 +3351,8 @@ async function go() {
   const pp = document.getElementById('push-prompt');
   if (pp && Notification.permission !== 'granted') pp.classList.add('visible');
   addFeedItem(txid, plan, plan === 'premium' ? 15 : 90);
+  saveHistory(txid, plan);
+  renderHistory();
 }
 
 function err(msg) {
@@ -3809,6 +3931,22 @@ async function fetchMempoolStats() {
       if (tkStuck) {
         tkStuck.textContent = stuck.toLocaleString('ru');
         tkStuck.className = 'ticker-val ' + (stuck > 50000 ? 'hot' : stuck > 20000 ? 'warm' : 'ok');
+        const badge = document.getElementById('tk-stuck-badge');
+        if (badge) {
+          if (stuck > 50000) {
+            badge.textContent = '🔴 Сеть перегружена';
+            badge.style.background = 'rgba(255,51,85,.1)';
+            badge.style.color = 'var(--err)';
+          } else if (stuck > 20000) {
+            badge.textContent = '🟡 Средняя нагрузка';
+            badge.style.background = 'rgba(255,209,102,.08)';
+            badge.style.color = '#ffd166';
+          } else {
+            badge.textContent = '🟢 Сеть свободна';
+            badge.style.background = 'rgba(0,232,122,.08)';
+            badge.style.color = 'var(--g)';
+          }
+        }
       }
       if (tkSize) tkSize.textContent = sizeMB;
     }
@@ -4165,8 +4303,124 @@ function _gtReset() {
 </div><!-- /.w -->
 
 <script>
+
+// ── УМНАЯ ДИАГНОСТИКА TXID ─────────────────────────────────────
+let _diagTimer = null;
+async function onTxidDiag(v) {
+  const diag = document.getElementById('smart-diag');
+  const content = document.getElementById('diag-content');
+  if (!diag || !content) return;
+  if (v.length !== 64) { diag.style.display = 'none'; return; }
+  clearTimeout(_diagTimer);
+  _diagTimer = setTimeout(async () => {
+    try {
+      diag.style.display = 'block';
+      content.innerHTML = '<span style="color:var(--m)">Анализируем транзакцию...</span>';
+      const [txRes, feesRes] = await Promise.all([
+        fetch('https://mempool.space/api/tx/' + v).catch(() => null),
+        fetch('https://mempool.space/api/v1/fees/recommended').catch(() => null)
+      ]);
+      if (!txRes || !txRes.ok) {
+        content.innerHTML = '⚠ Транзакция не найдена в мемпуле. Возможно уже подтверждена или ещё не распространилась.';
+        return;
+      }
+      const tx = await txRes.json();
+      const fees = feesRes ? await feesRes.json() : null;
+
+      if (tx.status && tx.status.confirmed) {
+        diag.style.borderColor = 'rgba(0,232,122,.25)';
+        diag.style.background = 'rgba(0,232,122,.04)';
+        content.innerHTML = '✓ <strong style="color:var(--g)">Транзакция уже подтверждена</strong> в блоке #' + (tx.status.block_height||'—') + '. Ускорение не требуется.';
+        return;
+      }
+
+      diag.style.borderColor = 'rgba(247,147,26,.18)';
+      diag.style.background = 'rgba(247,147,26,.05)';
+
+      const size = tx.weight ? Math.ceil(tx.weight / 4) : (tx.size || 250);
+      const feePaid = tx.fee || 0;
+      const feeRate = size > 0 ? (feePaid / size).toFixed(1) : 0;
+      const minFee = fees ? fees.minimumFee : null;
+      const fastFee = fees ? fees.fastestFee : null;
+      const economyFee = fees ? fees.economyFee : null;
+
+      let status = '', color = '', tip = '';
+      if (fastFee && feeRate >= fastFee * 0.9) {
+        status = 'Комиссия достаточная'; color = 'var(--g)';
+        tip = 'Транзакция должна подтвердиться в ближайших блоках. Если ждёте больше 30 мин — попробуйте ускорение.';
+      } else if (economyFee && feeRate >= economyFee * 0.8) {
+        status = 'Низкая комиссия'; color = '#ffd166';
+        tip = 'Комиссия ниже рекомендованной. Ускорение значительно поможет.';
+      } else {
+        status = 'Очень низкая комиссия'; color = 'var(--err)';
+        tip = 'Комиссия сильно ниже текущей рыночной. Транзакция может ждать очень долго. <strong style="color:var(--a)">Рекомендуем Premium</strong>.';
+      }
+
+      const rbfFlag = tx.vin && tx.vin.some(i => i.sequence < 0xFFFFFFFE);
+
+      content.innerHTML =
+        '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;margin-bottom:10px">' +
+        '<span style="color:var(--m)">Комиссия</span><span style="color:var(--t)">' + feePaid + ' sat (' + feeRate + ' sat/vB)</span>' +
+        '<span style="color:var(--m)">Размер TX</span><span style="color:var(--t)">' + size + ' vB</span>' +
+        (fastFee ? '<span style="color:var(--m)">Рынок (быстро)</span><span style="color:var(--a)">' + fastFee + ' sat/vB</span>' : '') +
+        '<span style="color:var(--m)">RBF</span><span style="color:' + (rbfFlag ? 'var(--g)' : 'var(--m)') + '">' + (rbfFlag ? '✓ Поддерживается' : '— Не поддерживается') + '</span>' +
+        '</div>' +
+        '<div style="padding:8px 12px;background:rgba(0,0,0,.3);border-radius:8px;border-left:3px solid ' + color + '">' +
+        '<span style="color:' + color + ';font-weight:700">' + status + '.</span> ' + tip + '</div>';
+    } catch(e) {
+      document.getElementById('smart-diag') && (document.getElementById('smart-diag').style.display = 'none');
+    }
+  }, 600);
+}
+
+// ── ИСТОРИЯ УСКОРЕНИЙ ─────────────────────────────────────────
+function saveHistory(txid, plan) {
+  try {
+    const h = JSON.parse(localStorage.getItem('tx_history') || '[]');
+    // не дублируем один и тот же txid
+    const filtered = h.filter(x => x.txid !== txid);
+    filtered.unshift({ txid, plan, ts: Date.now() });
+    localStorage.setItem('tx_history', JSON.stringify(filtered.slice(0, 10)));
+  } catch(e) {}
+}
+
+function renderHistory() {
+  try {
+    const wrap = document.getElementById('history-block');
+    const list = document.getElementById('history-list');
+    if (!wrap || !list) return;
+    const h = JSON.parse(localStorage.getItem('tx_history') || '[]');
+    if (!h.length) { wrap.style.display = 'none'; return; }
+    wrap.style.display = 'block';
+    list.innerHTML = h.map(item => {
+      const short = item.txid.slice(0,8) + '...' + item.txid.slice(-6);
+      const ago = Math.round((Date.now() - item.ts) / 60000);
+      const agoStr = ago < 1 ? 'только что' : ago < 60 ? ago + ' мин назад' : ago < 1440 ? Math.floor(ago/60) + ' ч назад' : Math.floor(ago/1440) + ' д назад';
+      const isPrem = item.plan === 'premium';
+      return `<a href="https://mempool.space/tx/${item.txid}" target="_blank" title="Открыть ${item.txid} на mempool.space"
+        style="display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;
+               background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);
+               text-decoration:none;transition:all .15s;cursor:pointer"
+        onmouseover="this.style.borderColor='rgba(247,147,26,.25)';this.style.background='rgba(247,147,26,.04)'"
+        onmouseout="this.style.borderColor='rgba(255,255,255,.05)';this.style.background='rgba(255,255,255,.02)'">
+        <span style="font-family:var(--mono);font-size:.68rem;color:var(--m2);flex:1">${short}</span>
+        <span style="font-family:var(--mono);font-size:.58rem;padding:2px 8px;border-radius:4px;
+                     background:${isPrem ? 'rgba(247,147,26,.12)' : 'rgba(255,255,255,.05)'};
+                     color:${isPrem ? 'var(--a)' : 'var(--m)'}">${isPrem ? 'PREMIUM' : 'FREE'}</span>
+        <span style="font-family:var(--mono);font-size:.58rem;color:var(--m)">${agoStr}</span>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--m)" stroke-width="2"
+             style="flex-shrink:0"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+             <polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      </a>`;
+    }).join('');
+  } catch(e) {}
+}
+
+// Инициализируем историю при загрузке
+document.addEventListener('DOMContentLoaded', renderHistory);
+
 (function(){
-  var u='pollytrazlo', d='gmail'+'.com', e=u+String.fromCharCode(64)+d;
+  var u='pollytrazlo', d='gmail'+'.'+'com', e=u+String.fromCharCode(64)+d;
   var a=document.getElementById('em-link');
   var b=document.getElementById('em-link-ft');
   var t=document.getElementById('em-text');
