@@ -476,11 +476,7 @@ h1 span{
   width:1px;background:var(--b)
 }
 .stat-card:hover{background:rgba(247,147,26,.04)}
-.stat-num{
-  font-family:var(--mono);font-size:1.6rem;font-weight:700;
-  color:var(--a);display:block;letter-spacing:-1px;
-  transition:color .3s
-}
+/* .stat-num → redesign section */
 .stat-lbl{font-size:.6rem;color:var(--m);margin-top:6px;letter-spacing:2px;text-transform:uppercase;font-family:var(--mono)}
 
 /* ── CARD ── */
@@ -704,17 +700,12 @@ input::placeholder{color:rgba(255,255,255,.22)}
 .pbp:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(247,147,26,.45)}
 
 /* ── SECTION HEADERS ── */
-.sh{
-  font-size:.58rem;font-weight:600;margin-bottom:16px;
-  display:flex;align-items:center;gap:14px;
-  letter-spacing:3px;text-transform:uppercase;
-  color:var(--m);font-family:var(--mono)
-}
+/* .sh → redesign section (::before/after kept below) */
 .sh::before{content:'//';color:rgba(247,147,26,.4);font-size:.65rem}
 .sh::after{content:'';flex:1;height:1px;background:var(--b)}
 
 /* ── POOLS ── */
-.pools-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(165px,1fr));gap:6px;margin-bottom:36px}
+/* .pools-grid → see redesign section */
 .pi{
   background:var(--s);border:1px solid var(--b);
   border-radius:var(--r);padding:12px 14px;
@@ -913,14 +904,6 @@ footer a:hover{color:var(--a)}
 .feed-txid{font-family:var(--mono);font-size:.68rem;color:var(--m2)}
 .feed-txid span{color:var(--t)}
 .feed-time{font-family:var(--mono);font-size:.6rem;color:var(--m);white-space:nowrap}
-/* ── CONF DOTS ── */
-.conf-dot-wait{animation:conf-wait 1.8s ease-in-out infinite}
-.conf-dot-active{animation:conf-active .4s ease forwards}
-.conf-dot-done{animation:none}
-@keyframes conf-wait{0%,100%{opacity:.25}50%{opacity:.55}}
-@keyframes conf-active{from{transform:scale(0.6);opacity:.4}to{transform:scale(1);opacity:1}}
-@keyframes conf-glow{0%,100%{box-shadow:0 0 0 0 rgba(0,232,122,0)}50%{box-shadow:0 0 6px 2px rgba(0,232,122,.35)}}
-
 .feed-badge-conf{
   font-family:var(--mono);font-size:.58rem;padding:3px 9px;
   border-radius:4px;white-space:nowrap;letter-spacing:.5px;
@@ -1317,7 +1300,6 @@ iframe.goog-te-banner-frame { display: none !important; }
 .feed-items { padding: 6px 0; min-height: 44px; }
 
 /* Card — тоньше верхний акцент, меньше padding на мобиле */
-.card { padding: 26px 28px; }
 @media(max-width:600px){ .card { padding: 20px 18px; } }
 
 /* Card title — чуть меньше */
@@ -1513,7 +1495,6 @@ details summary svg { transition: transform .2s; }
 .plans { margin-top: 0; }
 
 /* Отзывы — компактнее */
-.reviews-grid { gap: 8px; }
 .review-card { padding: 14px; gap: 8px; }
 .review-text { font-size: .72rem; }
 .rating-summary { padding: 12px 16px; margin-bottom: 16px; }
@@ -1541,7 +1522,6 @@ details summary svg { transition: transform .2s; }
 .stats { margin-bottom: 20px; }
 
 /* Card spacing */
-.card { margin-bottom: 16px; }
 
 /* Plans spacing */
 #plans-wrap { margin-bottom: 24px; }
@@ -1645,6 +1625,34 @@ input[type=text]:focus {
 .comp-table tr:hover td { background: rgba(247,147,26,.03) !important; }
 .comp-table .us { position: relative; }
 
+
+/* ── FEED TABS ── */
+.feed-tabs{display:flex;border-bottom:1px solid var(--b)}
+.feed-tab{
+  flex:1;padding:10px 14px;background:transparent;border:none;cursor:pointer;
+  font-family:var(--mono);font-size:.6rem;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--m);display:flex;align-items:center;justify-content:center;gap:6px;
+  border-bottom:2px solid transparent;margin-bottom:-1px;
+  transition:color .15s,background .15s,border-color .15s
+}
+.feed-tab:hover{color:var(--t);background:rgba(255,255,255,.02)}
+.feed-tab.active{color:var(--a);border-bottom-color:var(--a)}
+.feed-tab-cnt{
+  min-width:16px;height:16px;padding:0 4px;border-radius:8px;
+  font-size:.55rem;display:inline-flex;align-items:center;justify-content:center;
+  background:rgba(107,107,138,.2);color:var(--m);transition:background .2s,color .2s
+}
+.feed-tab.active .feed-tab-cnt{background:rgba(247,147,26,.2);color:var(--a)}
+.feed-panel{display:none;flex-direction:column}
+.feed-panel.active{display:flex}
+/* ── CONF DOTS ── */
+@keyframes conf-wait{0%,100%{opacity:.2}50%{opacity:.55}}
+@keyframes conf-pop{from{transform:scale(.5);opacity:.3}to{transform:scale(1);opacity:1}}
+@keyframes conf-glow{0%,100%{box-shadow:0 0 0 0 rgba(0,232,122,0)}50%{box-shadow:0 0 8px 3px rgba(0,232,122,.4)}}
+@keyframes blink-o{0%,100%{opacity:1}50%{opacity:.2}}
+.conf-dot-wait{animation:conf-wait 1.8s ease-in-out infinite}
+.conf-dot-active{animation:conf-pop .35s ease forwards}
+.queue-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;background:var(--a);animation:blink-o 1.8s ease-in-out infinite}
 </style>
 
 
@@ -1708,6 +1716,18 @@ input[type=text]:focus {
   <span id="tk-stuck" style="font-weight:700;font-size:.82rem;color:var(--t)">—</span>
   <span>транзакций</span>
   <span style="margin-left:6px;padding:2px 10px;border-radius:20px;font-size:.6rem" id="tk-stuck-badge">·</span>
+  <span style="margin-left:8px;color:rgba(255,255,255,.15)">|</span>
+  <span style="margin-left:4px">Быстрая комиссия:</span>
+  <span id="tk-nextfee" class="ticker-val ok" style="font-weight:700;color:var(--t)">—</span>
+  <span>sat/vB</span>
+  <span style="margin-left:6px;color:rgba(255,255,255,.1)">·</span>
+  <span>мин:</span>
+  <span id="tk-minfee" class="ticker-val ok" style="font-weight:700;color:var(--t)">—</span>
+  <span>sat/vB</span>
+  <span style="margin-left:6px;color:rgba(255,255,255,.1)">·</span>
+  <span>мемпул:</span>
+  <span id="tk-size" class="ticker-val ok" style="font-weight:700;color:var(--t)">—</span>
+  <span>МБ</span>
 </div>
 
 <!-- STATS -->
@@ -1727,7 +1747,7 @@ input[type=text]:focus {
 </div>
 
 <!-- ACCELERATE FORM -->
-<div class="card">
+<div class="card" id="accelerate">
   <div class="card-title"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>Ускорить транзакцию</span></div>
   <div class="card-sub">Вставьте TXID из кошелька — мы займёмся остальным</div>
 
@@ -1833,13 +1853,26 @@ input[type=text]:focus {
     <div id="history-list" style="display:flex;flex-direction:column;gap:4px"></div>
   </div>
 
-  <!-- LIVE FEED — соцдоказательство рядом с формой -->
+  <!-- LIVE FEED — вкладки: Последние ускорения | Ожидают ускорения -->
   <div class="live-feed" id="live-feed-wrap" style="margin-top:20px">
-    <div class="live-feed-header">
-      <div class="live-feed-title"><div class="live-feed-dot"></div>Последние ускорения</div>
-      <span style="font-family:var(--mono);font-size:.58rem;color:var(--m)">live</span>
+    <div class="feed-tabs">
+      <button class="feed-tab active" id="tab-confirmed" onclick="switchFeedTab('confirmed')">
+        <div class="live-feed-dot"></div>
+        Последние ускорения
+        <span class="feed-tab-cnt" id="confirmed-count">0</span>
+      </button>
+      <button class="feed-tab" id="tab-pending" onclick="switchFeedTab('pending')">
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        Ожидают ускорения
+        <span class="feed-tab-cnt" id="queue-count">0</span>
+      </button>
     </div>
-    <div class="feed-items" id="feed-items"></div>
+    <div class="feed-panel active" id="panel-confirmed">
+      <div class="feed-items" id="feed-items"></div>
+    </div>
+    <div class="feed-panel" id="panel-pending">
+      <div id="queue-list" style="display:flex;flex-direction:column;padding:4px 0"></div>
+    </div>
   </div>
 
   <div class="push-prompt" id="push-prompt">
@@ -2986,9 +3019,10 @@ setInterval(() => { if (_fbReady) updateFreeUI(); }, 30000);
 function renderFeedFromData(feed) {
   const el = document.getElementById('feed-items');
   if (!el) return;
+  const cc = document.getElementById('confirmed-count');
+  if (cc) cc.textContent = Array.isArray(feed) ? Math.min(feed.length, 6) : 0;
   if (!Array.isArray(feed) || !feed.length) {
     el.innerHTML = '<div class="feed-empty" style="font-family:var(--mono);font-size:.72rem;color:var(--m);text-align:center;padding:16px 0">Ещё нет ускорений — будьте первым</div>';
-  // Снимаем skeleton-анимацию с контейнера
   el.style.opacity = '1';
     return;
   }
@@ -3285,6 +3319,14 @@ function formatCooldown(ms) {
   return m + ' мин ' + String(s).padStart(2,'0') + ' сек';
 }
 
+// ── ПЕРЕКЛЮЧЕНИЕ ВКЛАДОК ─────────────────────────────────────
+function switchFeedTab(tab) {
+  document.getElementById('tab-confirmed').classList.toggle('active', tab==='confirmed');
+  document.getElementById('tab-pending').classList.toggle('active', tab==='pending');
+  document.getElementById('panel-confirmed').classList.toggle('active', tab==='confirmed');
+  document.getElementById('panel-pending').classList.toggle('active', tab==='pending');
+}
+
 function renderQueue() {
   const q = loadQ();
   // Держим только processing записи до 4 часов; done удаляем сразу из очереди
@@ -3305,22 +3347,35 @@ function renderQueue() {
   listEl.innerHTML = fresh.map(item => {
     const isPrem = item.plan === 'premium';
     const ago = Math.round((Date.now() - item.ts) / 60000);
-    const agoStr = ago < 1 ? 'только что' : ago + ' мин назад';
-    const short = item.txid.slice(0,10) + '...' + item.txid.slice(-8);
-    const rowBg     = isPrem ? 'rgba(247,147,26,.04)' : 'var(--bg)';
-    const rowBorder = isPrem ? 'rgba(247,147,26,.25)' : 'var(--b)';
+    const agoStr = ago < 1 ? 'только что' : ago < 60 ? ago + ' мин' : Math.floor(ago/60) + ' ч';
+    const short = item.txid.slice(0,8) + '...' + item.txid.slice(-6);
+    const rowBg     = isPrem ? 'rgba(247,147,26,.04)' : 'rgba(255,255,255,.015)';
+    const rowBorder = isPrem ? 'rgba(247,147,26,.22)' : 'rgba(255,255,255,.06)';
     const badge = isPrem
-      ? '<span style="background:rgba(247,147,26,.15);color:var(--a);border:1px solid rgba(247,147,26,.3);font-family:var(--mono);font-size:.65rem;padding:3px 9px;border-radius:12px">PREMIUM</span>'
-      : '<span style="background:rgba(107,107,138,.15);color:var(--m);border:1px solid var(--b);font-family:var(--mono);font-size:.65rem;padding:3px 9px;border-radius:12px">FREE</span>';
-    return `<div style="background:${rowBg};border:1px solid ${rowBorder};border-radius:10px;padding:10px 15px;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap">
-      <div style="display:flex;align-items:center;gap:10px">
-        <div style="width:8px;height:8px;border-radius:50%;background:var(--g);flex-shrink:0;animation:blink 1.6s infinite"></div>
-        <div>
-          <div style="font-family:var(--mono);font-size:.75rem;color:var(--t)">${short}</div>
-          <div style="font-size:.66rem;color:var(--m);font-family:var(--mono);margin-top:2px">${agoStr}</div>
+      ? '<span style="background:rgba(247,147,26,.12);color:var(--a);border:1px solid rgba(247,147,26,.25);font-family:var(--mono);font-size:.6rem;padding:2px 7px;border-radius:10px;flex-shrink:0">PREMIUM</span>'
+      : '<span style="background:rgba(107,107,138,.1);color:var(--m);border:1px solid rgba(107,107,138,.2);font-family:var(--mono);font-size:.6rem;padding:2px 7px;border-radius:10px;flex-shrink:0">FREE</span>';
+    return `<div style="background:${rowBg};border:1px solid ${rowBorder};border-radius:10px;
+              margin:4px 8px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+      <div style="display:flex;align-items:center;gap:9px;min-width:0">
+        <div class="queue-dot"></div>
+        <div style="min-width:0">
+          <div style="font-family:var(--mono);font-size:.7rem;color:var(--t);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${short}</div>
+          <div style="font-family:var(--mono);font-size:.58rem;color:var(--m);margin-top:2px">⏱ ${agoStr} назад</div>
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px">${badge}</div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+        ${badge}
+        <a href="https://mempool.space/tx/${item.txid}" target="_blank"
+          style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:6px;
+                 background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
+                 font-family:var(--mono);font-size:.58rem;color:var(--m);text-decoration:none;
+                 transition:border-color .15s,color .15s"
+          onmouseover="this.style.borderColor='rgba(247,147,26,.3)';this.style.color='var(--a)'"
+          onmouseout="this.style.borderColor='rgba(255,255,255,.07)';this.style.color='var(--m)'">
+          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+          статус
+        </a>
+      </div>
     </div>`;
   }).join('');
 }
@@ -3347,6 +3402,7 @@ async function monitorQueue() {
         // Удаляем из глобальной очереди Firebase
         fbQueueRemove(item.txid);
         sendPushNotification(item.txid);
+        switchFeedTab('confirmed');
       }
     } catch(e) {}
     await new Promise(r => setTimeout(r, 300));
@@ -3366,8 +3422,13 @@ function addToQueue(txid, planType) {
     q.splice(lastP + 1, 0, entry);
   } else { q.push(entry); }
   saveQ(q);
-  fbQueueAdd(txid, planType); // записать глобально в Firebase
+  fbQueueAdd(txid, planType);
   renderQueue();
+  switchFeedTab('pending');
+  setTimeout(() => {
+    const f = document.getElementById('live-feed-wrap');
+    if (f) f.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, 200);
 }
 
 renderQueue();
@@ -3543,18 +3604,10 @@ async function go() {
     <div id="conf-tracker" style="margin-top:14px;padding:12px 14px;background:rgba(0,232,122,.04);border:1px solid rgba(0,232,122,.1);border-radius:var(--r)">
       <div style="font-family:var(--mono);font-size:.6rem;color:var(--m);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Подтверждения</div>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-        <div class="conf-dot conf-dot-wait" id="conf-0"
-          style="width:11px;height:11px;border-radius:50%;background:var(--b2);
-                 transition:background .4s,box-shadow .4s,transform .2s;animation-delay:0s"></div>
-        <div class="conf-dot conf-dot-wait" id="conf-1"
-          style="width:11px;height:11px;border-radius:50%;background:var(--b2);
-                 transition:background .4s,box-shadow .4s,transform .2s;animation-delay:.3s"></div>
-        <div class="conf-dot conf-dot-wait" id="conf-2"
-          style="width:11px;height:11px;border-radius:50%;background:var(--b2);
-                 transition:background .4s,box-shadow .4s,transform .2s;animation-delay:.6s"></div>
-        <span id="conf-text" style="font-family:var(--mono);font-size:.68rem;color:var(--m2);margin-left:6px">
-          Ожидание включения в блок…
-        </span>
+        <div class="conf-dot conf-dot-wait" id="conf-0" style="width:11px;height:11px;border-radius:50%;background:var(--b2);transition:background .4s,box-shadow .4s;animation-delay:0s"></div>
+        <div class="conf-dot conf-dot-wait" id="conf-1" style="width:11px;height:11px;border-radius:50%;background:var(--b2);transition:background .4s,box-shadow .4s;animation-delay:.3s"></div>
+        <div class="conf-dot conf-dot-wait" id="conf-2" style="width:11px;height:11px;border-radius:50%;background:var(--b2);transition:background .4s,box-shadow .4s;animation-delay:.6s"></div>
+        <span id="conf-text" style="font-family:var(--mono);font-size:.68rem;color:var(--m2);margin-left:6px">Ожидание включения в блок…</span>
       </div>
       <div style="font-size:.6rem;color:var(--m);font-family:var(--mono)">1 подтверждение = 1 блок (~10 мин) · 3 = безопасно для большинства платежей</div>
     </div>
@@ -3589,145 +3642,89 @@ async function go() {
 
 // ── CONFIRMATIONS TRACKER ──────────────────────────────────
 let _confInterval = null;
-let _cachedHeight = 0;
-let _heightTs = 0;
+let _tipHeightCache = 0, _tipHeightTs = 0;
 
-// Кэшируем высоту блока — запрашиваем не чаще раза в 60 сек
 async function getCurrentHeight() {
-  if (_cachedHeight > 0 && Date.now() - _heightTs < 60000) return _cachedHeight;
+  // Кэш 60 сек — не спамим API
+  if (_tipHeightCache > 0 && Date.now() - _tipHeightTs < 60000) return _tipHeightCache;
   try {
     const r = await fetch('https://mempool.space/api/blocks/tip/height', { cache: 'no-store' });
     if (r.ok) {
       const h = parseInt(await r.text());
-      if (h > 0) { _cachedHeight = h; _heightTs = Date.now(); return h; }
+      if (h > 0) { _tipHeightCache = h; _tipHeightTs = Date.now(); return h; }
     }
   } catch(e) {}
-  return _cachedHeight || 0; // вернуть кэш если есть, иначе 0
+  return _tipHeightCache || 0;
 }
 
-// Устанавливает визуальный стейт точки
-function setDot(dot, state) {
-  // state: 'wait' | 'active' | 'done'
-  if (!dot) return;
-  // Убираем все классы трекера
-  dot.classList.remove('conf-dot-wait', 'conf-dot-active', 'conf-dot-done');
+function _setDot(d, state) {
+  if (!d) return;
+  d.classList.remove('conf-dot-wait', 'conf-dot-active');
+  d.style.animationDelay = '0s';
   if (state === 'wait') {
-    dot.style.background = 'var(--b2)';
-    dot.style.boxShadow = 'none';
-    dot.classList.add('conf-dot-wait');
-  } else if (state === 'active') {
-    dot.style.background = 'var(--a)';
-    dot.style.boxShadow = '0 0 6px 2px rgba(247,147,26,.35)';
-    dot.classList.add('conf-dot-active');
-  } else if (state === 'done') {
-    dot.style.background = 'var(--g)';
-    dot.style.boxShadow = '0 0 8px 2px rgba(0,232,122,.4)';
-    dot.classList.add('conf-dot-done');
-    // Добавим анимацию свечения
-    dot.style.animation = 'conf-glow 2s ease-in-out infinite';
+    d.classList.add('conf-dot-wait');
+    d.style.background = 'var(--b2)';
+    d.style.boxShadow = 'none';
+  } else if (state === 'lit-orange') {
+    d.classList.add('conf-dot-active');
+    d.style.background = 'var(--a)';
+    d.style.boxShadow = '0 0 6px 2px rgba(247,147,26,.4)';
+  } else if (state === 'lit-green') {
+    d.style.background = 'var(--g)';
+    d.style.boxShadow = 'none';
+    d.style.animation = 'conf-glow 2s ease-in-out infinite';
   }
 }
 
 async function startConfTracker(txid) {
-  if (_confInterval) clearInterval(_confInterval);
-
-  // Ждём пока DOM обновится после рендера результата
-  await new Promise(r => setTimeout(r, 200));
-
+  if (_confInterval) { clearInterval(_confInterval); _confInterval = null; }
+  await new Promise(r => setTimeout(r, 150));
   const tracker = document.getElementById('conf-tracker');
   if (!tracker) return;
   tracker.style.display = 'block';
 
-  // Сразу показываем пульсирующие точки ожидания
-  const dots = ['conf-0','conf-1','conf-2'].map(id => document.getElementById(id));
-  dots.forEach((d, i) => {
-    if (d) {
-      d.classList.remove('conf-dot-active','conf-dot-done');
-      d.classList.add('conf-dot-wait');
-      d.style.animationDelay = (i * 0.3) + 's';
-      d.style.background = 'var(--b2)';
-      d.style.boxShadow = 'none';
-    }
+  // Сразу — пульсирующее ожидание
+  ['conf-0','conf-1','conf-2'].forEach((id, i) => {
+    const d = document.getElementById(id);
+    if (d) { _setDot(d, 'wait'); d.style.animationDelay = (i * 0.3) + 's'; }
   });
 
-  let _retries = 0;
-  const MAX_RETRIES = 3;
-
+  let _fails = 0;
   async function checkConf() {
     try {
       const r = await fetch('https://mempool.space/api/tx/' + txid + '/status', { cache: 'no-store' });
-
-      if (!r.ok) {
-        _retries++;
-        if (_retries >= MAX_RETRIES) {
-          const txt = document.getElementById('conf-text');
-          if (txt) txt.innerHTML = '<span style="color:var(--m)">Нет ответа от сети — повтор через 30 сек</span>';
-        }
-        return;
-      }
-      _retries = 0;
-
+      if (!r.ok) { if (++_fails >= 3) { const t = document.getElementById('conf-text'); if(t) t.innerHTML = '<span style="color:var(--m)">Нет ответа от сети — повтор через 30 сек</span>'; } return; }
+      _fails = 0;
       const s = await r.json();
 
       let confs = 0;
       if (s.confirmed) {
-        if (s.block_height) {
-          const tipHeight = await getCurrentHeight();
-          if (tipHeight > 0) {
-            confs = Math.max(1, tipHeight - s.block_height + 1);
-          } else {
-            // Высота недоступна — но транзакция подтверждена, ставим минимум 1
-            confs = 1;
-          }
-        } else {
-          confs = 1;
-        }
+        const tip = await getCurrentHeight();
+        confs = tip > 0 ? Math.max(1, tip - (s.block_height || tip) + 1) : 1;
       }
 
-      const freshDots = ['conf-0','conf-1','conf-2'].map(id => document.getElementById(id));
-      const txt = document.getElementById('conf-text');
-
-      // Обновляем каждую точку
-      freshDots.forEach((d, i) => {
+      const dotIds = ['conf-0','conf-1','conf-2'];
+      const allDone = confs >= 3;
+      dotIds.forEach((id, i) => {
+        const d = document.getElementById(id);
         if (!d) return;
-        if (confs === 0) {
-          // Ждём — пульсируем
-          setDot(d, 'wait');
-          d.style.animationDelay = (i * 0.3) + 's';
-        } else if (i < confs) {
-          // Эта точка загорается
-          const allDone = confs >= 3;
-          setDot(d, allDone ? 'done' : 'active');
-          d.style.animationDelay = '0s';
-        } else {
-          // Ещё не набрали достаточно подтверждений
-          setDot(d, 'wait');
-          d.style.animationDelay = (i * 0.3) + 's';
-        }
+        if (i < confs) _setDot(d, allDone ? 'lit-green' : 'lit-orange');
+        else { _setDot(d, 'wait'); d.style.animationDelay = (i * 0.3) + 's'; }
       });
 
-      // Обновляем текст
+      const txt = document.getElementById('conf-text');
       if (txt) {
-        if (confs === 0) {
-          txt.innerHTML = '<span style="color:var(--m)">Ожидание включения в блок…</span>';
-        } else if (confs === 1) {
-          txt.innerHTML = '<span style="color:var(--a);font-weight:600">1 / 3 подтверждение</span> — включена в блок ✓';
-        } else if (confs === 2) {
-          txt.innerHTML = '<span style="color:var(--a);font-weight:600">2 / 3 подтверждения</span> — почти безопасно';
-        } else {
-          txt.innerHTML = '<span style="color:var(--g);font-weight:600">✓ ' + confs + ' подтверждения</span> — транзакция завершена';
-          clearInterval(_confInterval);
-          _confInterval = null;
+        if (confs === 0) txt.innerHTML = '<span style="color:var(--m)">Ожидание включения в блок…</span>';
+        else if (confs === 1) txt.innerHTML = '<span style="color:var(--a);font-weight:600">1 / 3</span> — включена в блок ✓';
+        else if (confs === 2) txt.innerHTML = '<span style="color:var(--a);font-weight:600">2 / 3</span> — почти безопасно';
+        else {
+          txt.innerHTML = '<span style="color:var(--g);font-weight:600">✓ ' + confs + ' подтверждения</span> — завершена';
+          clearInterval(_confInterval); _confInterval = null;
         }
       }
-    } catch(e) {
-      // Молча игнорируем — попробуем при следующем интервале
-    }
+    } catch(e) {}
   }
-
-  // Первая проверка сразу
   await checkConf();
-  // Повторяем каждые 30 секунд
   _confInterval = setInterval(checkConf, 30000);
 }
 
