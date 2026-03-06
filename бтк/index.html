@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="google-site-verification" content="MgTsmcJaF3CSd5cykmfnX0GX3WD0NqBf-DugkeYV_Jo" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 
 <!-- PRIMARY SEO -->
 <title>Bitcoin Transaction Accelerator — Ускоритель BTC Транзакций | TurboTX</title>
@@ -158,6 +158,159 @@
   --display:'Outfit',sans-serif
 }
 
+/* ══════════════════════════════════════════════
+   КРОСС-БРАУЗЕР / МОБАЙЛ — глобальные фиксы
+══════════════════════════════════════════════ */
+
+/* Убираем синюю вспышку при тапе на iOS */
+* { -webkit-tap-highlight-color: transparent; }
+
+/* Плавный скролл везде */
+html { -webkit-overflow-scrolling: touch; }
+
+/* Запрещаем случайное выделение текста на кнопках */
+button, .acc-btn, .pbtn, .chk-btn, .plan-card,
+.stat-card, .hero-cta, .popt, .pay-tab, .nav-link {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  user-select: none;
+  touch-action: manipulation; /* убирает 300ms задержку тапа */
+}
+
+/* Все ссылки и кнопки — убираем outline на touch */
+a:focus-visible, button:focus-visible {
+  outline: 2px solid rgba(247,147,26,.5);
+  outline-offset: 2px;
+}
+a:focus:not(:focus-visible), button:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Input на iOS — предотвращаем зум (нужен font-size >= 16px) */
+input[type=text], input[type=email], textarea {
+  font-size: 16px !important; /* iOS зумит при < 16px */
+  -webkit-appearance: none; /* убираем нативные стили iOS */
+  border-radius: var(--r); /* iOS добавляет свой border-radius */
+}
+
+/* Backdrop-filter — fallback для Firefox */
+@supports not (backdrop-filter: blur(1px)) {
+  nav { background: rgba(7,7,10,.95) !important; }
+  .modal { background: rgba(13,13,20,.98) !important; }
+}
+
+/* Hover — только на устройствах с мышью */
+@media (hover: hover) and (pointer: fine) {
+  .plan-card:hover { transform: translateY(-4px); }
+  .acc-btn:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 36px rgba(247,147,26,.4), inset 0 1px 0 rgba(255,255,255,.25);
+  }
+  .stat-card:hover { background: rgba(247,147,26,.04); }
+  .feed-item:hover { background: rgba(247,147,26,.04); border-left-color: rgba(247,147,26,.4); }
+  .pi:hover { border-color: rgba(247,147,26,.2); background: rgba(247,147,26,.03); }
+  .review-card:hover { border-color: rgba(255,255,255,.1); transform: translateY(-2px); }
+  .nav-link:hover { color: var(--t); background: rgba(255,255,255,.04); }
+  .hero-cta:hover { color: var(--a); border-color: rgba(247,147,26,.3); }
+  .hero-cta:hover svg { transform: translateY(2px); }
+}
+
+/* Touch-устройства — убираем hover трансформации */
+@media (hover: none) {
+  .plan-card:hover { transform: none !important; }
+  .acc-btn:hover { transform: none !important; }
+  .review-card:hover { transform: none !important; }
+}
+
+/* safe-area для iPhone X/11/12/13/14/15 (notch + home bar) */
+nav {
+  padding-left: max(28px, env(safe-area-inset-left));
+  padding-right: max(28px, env(safe-area-inset-right));
+}
+.w {
+  padding-left: max(28px, env(safe-area-inset-left));
+  padding-right: max(28px, env(safe-area-inset-right));
+}
+footer {
+  padding-bottom: max(32px, env(safe-area-inset-bottom)) !important;
+}
+@media(max-width:480px) {
+  nav {
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+  }
+  .w {
+    padding-left: max(14px, env(safe-area-inset-left));
+    padding-right: max(14px, env(safe-area-inset-right));
+  }
+}
+
+/* Таблица сравнения — скролл на mobile */
+.comp-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -4px;
+  padding: 0 4px;
+}
+.comp-table { min-width: 520px; }
+
+/* История ускорений — mobile */
+#history-list { gap: 6px; }
+#history-list a {
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+@media(max-width:480px) {
+  #history-list a { padding: 10px !important; }
+  #history-block { margin-top: 12px; }
+}
+
+/* Mempool bar — mobile */
+@media(max-width:480px) {
+  #mempool-bar { flex-wrap: wrap; justify-content: flex-start; gap: 6px; font-size: .62rem; }
+  #tk-stuck-badge { margin-left: 0 !important; }
+}
+
+/* Smart diagnosis — mobile */
+@media(max-width:480px) {
+  #diag-content { font-size: .65rem !important; }
+  #diag-content > div { grid-template-columns: 1fr !important; }
+}
+
+/* Feed items — touch friendly */
+.feed-item {
+  min-height: 44px; /* минимальный размер для тапа по iOS HIG */
+}
+
+/* Кнопки — минимальный размер тапа */
+.acc-btn, .pbtn, .chk-btn {
+  min-height: 48px;
+}
+button, .nav-link {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Range input — кросс-браузер */
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+}
+input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+}
+
+/* Details/summary — Safari fix */
+details > summary { list-style: none; }
+details > summary::-webkit-details-marker { display: none; }
+
+/* Comp table hover — только мышь */
+@media (hover: hover) {
+  .comp-table tr:hover td { background: rgba(247,147,26,.03) !important; }
+}
+
+
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
 #status,#pools,#queue-section,#support{scroll-margin-top:70px}
@@ -196,7 +349,7 @@ body::after{
 
 /* ── NAV ── */
 nav{
-  position:sticky;top:0;z-index:100;
+  position:-webkit-sticky;position:sticky;top:0;z-index:100;
   display:flex;align-items:center;justify-content:space-between;
   padding:0 28px;height:60px;
   overflow:hidden;
@@ -732,7 +885,13 @@ footer a:hover{color:var(--a)}
 .feed-item{
   display:flex;align-items:center;justify-content:space-between;
   padding:10px 18px;border-bottom:1px solid rgba(255,255,255,.03);
-  animation:feedin .4s ease;gap:12px
+  animation:feedin .4s ease;gap:12px;
+  border-left:2px solid transparent;transition:background .15s,border-color .15s;
+  cursor:pointer;text-decoration:none;color:inherit
+}
+.feed-item:hover{
+  background:rgba(247,147,26,.04);
+  border-left-color:rgba(247,147,26,.4)
 }
 .feed-item:last-child{border:none}
 @keyframes feedin{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
@@ -1307,8 +1466,6 @@ details summary svg { transition: transform .2s; }
 
 /* ── общее для всех мобильных ── */
 @media(max-width:768px){
-  .plan-card:hover{transform:none}
-  .acc-btn:hover:not(:disabled){transform:none}
   .urgency-bar{flex-direction:column;align-items:flex-start;gap:6px}
   .push-prompt{flex-direction:column;align-items:flex-start}
   .push-btn{width:100%;text-align:center}
@@ -1532,7 +1689,7 @@ input[type=text]:focus {
 
 <!-- STATS -->
 <div class="stats">
-  <a href="javascript:void(0)" class="stat-card" style="text-decoration:none;cursor:pointer" onclick="document.getElementById('queue-section').scrollIntoView({behavior:'smooth'});return false;">
+  <a href="javascript:void(0)" class="stat-card" style="text-decoration:none;cursor:pointer" onclick="document.getElementById('live-feed-wrap').scrollIntoView({behavior:'smooth'});return false;">
     <span class="stat-num" id="sc" style="opacity:.3;animation:skeletonPulse 1.6s ease-in-out infinite">—</span>
     <div class="stat-lbl">Ускорено транзакций</div>
   </a>
@@ -2803,14 +2960,19 @@ function renderFeedFromData(feed) {
     const ago = Math.round((Date.now() - item.ts) / 60000);
     const agoStr = ago < 1 ? 'только что' : ago < 60 ? ago + ' мин назад' : Math.floor(ago / 60) + ' ч назад';
     const short = item.short || item.txid.slice(0, 6) + '...' + item.txid.slice(-4);
-    return `<div class="feed-item">
-      <div class="feed-txid"><span>${short}</span></div>
+    return `<a class="feed-item" href="https://mempool.space/tx/${item.txid}" target="_blank"
+      title="Открыть на mempool.space"
+      style="text-decoration:none;cursor:pointer;transition:background .15s,border-color .15s"
+      onmouseover="this.style.background='rgba(247,147,26,.04)';this.style.borderColor='rgba(247,147,26,.15)'"
+      onmouseout="this.style.background='';this.style.borderColor=''">
+      <div class="feed-txid"><span style="color:var(--a)">${short}</span></div>
       <div style="display:flex;align-items:center;gap:8px">
         <span style="font-family:var(--mono);font-size:.58rem;color:${item.plan === 'premium' ? 'var(--a)' : 'var(--m)'}">${(item.plan || 'free').toUpperCase()}</span>
         <span class="feed-badge-conf">✓ ${item.mins} мин</span>
         <span class="feed-time" data-ts="${item.ts}">${agoStr}</span>
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--m)" stroke-width="2" style="flex-shrink:0;margin-left:2px"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
       </div>
-    </div>`;
+    </a>`;
   }).join('');
 }
 
@@ -4070,15 +4232,21 @@ function addFeedItem(txid, planType, minutes) {
   // Убираем заглушку если она есть
   const empty = el.querySelector('.feed-empty');
   if (empty) empty.remove();
-  const newItem = document.createElement('div');
+  const newItem = document.createElement('a');
   newItem.className = 'feed-item';
+  newItem.href = 'https://mempool.space/tx/' + txid;
+  newItem.target = '_blank';
+  newItem.rel = 'noopener noreferrer';
   newItem.dataset.ts = Date.now();
+  newItem.title = 'Открыть ' + txid + ' на mempool.space';
+  newItem.style.textDecoration = 'none';
   newItem.innerHTML = `
-    <div class="feed-txid"><span>${short}</span></div>
+    <div class="feed-txid"><span style="color:var(--a)">${short}</span></div>
     <div style="display:flex;align-items:center;gap:8px">
       <span style="font-family:var(--mono);font-size:.58rem;color:${planType==='premium'?'var(--a)':'var(--m)'}">${planType.toUpperCase()}</span>
       <span class="feed-badge-conf">✓ ${minutes} мин</span>
       <span class="feed-time" data-ts="${Date.now()}">только что</span>
+      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--m)" stroke-width="2" style="flex-shrink:0;margin-left:2px"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
     </div>`;
   el.prepend(newItem);
   while (el.children.length > 6) el.removeChild(el.lastChild);
