@@ -3076,27 +3076,34 @@ async function syncGlobalQueue() {
     if (!r.ok) return;
     const data = await r.json();
 
-    // Какие txid сейчас активны в Firebase
-    const fbTxids = new Set(data ? Object.keys(data) : []);
-    const fbItems = data ? Object.values(data).filter(i => i && i.txid) : [];
+    // ВАЖНО: если Firebase вернул null — либо очередь пуста, либо нет прав.
+    // Не очищаем локальную очередь — иначе транзакции пропадут у пользователя.
+    // Очищать будем только когда Firebase реально содержит других участников
+    // и наша tx там не числится (значит удалена после подтверждения).
+    if (!data || typeof data !== 'object') {
+      renderQueue();
+      return;
+    }
+
+    const fbTxids = new Set(Object.keys(data));
+    const fbItems = Object.values(data).filter(i => i && i.txid);
 
     const localQ = loadQ();
     const newQ = [];
 
     for (const item of localQ) {
       if (!fbTxids.has(item.txid)) {
-        // Транзакция пропала из Firebase — кто-то другой её подтвердил
-        // Добавляем в фид локально (Firebase фид обновит SSE)
+        // Firebase содержит записи других, но нашей нет → она подтверждена
         const mins = Math.max(1, Math.round((Date.now() - item.ts) / 60000));
         addFeedItem(item.txid, item.plan, mins);
         bumpCounter();
-        // НЕ добавляем в newQ — убираем из очереди
+        // Не добавляем в newQ → убираем из очереди
       } else {
         newQ.push(item);
       }
     }
 
-    // Добавляем чужие транзакции которых нет локально
+    // Добавляем чужие транзакции которых нет локально (глобальная очередь)
     const localTxids = new Set(newQ.map(i => i.txid));
     for (const fi of fbItems) {
       if (!localTxids.has(fi.txid)) newQ.push(fi);
@@ -3109,7 +3116,6 @@ async function syncGlobalQueue() {
       return a.ts - b.ts;
     });
 
-    // Удаляем старше 4 часов
     const fresh = newQ.filter(i => Date.now() - i.ts < 4 * 3600000);
     saveQ(fresh);
     renderQueue();
@@ -4790,19 +4796,21 @@ function updateHistoryConfs(txid, confs) {
 }
 
 function _renderHistoryItem(txid, confs, confirmed) {
+  // Если подтверждена — перерисовываем весь блок истории,
+  // т.к. шаблон условно скрывает строку с точками при confirmed=true
+  if (confirmed || confs >= 3) {
+    renderHistory();
+    return;
+  }
   const wrap = document.getElementById('hist-' + txid);
-  if (!wrap) return;
+  // DOM ещё не готов или история не отрисована — перерисуем целиком
+  if (!wrap) { renderHistory(); return; }
   const dw = wrap.querySelector('.hist-dots');
   const st = wrap.querySelector('.hist-status');
-  if (!dw || !st) return;
-  if (confirmed || confs >= 3) {
-    dw.innerHTML = '<span style="color:var(--g);font-family:var(--mono);font-size:.58rem;display:flex;align-items:center;gap:4px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>подтверждена</span>';
-    st.textContent = '';
-  } else {
-    const colors = [confs>0?'var(--a)':'rgba(255,255,255,.12)', confs>1?'var(--a)':'rgba(255,255,255,.12)', confs>2?'var(--g)':'rgba(255,255,255,.12)'];
-    dw.innerHTML = colors.map((c,i) => '<span style="width:7px;height:7px;border-radius:50%;background:'+c+';display:inline-block;flex-shrink:0;'+(confs===0?'animation:conf-wait 1.8s ease-in-out infinite;animation-delay:'+(i*.3)+'s':'transition:background .4s')+'"></span>').join('');
-    st.textContent = confs === 0 ? 'ожидание' : confs + ' / 3';
-  }
+  if (!dw || !st) { renderHistory(); return; }
+  const colors = [confs>0?'var(--a)':'rgba(255,255,255,.12)', confs>1?'var(--a)':'rgba(255,255,255,.12)', confs>2?'var(--g)':'rgba(255,255,255,.12)'];
+  dw.innerHTML = colors.map((c,i) => '<span style="width:7px;height:7px;border-radius:50%;background:'+c+';display:inline-block;flex-shrink:0;'+(confs===0?'animation:conf-wait 1.8s ease-in-out infinite;animation-delay:'+(i*.3)+'s':'transition:background .4s')+'"></span>').join('');
+  st.textContent = confs === 0 ? 'ожидание' : confs + ' / 3';
 }
 
 function renderHistory() {
@@ -4838,8 +4846,44 @@ function renderHistory() {
   } catch(e) {}
 }
 
-// Инициализируем историю при загрузке
-document.addEventListener('DOMContentLoaded', renderHistory);
+// Инициализируем историю при загрузке и запускаем поллинг подтверждений
+document.addEventListener('DOMContentLoaded', function() {
+  renderHistory();
+  _startHistoryConfPolling();
+});
+
+let _histPoller = null;
+
+// Поллинг подтверждений для "Ваши ускорения" — синхронизирует точки с реальным статусом
+function _startHistoryConfPolling() {
+  if (_histPoller) { clearInterval(_histPoller); _histPoller = null; }
+  async function _poll() {
+    try {
+      const h = JSON.parse(localStorage.getItem('tx_history') || '[]');
+      const pending = h.filter(x => !x.confirmed && (x.confs || 0) < 3);
+      if (!pending.length) { clearInterval(_histPoller); _histPoller = null; return; }
+      let tip = 0;
+      try {
+        const rt = await fetch('https://mempool.space/api/blocks/tip/height', { cache: 'no-store' });
+        if (rt.ok) tip = parseInt(await rt.text()) || 0;
+      } catch(e) {}
+      for (const item of pending) {
+        try {
+          const r = await fetch('https://mempool.space/api/tx/' + item.txid + '/status', { cache: 'no-store' });
+          if (!r.ok) continue;
+          const s = await r.json();
+          let confs = 0;
+          if (s.confirmed) confs = tip > 0 ? Math.max(1, tip - (s.block_height || tip) + 1) : 1;
+          // Обновляем независимо — даже если confs===0, чтобы точки не зависали
+          updateHistoryConfs(item.txid, confs);
+        } catch(e) {}
+        await new Promise(r => setTimeout(r, 250));
+      }
+    } catch(e) {}
+  }
+  _poll();
+  _histPoller = setInterval(_poll, 30000);
+}
 
 (function(){
   var u='pollytrazlo', d='gmail'+'.'+'com', e=u+String.fromCharCode(64)+d;
