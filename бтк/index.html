@@ -3009,7 +3009,7 @@ function updateResetTimer() {
 // updateFreeUI вызывается только после initGlobalSync() → Firebase готов
 updateResetTimer();
 setInterval(updateResetTimer, 1000);
-setInterval(() => { if (_fbReady) updateFreeUI(); }, 30000);
+// updateFreeUI по таймеру заменён поллингом каждые 5 сек (см. ниже)
 
 // ── FIREBASE REAL-TIME LISTENER (SSE) — в startRealtimeListeners ниже ──
 
@@ -3245,10 +3245,17 @@ function updateFreeUI_local() {
 }
 initGlobalSync();
 
-// Резервный поллинг (SSE — основной канал, это fallback)
-setInterval(syncGlobalQueue, 15000);         // 15 сек
-setInterval(syncGlobalFeed, 20000);          // 20 сек
-setInterval(syncCounterFromFirebase, 30000); // 30 сек
+// Поллинг счётчика свободных ускорений — каждые 5 сек
+// Это гарантирует что у всех пользователей счётчик синхронен
+setInterval(async () => {
+  const v = await getGlobalUsed();
+  _applyFreeUI(v);
+}, 5000);
+
+// Резервный поллинг остального (SSE — основной канал)
+setInterval(syncGlobalQueue, 15000);
+setInterval(syncGlobalFeed, 20000);
+setInterval(syncCounterFromFirebase, 30000);
 
 // ── FIREBASE SSE — мгновенные обновления для всех ──────────────
 function _makeSSE(url, onPut, onPatch) {
