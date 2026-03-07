@@ -257,11 +257,11 @@ footer {
 }
 @media(max-width:480px) {
   nav {
-    padding-left: max(62px, calc(env(safe-area-inset-left) + 48px));
+    padding-left: max(14px, env(safe-area-inset-left));
     padding-right: max(14px, env(safe-area-inset-right));
   }
   .w {
-    padding-left: max(62px, calc(env(safe-area-inset-left) + 48px));
+    padding-left: max(14px, env(safe-area-inset-left));
     padding-right: max(14px, env(safe-area-inset-right));
   }
 }
@@ -1644,7 +1644,7 @@ input[type=text]:focus {
   letter-spacing:.5px;white-space:nowrap;padding:4px 10px;border-radius:5px;
   border:1px solid rgba(255,255,255,.08);pointer-events:none;opacity:0;transition:opacity .15s}
 .fs-icon:hover::after{opacity:1}
-@media(max-width:480px){#float-support{bottom:max(18px,env(safe-area-inset-bottom));left:max(10px,env(safe-area-inset-left));gap:6px}.fs-icon{width:34px;height:34px}.fs-icon::after{display:none}.lang-flag-btn{width:34px;height:34px}.lang-flag-btn::after{display:none}#lang-btn{width:34px;height:34px}#lang-flags{left:48px;bottom:max(16px,env(safe-area-inset-bottom))}}
+@media(max-width:600px){#float-support{bottom:max(18px,env(safe-area-inset-bottom));left:max(10px,env(safe-area-inset-left));flex-direction:column;gap:7px;transform:none}.fs-icon{width:34px;height:34px}.fs-icon::after{display:none}#lang-btn{width:34px;height:34px}#lang-flags{left:48px;bottom:max(16px,env(safe-area-inset-bottom))}.lang-flag-btn{width:34px;height:34px}.lang-flag-btn::after{display:none}nav{padding-left:max(58px,calc(env(safe-area-inset-left) + 44px))!important}.w{padding-left:max(58px,calc(env(safe-area-inset-left) + 44px))!important}}
 </style>
 
 
