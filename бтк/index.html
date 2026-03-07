@@ -2781,21 +2781,22 @@ function _setCounterUI(val) {
 }
 
 async function bumpCounter() {
-  // Increment globally in Firebase
   if (_fbReady) {
-    try {
-      const url = `${FIREBASE_DB}/stats/total.json`;
-      const r1 = await fetch(url, { headers:{'X-Firebase-ETag':'true'}, cache:'no-store' });
-      if (r1.ok) {
+    const url = `${FIREBASE_DB}/stats/total.json`;
+    for (let attempt = 0; attempt < 4; attempt++) {
+      try {
+        const r1 = await fetch(url, { headers:{'X-Firebase-ETag':'true'}, cache:'no-store' });
+        if (!r1.ok) break;
         const etag = r1.headers.get('ETag');
         const cur = await r1.json();
-        const nv = (typeof cur === 'number' ? cur : (parseInt(document.getElementById('sc')?.textContent?.replace(/[^0-9]/g,'')) || 0)) + 1;
+        const nv = (typeof cur === 'number' ? cur : cnt) + 1;
         const h = {'Content-Type':'application/json'};
         if (etag) h['If-Match'] = etag;
         const r2 = await fetch(url, { method:'PUT', headers:h, body:JSON.stringify(nv) });
         if (r2.ok) { _setCounterUI(nv); _animateCounter(); return; }
-      }
-    } catch(e) {}
+        if (r2.status !== 412) break;
+      } catch(e) { break; }
+    }
   }
   _setCounterUI(cnt + 1); _animateCounter();
 }
@@ -2937,29 +2938,34 @@ async function getGlobalUsed() {
   return parseInt(localStorage.getItem('turbotx_free_used') || '0');
 }
 
-// Атомарный инкремент через Firebase (ETag)
+// Атомарный инкремент через Firebase (ETag + retry на 412)
 async function incrementGlobalUsed() {
   if (_fbReady) {
     const url = `${FIREBASE_DB}/daily/${todayStr()}/used.json`;
-    try {
-      const r1 = await fetch(url, { headers: { 'X-Firebase-ETag': 'true' }, cache: 'no-store' });
-      if (r1.ok) {
+    // До 4 попыток: 412 = ETag конфликт → читаем заново и повторяем
+    for (let attempt = 0; attempt < 4; attempt++) {
+      try {
+        const r1 = await fetch(url, { headers: { 'X-Firebase-ETag': 'true' }, cache: 'no-store' });
+        if (!r1.ok) break;
         const etag = r1.headers.get('ETag');
         const current = await r1.json();
         const newVal = (typeof current === 'number' ? current : 0) + 1;
         const headers = { 'Content-Type': 'application/json' };
         if (etag) headers['If-Match'] = etag;
         const r2 = await fetch(url, { method: 'PUT', headers, body: JSON.stringify(newVal) });
-        if (r2.ok) return newVal;
-        if (r2.status === 412) {
-          const r3 = await fetch(url, { cache: 'no-store' });
-          const v = await r3.json();
-          return typeof v === 'number' ? v : newVal;
+        if (r2.ok) {
+          // Успешно записали — обновляем UI и localStorage сразу
+          _lastKnownUsed = newVal;
+          localStorage.setItem('turbotx_free_date', todayStr());
+          localStorage.setItem('turbotx_free_used', newVal);
+          return newVal;
         }
-      }
-    } catch(e) { /* тихий fallback */ }
+        // 412 = другой юзер успел записать раньше — повторяем с новым ETag
+        if (r2.status !== 412) break;
+      } catch(e) { break; }
+    }
   }
-  // Fallback: localStorage
+  // Fallback: localStorage (Firebase недоступен)
   const today = todayStr();
   const lsDate = localStorage.getItem('turbotx_free_date');
   const prevUsed = lsDate === today ? parseInt(localStorage.getItem('turbotx_free_used') || '0') : 0;
@@ -3132,12 +3138,11 @@ async function fbFeedAdd(txid, planType, mins) {
 }
 
 async function syncGlobalFeed() {
-  if (!_fbReady) return;
   try {
     const r = await fetch(`${FIREBASE_DB}/feed.json`, { cache: 'no-store' });
     if (!r.ok) return;
     const feed = await r.json();
-    renderFeedFromData(feed);
+    renderFeedFromData(Array.isArray(feed) ? feed : []);
   } catch(e) {}
 }
 
@@ -3219,56 +3224,62 @@ setInterval(syncGlobalFeed, 15000);
 setInterval(syncCounterFromFirebase, 30000);
 
 // ── FIREBASE SSE — мгновенные обновления для всех ──────────────
+// SSE с авто-переподключением (до 15 попыток с экспоненциальной задержкой)
+function _makeSSE(url, onPut, onPatch) {
+  let retries = 0;
+  function connect() {
+    try {
+      const es = new EventSource(url);
+      es.addEventListener('put', ev => {
+        retries = 0;
+        try { if (onPut) onPut(JSON.parse(ev.data)); } catch(e) {}
+      });
+      es.addEventListener('patch', ev => {
+        retries = 0;
+        try { if (onPatch) onPatch(JSON.parse(ev.data)); else if (onPut) onPut({ __patch: true }); } catch(e) {}
+      });
+      es.addEventListener('cancel', () => { es.close(); schedReconnect(); });
+      es.onerror = () => { es.close(); schedReconnect(); };
+    } catch(e) { schedReconnect(); }
+  }
+  function schedReconnect() {
+    if (retries++ < 15) setTimeout(connect, Math.min(500 * Math.pow(1.5, retries), 30000));
+  }
+  connect();
+}
+
 function startRealtimeListeners() {
   if (!_fbReady) return;
   const ns = FIREBASE_DB.split('//')[1].split('.')[0];
 
-  // Очередь — любое изменение (добавление или удаление tx)
-  try {
-    const esQ = new EventSource(`${FIREBASE_DB}/queue.json?ns=${ns}`);
-    esQ.addEventListener('put', () => syncGlobalQueue());
-    esQ.addEventListener('patch', () => syncGlobalQueue());
-    esQ.onerror = () => esQ.close();
-  } catch(e) {}
+  // Очередь
+  _makeSSE(`${FIREBASE_DB}/queue.json?ns=${ns}`,
+    () => syncGlobalQueue(),
+    () => syncGlobalQueue()
+  );
 
-  // Фид — подтверждённые транзакции мгновенно у всех
-  try {
-    const esF = new EventSource(`${FIREBASE_DB}/feed.json?ns=${ns}`);
-    esF.addEventListener('put', function(e) {
-      try {
-        const data = JSON.parse(e.data);
-        if (data && Array.isArray(data.data)) renderFeedFromData(data.data);
-      } catch(err) {}
-    });
-    esF.onerror = () => esF.close();
-  } catch(e) {}
+  // Фид — подтверждённые транзакции
+  _makeSSE(`${FIREBASE_DB}/feed.json?ns=${ns}`, d => {
+    if (!d) return;
+    if (d.__patch) { syncGlobalFeed(); return; }
+    const feed = d.data;
+    if (Array.isArray(feed)) renderFeedFromData(feed);
+    else if (feed === null) renderFeedFromData([]);
+    else syncGlobalFeed();
+  });
 
-  // Счётчик ускорений
-  try {
-    const esC = new EventSource(`${FIREBASE_DB}/stats/total.json?ns=${ns}`);
-    esC.addEventListener('put', function(e) {
-      try {
-        const data = JSON.parse(e.data);
-        if (data && typeof data.data === 'number' && data.data >= 0) _setCounterUI(data.data);
-      } catch(err) {}
-    });
-    esC.onerror = () => esC.close();
-  } catch(e) {}
+  // Счётчик общих ускорений (stats/total)
+  _makeSSE(`${FIREBASE_DB}/stats/total.json?ns=${ns}`, d => {
+    if (d && typeof d.data === 'number' && d.data >= 0) _setCounterUI(d.data);
+  });
 
-  // Лимит бесплатных транзакций — мгновенно у всех
-  try {
-    const esL = new EventSource(`${FIREBASE_DB}/daily/${todayStr()}/used.json?ns=${ns}`);
-    esL.addEventListener('put', function(e) {
-      try {
-        const data = JSON.parse(e.data);
-        if (data && typeof data.data === 'number' && data.data >= 0) {
-          _lastKnownUsed = data.data;
-          updateFreeUI(data.data);
-        }
-      } catch(err) {}
-    });
-    esL.onerror = () => esL.close();
-  } catch(e) {}
+  // Счётчик бесплатных (daily/used) — ГЛАВНЫЙ для синхронизации
+  _makeSSE(`${FIREBASE_DB}/daily/${todayStr()}/used.json?ns=${ns}`, d => {
+    if (d && typeof d.data === 'number' && d.data >= 0) {
+      _lastKnownUsed = d.data;
+      updateFreeUI(d.data);
+    }
+  });
 }
 
 // ── PLAN SELECT ────────────────────────────────────────────────
