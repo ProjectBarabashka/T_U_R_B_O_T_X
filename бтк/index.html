@@ -1694,6 +1694,10 @@ input[type=text]:focus {
 .feed-panel{display:none;flex-direction:column}
 .feed-panel.active{display:flex}
 /* ── CONF DOTS ── */
+@keyframes flame-pulse{
+  0%,100%{transform:scale(1) rotate(-3deg)}
+  50%{transform:scale(1.2) rotate(3deg)}
+}
 @keyframes conf-wait{0%,100%{opacity:.2}50%{opacity:.55}}
 @keyframes conf-pop{from{transform:scale(.5);opacity:.3}to{transform:scale(1);opacity:1}}
 @keyframes conf-glow{0%,100%{box-shadow:0 0 0 0 rgba(0,232,122,0)}50%{box-shadow:0 0 8px 3px rgba(0,232,122,.4)}}
@@ -1804,7 +1808,7 @@ input[type=text]:focus {
     <div class="stat-lbl">Ускорено TX</div>
   </a>
   <a href="javascript:void(0)" class="stat-card" style="text-decoration:none" onclick="document.getElementById('status').scrollIntoView({behavior:'smooth'});return false;">
-    <span class="stat-card-icon">⏱</span>
+    <span class="stat-card-icon" id="block-icon" style="transition:filter .5s,transform .3s;display:inline-block">🔥</span>
     <span class="stat-num" id="avg-time" style="opacity:.3;animation:skeletonPulse 1.6s ease-in-out infinite">—</span>
     <div class="stat-lbl">Среднее время блока</div>
   </a>
@@ -2956,11 +2960,41 @@ async function fetchLiveStats() {
           // Premium = 1-2 blocks, Free = 6-18 blocks (1-3h)
           const premLo = avgMin, premHi = Math.round(avgMin * 1.8);
           const el = document.getElementById('avg-time');
+          const iconEl = document.getElementById('block-icon');
           if (el) {
             el.style.opacity = '';
             el.style.animation = '';
             el.textContent = '~' + avgMin + ' мин';
             el.title = 'Среднее время между блоками (последние ' + count + ' блоков)';
+
+            // Цвет и иконка по загруженности сети
+            // <8 мин  — сеть перегружена (красный, 🔥 яркий)
+            // 8-12 мин — норма (оранжевый, 🔥 обычный)
+            // >12 мин — сеть свободна (зелёный, ✨)
+            if (iconEl) {
+              if (avgMin < 8) {
+                // Перегружена — красный огонь
+                el.style.color = '#ff4455';
+                iconEl.textContent = '🔥';
+                iconEl.style.filter = 'hue-rotate(300deg) saturate(2) brightness(1.2)';
+                iconEl.style.animation = 'flame-pulse 0.8s ease-in-out infinite';
+                iconEl.title = 'Сеть перегружена';
+              } else if (avgMin <= 12) {
+                // Норма — оранжевый
+                el.style.color = 'var(--a)';
+                iconEl.textContent = '🔥';
+                iconEl.style.filter = 'none';
+                iconEl.style.animation = 'flame-pulse 2s ease-in-out infinite';
+                iconEl.title = 'Нормальная загруженность';
+              } else {
+                // Свободна — зелёный
+                el.style.color = 'var(--g)';
+                iconEl.textContent = '✨';
+                iconEl.style.filter = 'none';
+                iconEl.style.animation = 'none';
+                iconEl.title = 'Сеть свободна';
+              }
+            }
           }
         }
       }
