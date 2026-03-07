@@ -3434,6 +3434,8 @@ function renderQueue() {
   }).join('');
 }
 
+let _tipHeightCache = 0, _tipHeightTs = 0;
+
 // ── МОНИТОРИНГ — проверяем processing каждые 60 сек ──────────
 async function monitorQueue() {
   const q = loadQ();
@@ -3698,7 +3700,6 @@ async function go() {
 
 // ── CONFIRMATIONS TRACKER ──────────────────────────────────
 let _confInterval = null;
-let _tipHeightCache = 0, _tipHeightTs = 0;
 
 async function getCurrentHeight() {
   if (_tipHeightCache > 0 && Date.now() - _tipHeightTs < 60000) return _tipHeightCache;
