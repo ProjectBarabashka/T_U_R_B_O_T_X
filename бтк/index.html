@@ -1133,89 +1133,55 @@ textarea.batch-input::placeholder{color:rgba(255,255,255,.22)}
 }
 
 /* ── LANGUAGE SWITCHER ── */
-#lang-bar {
-  position: fixed;
-  bottom: 20px;
-  right: 20px;
-  z-index: 9999;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
+/* ── LANG PICKER ── */
 #lang-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: rgba(20,20,40,.92);
-  border: 1px solid rgba(247,147,26,.3);
-  border-radius: 12px;
-  padding: 9px 14px;
-  cursor: pointer;
-  font-family: var(--mono);
-  font-size: .68rem;
-  color: var(--a);
-  letter-spacing: .5px;
-  box-shadow: 0 4px 20px rgba(0,0,0,.4);
-  transition: all .2s;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  user-select: none;
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(13,13,20,.82); border: 1px solid rgba(255,255,255,.09);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  cursor: pointer; position: relative;
+  transition: border-color .18s, background .18s, transform .18s, opacity .18s;
+  opacity: .55;
 }
-#lang-btn:hover {
-  border-color: rgba(247,147,26,.6);
-  box-shadow: 0 6px 28px rgba(247,147,26,.2);
-  transform: translateY(-1px);
+#lang-btn:hover { opacity:1; transform:translateX(3px); background:rgba(13,13,20,.97); border-color:rgba(247,147,26,.4); }
+#lang-btn.active { opacity:1; border-color:rgba(247,147,26,.55); background:rgba(20,14,6,.97); }
+#lang-btn::after {
+  content: attr(data-tip); position: absolute; left: 44px; top: 50%; transform: translateY(-50%);
+  background: rgba(7,7,10,.94); color: rgba(238,238,246,.85); font-family: var(--mono);
+  font-size: .58rem; white-space: nowrap; padding: 4px 10px;
+  border-radius: 5px; border: 1px solid rgba(255,255,255,.08);
+  pointer-events: none; opacity: 0; transition: opacity .15s;
 }
-#lang-dropdown {
-  display: none;
-  position: fixed;
-  bottom: 62px;
-  right: 20px;
-  background: rgba(15,15,30,.97);
-  border: 1px solid rgba(247,147,26,.25);
-  border-radius: 14px;
-  padding: 10px;
-  box-shadow: 0 12px 48px rgba(0,0,0,.6);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  z-index: 9999;
-  width: 230px;
-  max-height: 360px;
-  overflow-y: auto;
+#lang-btn:hover::after { opacity: 1; }
+/* Флаги выезжают ВВЕРХ прямо в колонке */
+#lang-flags {
+  display: flex; flex-direction: column; gap: 8px;
+  overflow-y: auto; overflow-x: visible;
+  max-height: 0;
+  transition: max-height .4s cubic-bezier(.4,0,.2,1);
+  pointer-events: none;
 }
-#lang-dropdown.open { display: block; animation: fadeup .18s ease; }
-.lang-search {
-  width: 100%;
-  background: rgba(255,255,255,.05);
-  border: 1px solid rgba(255,255,255,.08);
-  border-radius: 8px;
-  padding: 7px 10px;
-  color: var(--t);
-  font-family: var(--mono);
-  font-size: .68rem;
-  outline: none;
-  margin-bottom: 8px;
-  transition: border-color .2s;
+#lang-flags.open { max-height: 380px; pointer-events: auto; }
+#lang-flags::-webkit-scrollbar { width: 2px; }
+#lang-flags::-webkit-scrollbar-thumb { background: rgba(247,147,26,.3); border-radius: 2px; }
+.lang-flag-btn {
+  width: 36px; height: 36px; border-radius: 50%; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(13,13,20,.85); border: 1px solid rgba(255,255,255,.08);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+  cursor: pointer; transition: all .15s; position: relative;
+  opacity: .75; overflow: hidden;
 }
-.lang-search:focus { border-color: rgba(247,147,26,.4); }
-.lang-list { display: flex; flex-direction: column; gap: 2px; }
-.lang-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 7px 10px;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background .15s;
-  font-family: var(--mono);
-  font-size: .68rem;
-  color: var(--m2);
+.lang-flag-btn:hover { opacity:1; transform:translateX(3px); border-color:rgba(247,147,26,.4); background:rgba(13,13,20,.97); }
+.lang-flag-btn.active { opacity:1; border-color:rgba(247,147,26,.7); background:rgba(247,147,26,.1); box-shadow:0 0 0 2px rgba(247,147,26,.15); }
+.lang-flag-btn::after {
+  content: attr(data-tip); position: absolute; left: 44px; top: 50%; transform: translateY(-50%);
+  background: rgba(7,7,10,.95); color: rgba(238,238,246,.9); font-family: var(--mono);
+  font-size: .56rem; white-space: nowrap; padding: 3px 9px;
+  border-radius: 5px; border: 1px solid rgba(255,255,255,.08);
+  pointer-events: none; opacity: 0; transition: opacity .12s; z-index: 10000;
 }
-.lang-item:hover { background: rgba(247,147,26,.08); color: var(--a); }
-.lang-item.active { background: rgba(247,147,26,.1); color: var(--a); font-weight: 700; }
-.lang-flag { font-size: 1.1rem; flex-shrink: 0; line-height: 1; }
-.lang-name { flex: 1; }
-.lang-code { font-size: .58rem; color: var(--m); opacity: .7; }
+.lang-flag-btn:hover::after { opacity: 1; }
 /* Полностью скрываем Google Translate бар */
 .goog-te-banner-frame,
 .goog-te-banner-frame.skiptranslate,
@@ -1458,7 +1424,7 @@ details summary svg { transition: transform .2s; }
   footer{padding:20px 14px!important;text-align:center}
   .fl2{flex-wrap:wrap;justify-content:center;gap:8px 14px}
   #lang-bar{bottom:14px;right:14px}
-  #lang-dropdown{right:0;left:auto;width:220px}
+  #lang-dropdown{left:50px;width:200px;bottom:18px}
 }
 
 /* ── 481–768px (большие телефоны, маленькие планшеты) ── */
@@ -3028,8 +2994,8 @@ function renderFeedFromData(feed) {
     return;
   }
   const cc = document.getElementById('confirmed-count');
-  if (cc) cc.textContent = Math.min(feed.length, 6);
-  el.innerHTML = feed.slice(0, 6).map(item => {
+  if (cc) cc.textContent = feed.length;
+  el.innerHTML = feed.map(item => {
     const ago = Math.round((Date.now() - item.ts) / 60000);
     const agoStr = ago < 1 ? 'только что' : ago < 60 ? ago + ' мин назад' : Math.floor(ago/60) + ' ч назад';
     const short = item.short || item.txid.slice(0,6) + '...' + item.txid.slice(-4);
@@ -4481,7 +4447,7 @@ function addFeedItem(txid, planType, minutes) {
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--m)" stroke-width="2" style="flex-shrink:0;margin-left:2px"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
     </div>`;
   el.prepend(newItem);
-  while (el.children.length > 6) el.removeChild(el.lastChild);
+  while (el.children.length > 50) el.removeChild(el.lastChild);
   const _cc = document.getElementById('confirmed-count');
   if (_cc) _cc.textContent = el.querySelectorAll('.feed-item').length;
 }
@@ -4532,184 +4498,233 @@ function sendPushNotification(txid) {
 
 // ── LANGUAGE SWITCHER ─────────────────────────────────────────
 const LANGS = [
-  {code:'ru',name:'Русский',flag:'🇷🇺',gt:'ru'},
-  {code:'en',name:'English',flag:'🇬🇧',gt:'en'},
-  {code:'zh',name:'中文',flag:'🇨🇳',gt:'zh-CN'},
-  {code:'ar',name:'العربية',flag:'🇸🇦',gt:'ar'},
-  {code:'es',name:'Español',flag:'🇪🇸',gt:'es'},
-  {code:'fr',name:'Français',flag:'🇫🇷',gt:'fr'},
-  {code:'de',name:'Deutsch',flag:'🇩🇪',gt:'de'},
-  {code:'pt',name:'Português',flag:'🇧🇷',gt:'pt'},
-  {code:'hi',name:'Hindi',flag:'🇮🇳',gt:'hi'},
-  {code:'tr',name:'Türkçe',flag:'🇹🇷',gt:'tr'},
-  {code:'ko',name:'한국어',flag:'🇰🇷',gt:'ko'},
-  {code:'ja',name:'日本語',flag:'🇯🇵',gt:'ja'},
-  {code:'it',name:'Italiano',flag:'🇮🇹',gt:'it'},
-  {code:'pl',name:'Polski',flag:'🇵🇱',gt:'pl'},
-  {code:'uk',name:'Українська',flag:'🇺🇦',gt:'uk'},
-  {code:'nl',name:'Nederlands',flag:'🇳🇱',gt:'nl'},
-  {code:'vi',name:'Tieng Viet',flag:'🇻🇳',gt:'vi'},
-  {code:'th',name:'Thai',flag:'🇹🇭',gt:'th'},
-  {code:'id',name:'Indonesia',flag:'🇮🇩',gt:'id'},
-  {code:'fa',name:'Farsi',flag:'🇮🇷',gt:'fa'},
-  {code:'sv',name:'Svenska',flag:'🇸🇪',gt:'sv'},
-  {code:'cs',name:'Cestina',flag:'🇨🇿',gt:'cs'},
-  {code:'ro',name:'Romana',flag:'🇷🇴',gt:'ro'},
-  {code:'hu',name:'Magyar',flag:'🇭🇺',gt:'hu'},
-  {code:'el',name:'Ellinika',flag:'🇬🇷',gt:'el'},
-  {code:'he',name:'Ivrit',flag:'🇮🇱',gt:'iw'},
-  {code:'bn',name:'Bangla',flag:'🇧🇩',gt:'bn'},
-  {code:'ms',name:'Melayu',flag:'🇲🇾',gt:'ms'},
-  {code:'uz',name:'Uzbek',flag:'🇺🇿',gt:'uz'},
-  {code:'kk',name:'Kazakh',flag:'🇰🇿',gt:'kk'},
-  {code:'az',name:'Azerbaijani',flag:'🇦🇿',gt:'az'},
-  {code:'da',name:'Dansk',flag:'🇩🇰',gt:'da'},
-  {code:'fi',name:'Suomi',flag:'🇫🇮',gt:'fi'},
-  {code:'no',name:'Norsk',flag:'🇳🇴',gt:'no'},
-  {code:'sk',name:'Slovencina',flag:'🇸🇰',gt:'sk'},
-  {code:'bg',name:'Bulgarian',flag:'🇧🇬',gt:'bg'},
-  {code:'sr',name:'Srpski',flag:'🇷🇸',gt:'sr'},
-  {code:'hr',name:'Hrvatski',flag:'🇭🇷',gt:'hr'},
-  {code:'lt',name:'Lietuviu',flag:'🇱🇹',gt:'lt'},
-  {code:'lv',name:'Latviesu',flag:'🇱🇻',gt:'lv'},
-  {code:'et',name:'Eesti',flag:'🇪🇪',gt:'et'},
-  {code:'ka',name:'Georgian',flag:'🇬🇪',gt:'ka'},
-  {code:'hy',name:'Armenian',flag:'🇦🇲',gt:'hy'},
-  {code:'sw',name:'Kiswahili',flag:'🇰🇪',gt:'sw'},
-  {code:'tl',name:'Filipino',flag:'🇵🇭',gt:'tl'},
-  {code:'af',name:'Afrikaans',flag:'🇿🇦',gt:'af'},
+  {code:'ru',name:'Русский',cc:'ru',gt:'ru'},
+  {code:'en',name:'English',cc:'gb',gt:'en'},
+  {code:'zh',name:'中文',cc:'cn',gt:'zh-CN'},
+  {code:'ar',name:'العربية',cc:'sa',gt:'ar'},
+  {code:'es',name:'Español',cc:'es',gt:'es'},
+  {code:'fr',name:'Français',cc:'fr',gt:'fr'},
+  {code:'de',name:'Deutsch',cc:'de',gt:'de'},
+  {code:'pt',name:'Português',cc:'br',gt:'pt'},
+  {code:'hi',name:'Hindi',cc:'in',gt:'hi'},
+  {code:'tr',name:'Türkçe',cc:'tr',gt:'tr'},
+  {code:'ko',name:'한국어',cc:'kr',gt:'ko'},
+  {code:'ja',name:'日本語',cc:'jp',gt:'ja'},
+  {code:'it',name:'Italiano',cc:'it',gt:'it'},
+  {code:'pl',name:'Polski',cc:'pl',gt:'pl'},
+  {code:'uk',name:'Українська',cc:'ua',gt:'uk'},
+  {code:'nl',name:'Nederlands',cc:'nl',gt:'nl'},
+  {code:'vi',name:'Tiếng Việt',cc:'vn',gt:'vi'},
+  {code:'th',name:'ภาษาไทย',cc:'th',gt:'th'},
+  {code:'id',name:'Indonesia',cc:'id',gt:'id'},
+  {code:'fa',name:'فارسی',cc:'ir',gt:'fa'},
+  {code:'sv',name:'Svenska',cc:'se',gt:'sv'},
+  {code:'cs',name:'Čeština',cc:'cz',gt:'cs'},
+  {code:'ro',name:'Română',cc:'ro',gt:'ro'},
+  {code:'hu',name:'Magyar',cc:'hu',gt:'hu'},
+  {code:'el',name:'Ελληνικά',cc:'gr',gt:'el'},
+  {code:'he',name:'עברית',cc:'il',gt:'iw'},
+  {code:'bn',name:'বাংলা',cc:'bd',gt:'bn'},
+  {code:'ms',name:'Melayu',cc:'my',gt:'ms'},
+  {code:'uz',name:'Uzbek',cc:'uz',gt:'uz'},
+  {code:'kk',name:'Қазақша',cc:'kz',gt:'kk'},
+  {code:'az',name:'Azərbaycan',cc:'az',gt:'az'},
+  {code:'da',name:'Dansk',cc:'dk',gt:'da'},
+  {code:'fi',name:'Suomi',cc:'fi',gt:'fi'},
+  {code:'no',name:'Norsk',cc:'no',gt:'no'},
+  {code:'sk',name:'Slovenčina',cc:'sk',gt:'sk'},
+  {code:'bg',name:'Български',cc:'bg',gt:'bg'},
+  {code:'sr',name:'Srpski',cc:'rs',gt:'sr'},
+  {code:'hr',name:'Hrvatski',cc:'hr',gt:'hr'},
+  {code:'lt',name:'Lietuvių',cc:'lt',gt:'lt'},
+  {code:'lv',name:'Latviešu',cc:'lv',gt:'lv'},
+  {code:'et',name:'Eesti',cc:'ee',gt:'et'},
+  {code:'ka',name:'ქართული',cc:'ge',gt:'ka'},
+  {code:'hy',name:'Հայերեն',cc:'am',gt:'hy'},
+  {code:'sw',name:'Kiswahili',cc:'ke',gt:'sw'},
+  {code:'tl',name:'Filipino',cc:'ph',gt:'tl'},
+  {code:'af',name:'Afrikaans',cc:'za',gt:'af'},
 ];
 
 let currentLang = 'ru';
-let _langDropOpen = false;
+let _langFlagsOpen = false;
 
-// При загрузке — рендерим список языков
-function _renderLangs(filter) {
-  const list = document.getElementById('lang-list');
-  if (!list) return;
-  const f = (filter || '').toLowerCase();
-  const filtered = f ? LANGS.filter(l =>
-    l.name.toLowerCase().includes(f) || l.code.includes(f)
-  ) : LANGS;
-  list.innerHTML = filtered.map(l =>
-    '<div class="lang-item' + (l.code===currentLang?' active':'') + '" onclick="setLang(\''+l.code+'\',\''+l.gt+'\',\''+l.flag+'\',\''+l.name+'\')">'+
-    '<span class="lang-flag">'+l.flag+'</span>'+
-    '<span class="lang-name">'+l.name+'</span>'+
-    '<span class="lang-code">'+l.code.toUpperCase()+'</span>'+
-    '</div>'
+function _flagImg(cc) {
+  return '<img src="https://flagcdn.com/w40/' + cc + '.png" width="26" height="18" style="border-radius:3px;object-fit:cover;pointer-events:none" loading="lazy" onerror="this.style.display=\'none\'">';
+}
+
+function _renderLangFlags() {
+  const wrap = document.getElementById('lang-flags');
+  if (!wrap) return;
+  const reversed = [...LANGS].reverse();
+  wrap.innerHTML = reversed.map(l =>
+    '<div class="lang-flag-btn' + (l.code===currentLang?' active':'') + '" ' +
+    'onclick="setLang(\'' + l.code + '\',\'' + l.gt + '\',\'' + l.cc + '\',\'' + l.name + '\')" ' +
+    'data-tip="' + l.name + '">' + _flagImg(l.cc) + '</div>'
   ).join('');
 }
 
-function toggleLangDropdown() {
-  _langDropOpen = !_langDropOpen;
-  const dd = document.getElementById('lang-dropdown');
-  if (!dd) return;
-  dd.classList.toggle('open', _langDropOpen);
-  if (_langDropOpen) {
-    _renderLangs('');
-    setTimeout(function() {
-      const si = document.getElementById('lang-search-input');
-      if (si) si.focus();
-    }, 80);
+function toggleLangFlags() {
+  _langFlagsOpen = !_langFlagsOpen;
+  const wrap = document.getElementById('lang-flags');
+  const btn = document.getElementById('lang-btn');
+  if (!wrap) return;
+  if (_langFlagsOpen) {
+    _renderLangFlags();
+    // Небольшая задержка чтобы DOM успел отрисовать элементы до анимации
+    requestAnimationFrame(() => { wrap.classList.add('open'); });
+    if (btn) btn.classList.add('active');
+  } else {
+    wrap.classList.remove('open');
+    if (btn) btn.classList.remove('active');
   }
 }
 
-function filterLangs(val) { _renderLangs(val); }
-
-function setLang(code, gtCode, flag, name) {
+function setLang(code, gtCode, cc, name) {
   currentLang = code;
-  var flagEl = document.getElementById('lang-current-flag');
-  var nameEl = document.getElementById('lang-current-name');
-  if (flagEl) flagEl.textContent = flag;
-  if (nameEl) nameEl.textContent = code.toUpperCase();
-  _langDropOpen = false;
-  var dd = document.getElementById('lang-dropdown');
-  if (dd) dd.classList.remove('open');
-
-  if (code === 'ru') {
-    _gtReset();
-    return;
+  const icon = document.getElementById('lang-current-icon');
+  if (icon) {
+    if (code === 'ru') {
+      icon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
+    } else {
+      icon.innerHTML = '<img src="https://flagcdn.com/w40/' + cc + '.png" width="24" height="16" style="border-radius:3px;object-fit:cover" loading="lazy">';
+    }
   }
-  if(typeof _gtInitialized!=='undefined'&&!_gtInitialized)_pendingLang=gtCode;
+  _langFlagsOpen = false;
+  const wrap = document.getElementById('lang-flags');
+  const btn = document.getElementById('lang-btn');
+  if (wrap) wrap.classList.remove('open');
+  if (btn) btn.classList.remove('active');
+  if (code === 'ru') { _gtReset(); return; }
   _gtSetLang(gtCode);
 }
 
 document.addEventListener('click', function(e) {
-  const bar = document.getElementById('lang-bar');
-  if (_langDropOpen && bar && !bar.contains(e.target)) {
-    _langDropOpen = false;
-    const dd = document.getElementById('lang-dropdown');
-    if (dd) dd.classList.remove('open');
+  const fs = document.getElementById('float-support');
+  if (_langFlagsOpen && fs && !fs.contains(e.target)) {
+    _langFlagsOpen = false;
+    const wrap = document.getElementById('lang-flags');
+    const btn = document.getElementById('lang-btn');
+    if (wrap) wrap.classList.remove('open');
+    if (btn) btn.classList.remove('active');
   }
 });
 
-document.addEventListener('DOMContentLoaded', function() { _renderLangs(''); });
+document.addEventListener('DOMContentLoaded', function() { _renderLangFlags(); });
 
 </script>
 
 <!-- LANGUAGE SWITCHER + GOOGLE TRANSLATE -->
 <!-- Скрытый контейнер для Google Translate Widget -->
-<div id="google_translate_element" style="display:none!important;visibility:hidden;position:absolute;top:-9999px"></div>
 
-<div id="lang-bar">
-  <div id="lang-btn" onclick="toggleLangDropdown()">
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
-    <span id="lang-current-flag">🌐</span>
-    <span id="lang-current-name">RU</span>
-    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"/></svg>
-  </div>
-  <div id="lang-dropdown">
-    <input class="lang-search" id="lang-search-input" type="text" placeholder="Поиск языка..." oninput="filterLangs(this.value)" autocomplete="off">
-    <div class="lang-list" id="lang-list"></div>
-  </div>
-</div>
+
+<!-- lang встроен в float-support -->
 
 <script type="text/javascript">
-// ── GOOGLE TRANSLATE WIDGET INIT ──────────────────────────────
-function googleTranslateElementInit() {
-  new google.translate.TranslateElement({
-    pageLanguage: 'ru',
-    autoDisplay: false,
-    layout: google.translate.TranslateElement.InlineLayout.SIMPLE
-  }, 'google_translate_element');
+// ── FAST TRANSLATOR (MyMemory API) ────────────────────────────
+// Переводим текстовые ноды страницы напрямую через API — без виджетов и задержек
+
+let _txCache = {}, _txLang = 'ru', _txOriginals = new Map();
+
+// Собираем все текстовые ноды страницы (кроме скриптов/стилей)
+function _getTextNodes(root) {
+  const walker = document.createTreeWalker(
+    root || document.body,
+    NodeFilter.SHOW_TEXT,
+    { acceptNode: n => {
+      const p = n.parentElement;
+      if (!p) return NodeFilter.FILTER_REJECT;
+      const tag = p.tagName;
+      if (['SCRIPT','STYLE','NOSCRIPT','TEXTAREA','INPUT'].includes(tag)) return NodeFilter.FILTER_REJECT;
+      if (p.closest('#google_translate_element,#lang-bar,#lang-dropdown')) return NodeFilter.FILTER_REJECT;
+      const t = n.textContent.trim();
+      if (!t || t.length < 2) return NodeFilter.FILTER_SKIP;
+      return NodeFilter.FILTER_ACCEPT;
+    }}
+  );
+  const nodes = [];
+  let n;
+  while ((n = walker.nextNode())) nodes.push(n);
+  return nodes;
 }
 
-// Ждём пока GT widget создаст select и вызываем смену языка
-function _gtSetLang(langCode) {
-  function _byCookie() {
-    var val='/ru/'+langCode, exp=new Date(Date.now()+365*24*3600e3).toUTCString();
-    ['',location.hostname,'.'+location.hostname].forEach(function(d){
-      document.cookie='googtrans='+val+'; expires='+exp+'; path=/'+(d?'; domain='+d:'');
-    });
+// Переводим батч текстов через MyMemory
+async function _translateBatch(texts, toLang) {
+  const results = [];
+  // MyMemory: 500 символов за запрос, объединяем через разделитель
+  const SEP = ' ||||| ';
+  const chunks = [];
+  let cur = [];
+  let len = 0;
+  for (const t of texts) {
+    if (len + t.length + SEP.length > 450 && cur.length) {
+      chunks.push(cur);
+      cur = [t]; len = t.length;
+    } else {
+      cur.push(t); len += t.length + SEP.length;
+    }
   }
-  _byCookie();
-  var tries=0;
-  function attempt(){
-    var sel=document.querySelector('select.goog-te-combo');
-    if(sel){sel.value=langCode;sel.dispatchEvent(new Event('change',{bubbles:true}));sel.dispatchEvent(new Event('input',{bubbles:true}));return;}
-    if(tries++<80) setTimeout(attempt,100);
-    else setTimeout(function(){window.location.reload();},200);
+  if (cur.length) chunks.push(cur);
+
+  for (const chunk of chunks) {
+    const joined = chunk.join(SEP);
+    const key = toLang + ':' + joined;
+    if (_txCache[key]) {
+      results.push(..._txCache[key]);
+      continue;
+    }
+    try {
+      const url = 'https://api.mymemory.translated.net/get?q=' +
+        encodeURIComponent(joined) + '&langpair=ru|' + toLang + '&de=turbotx@acelerat.app';
+      const r = await fetch(url, { cache: 'no-store' });
+      if (!r.ok) { results.push(...chunk); continue; }
+      const d = await r.json();
+      const translated = d.responseData?.translatedText || joined;
+      const parts = translated.split(SEP).map(s => s.trim());
+      // Если частей меньше — дополняем оригиналами
+      while (parts.length < chunk.length) parts.push(chunk[parts.length]);
+      _txCache[key] = parts.slice(0, chunk.length);
+      results.push(..._txCache[key]);
+    } catch(e) { results.push(...chunk); }
   }
-  attempt();
+  return results;
 }
-var _gtInitialized=false,_pendingLang=null;
-var _origGtInit=window.googleTranslateElementInit;
-window.googleTranslateElementInit=function(){
-  if(_origGtInit)_origGtInit();
-  _gtInitialized=true;
-  if(_pendingLang){var p=_pendingLang;_pendingLang=null;setTimeout(function(){_gtSetLang(p);},300);}
-};
+
+let _txBusy = false;
+
+async function _translatePage(toLang) {
+  if (_txBusy) return;
+  _txBusy = true;
+  _txLang = toLang;
+
+  // Показываем индикатор загрузки
+  const flagEl2 = document.getElementById('lang-current-flag');
+  if (flagEl2) { flagEl2.dataset.orig = flagEl2.dataset.orig || flagEl2.textContent; flagEl2.textContent = '⏳'; }
+
+  const nodes = _getTextNodes();
+  // Сохраняем оригиналы если ещё нет
+  nodes.forEach(n => { if (!_txOriginals.has(n)) _txOriginals.set(n, n.textContent); });
+
+  const texts = nodes.map(n => _txOriginals.get(n) || n.textContent);
+  const translated = await _translateBatch(texts, toLang);
+
+  nodes.forEach((n, i) => { if (translated[i]) n.textContent = translated[i]; });
+
+  if (flagEl2 && flagEl2.dataset.orig) flagEl2.textContent = flagEl2.dataset.orig;
+  _txBusy = false;
+}
 
 function _gtReset() {
-  // Сброс через cookie + перезагрузка — самый надёжный способ
-  var exp = 'expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/';
-  document.cookie = 'googtrans=; ' + exp;
-  document.cookie = 'googtrans=; ' + exp + '; domain=' + location.hostname;
-  document.cookie = 'googtrans=; ' + exp + '; domain=.' + location.hostname;
-  window.location.reload();
+  // Восстанавливаем оригинальные тексты
+  _txOriginals.forEach((orig, node) => { try { node.textContent = orig; } catch(e) {} });
+  _txLang = 'ru';
+
+}
+
+function _gtSetLang(langCode) {
+  _translatePage(langCode);
 }
 </script>
-<script src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit" async></script>
 
 </div><!-- /.w -->
 
@@ -4819,33 +4834,33 @@ function updateHistoryConfs(txid, confs) {
     const idx = h.findIndex(x => x.txid === txid);
     if (idx === -1) return;
     h[idx].confs = confs;
-    if (confs >= 3) h[idx].confirmed = true;
+    // confirmed=true сохраняем для обратной совместимости, но точки показываем всегда
+    if (confs >= 1) h[idx].confirmed = true;
     localStorage.setItem('tx_history', JSON.stringify(h));
-    _renderHistoryItem(txid, confs, h[idx].confirmed);
+    _renderHistoryItem(txid, confs);
   } catch(e) {}
 }
 
-function _renderHistoryItem(txid, confs, confirmed) {
-  // Если подтверждена — перерисовываем весь блок истории,
-  // т.к. шаблон условно скрывает строку с точками при confirmed=true
-  if (confirmed || confs >= 3) {
-    renderHistory();
-    return;
-  }
+function _renderHistoryItem(txid, confs) {
   const wrap = document.getElementById('hist-' + txid);
-  // DOM ещё не готов или история не отрисована — перерисуем целиком
   if (!wrap) { renderHistory(); return; }
   const dw = wrap.querySelector('.hist-dots');
   const st = wrap.querySelector('.hist-status');
   if (!dw || !st) { renderHistory(); return; }
-  // 0=серая(пульс), 1=жёлтая, 2+=зелёная
-  const colors = [
-    confs >= 1 ? (confs >= 2 ? 'var(--g)' : '#ffd166') : 'rgba(255,255,255,.15)',
-    confs >= 2 ? 'var(--g)' : 'rgba(255,255,255,.15)',
-    confs >= 3 ? 'var(--g)' : 'rgba(255,255,255,.15)'
-  ];
-  dw.innerHTML = colors.map((c,i) => '<span style="width:7px;height:7px;border-radius:50%;background:'+c+';display:inline-block;flex-shrink:0;'+(confs===0?'animation:conf-wait 1.8s ease-in-out infinite;animation-delay:'+(i*.3)+'s':'transition:background .4s')+'"></span>').join('');
-  st.textContent = confs === 0 ? 'ожидание' : confs + ' / 3';
+  if (confs === 0) {
+    dw.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" style="animation:spin 1.1s linear infinite;transform-origin:center;flex-shrink:0"><path d="M21 12a9 9 0 1 1-6.219-8.56" stroke="var(--a)"/><path d="M21 12a9 9 0 0 0-9-9" stroke="rgba(255,255,255,.1)"/></svg>';
+  } else {
+    const colors = [
+      confs >= 1 ? (confs >= 2 ? 'var(--g)' : '#ffd166') : 'rgba(255,255,255,.15)',
+      confs >= 2 ? 'var(--g)' : 'rgba(255,255,255,.15)',
+      confs >= 3 ? 'var(--g)' : 'rgba(255,255,255,.15)'
+    ];
+    dw.innerHTML = colors.map((c,i) => '<span style="width:7px;height:7px;border-radius:50%;background:'+c+';display:inline-block;flex-shrink:0;transition:background .4s"></span>').join('');
+  }
+  const statusText = confs === 0 ? 'ожидание...' : confs < 3 ? confs+' / 3' : '✓ '+confs+' подтв.';
+  const statusColor = confs >= 3 ? 'var(--g)' : confs >= 1 ? '#ffd166' : 'var(--m)';
+  st.textContent = statusText;
+  st.style.color = statusColor;
 }
 
 const HIST_PER_PAGE = 5;
@@ -4881,20 +4896,22 @@ function renderHistory(page) {
       const agoStr = ago < 1 ? 'только что' : ago < 60 ? ago+' мин' : ago < 1440 ? Math.floor(ago/60)+' ч' : Math.floor(ago/1440)+' дн';
       const isPrem = item.plan === 'premium';
       const confs = item.confs || 0;
-      const confirmed = item.confirmed || confs >= 3;
-      const dotColors = _histDotColors(confs);
-      const dotsHTML = confirmed
-        ? `<span style="color:var(--g);font-family:var(--mono);font-size:.58rem;display:flex;align-items:center;gap:4px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>подтверждена</span>`
-        : dotColors.map((c,i) => `<span style="width:7px;height:7px;border-radius:50%;background:${c};display:inline-block;flex-shrink:0;${confs===0?'animation:conf-wait 1.8s ease-in-out infinite;animation-delay:'+(i*.3)+'s':'transition:background .4s'}"></span>`).join('');
+      // При confs===0 — спиннер. При 1+ — точки с цветами
+      const dc = _histDotColors(confs);
+      const dotsHTML = confs === 0
+        ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="2.5" stroke-linecap="round" style="animation:spin 1.1s linear infinite;transform-origin:center;flex-shrink:0"><path d="M21 12a9 9 0 1 1-6.219-8.56" stroke="var(--a)" stroke-width="2.5"/><path d="M21 12a9 9 0 0 0-9-9" stroke="rgba(255,255,255,.1)" stroke-width="2.5"/></svg>`
+        : dc.map((c,i) => `<span style="width:7px;height:7px;border-radius:50%;background:${c};display:inline-block;flex-shrink:0;transition:background .4s"></span>`).join('');
+      const statusText = confs === 0 ? 'ожидание...' : confs < 3 ? confs+' / 3' : `✓ ${confs} подтв.`;
+      const statusColor = confs >= 3 ? 'var(--g)' : confs >= 1 ? '#ffd166' : 'var(--m)';
       return `<div id="hist-${item.txid}" style="background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px 12px;transition:border-color .15s"
         onmouseover="this.style.borderColor='rgba(247,147,26,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)'">
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:${confirmed?'0':'7px'}">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
           <a href="https://mempool.space/tx/${item.txid}" target="_blank" style="font-family:var(--mono);font-size:.68rem;color:var(--m2);text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0" onmouseover="this.style.color='var(--a)'" onmouseout="this.style.color='var(--m2)'">${short}</a>
           <span style="font-family:var(--mono);font-size:.55rem;padding:2px 6px;border-radius:4px;flex-shrink:0;background:${isPrem?'rgba(247,147,26,.12)':'rgba(255,255,255,.05)'};color:${isPrem?'var(--a)':'var(--m)'}">${isPrem?'PREM':'FREE'}</span>
           <span style="font-family:var(--mono);font-size:.55rem;color:var(--m);flex-shrink:0">${agoStr}</span>
           <button onclick="document.getElementById('txid').value='${item.txid}';document.getElementById('txid').dispatchEvent(new Event('input'));" title="Ускорить снова" style="width:24px;height:24px;flex-shrink:0;border-radius:6px;background:transparent;border:1px solid rgba(247,147,26,.2);cursor:pointer;font-size:.62rem;color:var(--a);transition:all .15s;display:flex;align-items:center;justify-content:center" onmouseover="this.style.background='rgba(247,147,26,.12)'" onmouseout="this.style.background='transparent'">↻</button>
         </div>
-        ${!confirmed ? `<div style="display:flex;align-items:center;gap:5px"><div class="hist-dots" style="display:flex;gap:5px;align-items:center">${dotsHTML}</div><span class="hist-status" style="font-family:var(--mono);font-size:.58rem;color:var(--m);margin-left:3px">${confs===0?'ожидание':confs+' / 3'}</span></div>` : ''}
+        <div style="display:flex;align-items:center;gap:5px"><div class="hist-dots" style="display:flex;gap:5px;align-items:center">${dotsHTML}</div><span class="hist-status" style="font-family:var(--mono);font-size:.58rem;color:${statusColor};margin-left:3px;transition:color .4s">${statusText}</span></div>
       </div>`;
     }).join('');
 
@@ -4934,29 +4951,28 @@ function _startHistoryConfPolling() {
   async function _poll() {
     try {
       const h = JSON.parse(localStorage.getItem('tx_history') || '[]');
-      const pending = h.filter(x => !x.confirmed && (x.confs || 0) < 3);
-      if (!pending.length) { clearInterval(_histPoller); _histPoller = null; return; }
+      if (!h.length) return; // история пуста — ждём следующего тика
+      // Опрашиваем ВСЕ транзакции — не останавливаемся никогда
       let tip = 0;
       try {
         const rt = await fetch('https://mempool.space/api/blocks/tip/height', { cache: 'no-store' });
         if (rt.ok) tip = parseInt(await rt.text()) || 0;
       } catch(e) {}
-      for (const item of pending) {
+      for (const item of h) {
         try {
           const r = await fetch('https://mempool.space/api/tx/' + item.txid + '/status', { cache: 'no-store' });
           if (!r.ok) continue;
           const s = await r.json();
           let confs = 0;
           if (s.confirmed) confs = tip > 0 ? Math.max(1, tip - (s.block_height || tip) + 1) : 1;
-          // Обновляем независимо — даже если confs===0, чтобы точки не зависали
           updateHistoryConfs(item.txid, confs);
         } catch(e) {}
-        await new Promise(r => setTimeout(r, 250));
+        await new Promise(r => setTimeout(r, 200)); // небольшая пауза между запросами
       }
     } catch(e) {}
   }
   _poll();
-  _histPoller = setInterval(_poll, 30000);
+  _histPoller = setInterval(_poll, 30000); // каждые 30 сек навсегда
 }
 
 (function(){
@@ -4973,6 +4989,10 @@ function _startHistoryConfPolling() {
 </script>
 
 <div id="float-support">
+  <div id="lang-flags"></div>
+  <div id="lang-btn" onclick="toggleLangFlags()" data-tip="Язык / Language">
+    <span id="lang-current-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
+  </div>
   <a class="fs-icon fs-tg" href="https://t.me/TurboTXAcel" target="_blank" rel="noopener" data-tip="@TurboTXAcel" aria-label="Telegram">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248-1.97 9.281c-.144.658-.537.817-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.243-.213-.053-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.135-.953l11.571-4.462c.536-.194 1.005.131.833.941z"/></svg>
   </a>
