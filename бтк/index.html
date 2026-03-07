@@ -257,11 +257,11 @@ footer {
 }
 @media(max-width:480px) {
   nav {
-    padding-left: max(14px, env(safe-area-inset-left));
+    padding-left: max(62px, calc(env(safe-area-inset-left) + 48px));
     padding-right: max(14px, env(safe-area-inset-right));
   }
   .w {
-    padding-left: max(14px, env(safe-area-inset-left));
+    padding-left: max(62px, calc(env(safe-area-inset-left) + 48px));
     padding-right: max(14px, env(safe-area-inset-right));
   }
 }
@@ -1644,7 +1644,7 @@ input[type=text]:focus {
   letter-spacing:.5px;white-space:nowrap;padding:4px 10px;border-radius:5px;
   border:1px solid rgba(255,255,255,.08);pointer-events:none;opacity:0;transition:opacity .15s}
 .fs-icon:hover::after{opacity:1}
-@media(max-width:480px){#float-support{bottom:max(18px,env(safe-area-inset-bottom));left:max(12px,env(safe-area-inset-left));gap:7px}.fs-icon{width:32px;height:32px}.fs-icon::after{display:none}.lang-flag-btn{width:32px;height:32px}.lang-flag-btn::after{display:none}#lang-btn{width:32px;height:32px}#lang-flags{left:46px;bottom:max(16px,env(safe-area-inset-bottom))}}
+@media(max-width:480px){#float-support{bottom:max(18px,env(safe-area-inset-bottom));left:max(10px,env(safe-area-inset-left));gap:6px}.fs-icon{width:34px;height:34px}.fs-icon::after{display:none}.lang-flag-btn{width:34px;height:34px}.lang-flag-btn::after{display:none}#lang-btn{width:34px;height:34px}#lang-flags{left:48px;bottom:max(16px,env(safe-area-inset-bottom))}}
 </style>
 
 
@@ -2859,6 +2859,45 @@ async function fetchLiveStats() {
 fetchLiveStats();
 setInterval(fetchLiveStats, 3 * 60 * 1000);
 
+
+// ══════════════════════════════════════════════════════
+// SECURITY LAYER — защита от XSS и злоупотреблений
+// ══════════════════════════════════════════════════════
+
+// Санитайзер TXID — только hex 64 символа, ничего лишнего
+function sanitizeTxid(v) {
+  if (typeof v !== 'string') return '';
+  return v.replace(/[^a-fA-F0-9]/g, '').slice(0, 64);
+}
+
+// Санитайзер строк для вставки в HTML — экранируем спецсимволы
+function sanitizeStr(v) {
+  if (typeof v !== 'string') return '';
+  return v
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#x27;');
+}
+
+// Валидация числа из Firebase — только неотрицательное конечное число
+function safeNum(v, fallback) {
+  const n = Number(v);
+  return (isFinite(n) && n >= 0) ? n : (fallback || 0);
+}
+
+// Клиентский rate-limiter — защита от спама кнопки
+const _rl = {};
+function rateLimit(key, ms) {
+  const now = Date.now();
+  if (_rl[key] && now - _rl[key] < ms) return false;
+  _rl[key] = now;
+  return true;
+}
+
+// ══════════════════════════════════════════════════════
+
 // ── GLOBAL FREE LIMIT (Firebase Realtime Database) ─────────────
 // ▶ Настройка: создай бесплатный проект на https://console.firebase.google.com
 //   → Realtime Database → Создать базу → Правила: { "rules": { ".read": true, ".write": true } }
@@ -2882,19 +2921,14 @@ async function _testFirebase() {
   return false;
 }
 
-// Ключ дня для Firebase — ОДИНАКОВЫЙ для всех часовых поясов.
-// "День" начинается в 22:00 UTC (01:00 МСК) и длится 24 часа.
-// Все пользователи в любом часовом поясе читают один ключ.
+// Ключ дня для Firebase — одинаковый для всех пользователей.
+// Сброс счётчика в 00:00 МСК (UTC+3) = 21:00 UTC предыдущего дня.
 function todayStr() {
-  // Берём чистое UTC-время — не зависит от локального часового пояса
-  const nowUtc = Date.now();
-  // Смещаем на 2 часа вперёд: UTC 22:00 → 00:00 следующего дня в смещённой шкале
-  // Таким образом 22:00 UTC становится "началом нового дня"
-  const shifted = new Date(nowUtc + 2 * 3600 * 1000);
-  // Берём UTC-дату смещённого времени — у всех пользователей результат одинаков
-  const y = shifted.getUTCFullYear();
-  const m = String(shifted.getUTCMonth() + 1).padStart(2, '0');
-  const d = String(shifted.getUTCDate()).padStart(2, '0');
+  // Смещаем UTC на +3 часа → московская дата → используем как ключ дня
+  const msk = new Date(Date.now() + 3 * 3600 * 1000);
+  const y = msk.getUTCFullYear();
+  const m = String(msk.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(msk.getUTCDate()).padStart(2, '0');
   return y + '-' + m + '-' + d;
 }
 
@@ -2905,8 +2939,9 @@ async function getGlobalUsed() {
     const r = await fetch(`${FIREBASE_DB}/daily/${todayStr()}/used.json`, { cache: 'no-store' });
     if (r.ok) {
       const val = await r.json();
-      if (typeof val === 'number' && val >= 0) return val;
       if (val === null) return 0; // новый день — ещё никто не тратил
+      const n = safeNum(val, 0);
+      if (n >= 0) return n;
     }
   } catch(e) {}
   // Сеть недоступна — последнее известное значение
@@ -2982,10 +3017,10 @@ async function updateFreeUI(forceUsed) {
   _applyFreeUI(used);
 }
 
-// Таймер до сброса лимита — сброс в 22:00 UTC (01:00 МСК)
+// Таймер до сброса лимита — сброс в 00:00 МСК = 21:00 UTC
 function updateResetTimer() {
   const now = new Date();
-  const todayReset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 22, 0, 0));
+  const todayReset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 21, 0, 0));
   const next = now < todayReset ? todayReset : new Date(todayReset.getTime() + 86400000);
   const diff = next - now;
   const h = Math.floor(diff / 3600000);
@@ -3020,8 +3055,9 @@ function renderFeedFromData(feed) {
   el.innerHTML = feed.map(item => {
     const ago = Math.round((Date.now() - item.ts) / 60000);
     const agoStr = ago < 1 ? 'только что' : ago < 60 ? ago + ' мин назад' : Math.floor(ago/60) + ' ч назад';
-    const short = item.short || item.txid.slice(0,6) + '...' + item.txid.slice(-4);
-    return `<a class="feed-item" href="https://mempool.space/tx/${item.txid}" target="_blank"
+    const safeTxid = sanitizeTxid(item.txid || '');
+    const short = safeTxid.slice(0,6) + '...' + safeTxid.slice(-4);
+    return `<a class="feed-item" href="https://mempool.space/tx/${safeTxid}" target="_blank" rel="noopener noreferrer"
       title="Открыть на mempool.space"
       style="text-decoration:none;cursor:pointer;transition:background .15s,border-color .15s"
       onmouseover="this.style.background='rgba(247,147,26,.04)';this.style.borderColor='rgba(247,147,26,.15)'"
@@ -3283,7 +3319,7 @@ function startRealtimeListeners() {
   _startDailySSE(ns);
 }
 
-// SSE для счётчика дня — переподключается при смене даты (сброс в 01:00 МСК)
+// SSE для счётчика дня — переподключается при смене даты (сброс в 00:00 МСК)
 function _startDailySSE(ns) {
   _currentDayKey = todayStr();
   _makeSSE(`${FIREBASE_DB}/daily/${_currentDayKey}/used.json?ns=${ns}`, d => {
@@ -3387,13 +3423,14 @@ function renderQueue() {
     const isPrem = item.plan === 'premium';
     const ago = Math.round((Date.now() - item.ts) / 60000);
     const agoStr = ago < 1 ? 'только что' : ago < 60 ? ago + ' мин' : Math.floor(ago/60) + ' ч';
-    const short = item.txid.slice(0,8) + '...' + item.txid.slice(-6);
+    const safeTxid = sanitizeTxid(item.txid || '');
+    const short = safeTxid.slice(0,8) + '...' + safeTxid.slice(-6);
     const rowBg     = isPrem ? 'rgba(247,147,26,.04)' : 'rgba(255,51,85,.03)';
     const rowBorder = isPrem ? 'rgba(247,147,26,.22)' : 'rgba(255,51,85,.2)';
     const badge = isPrem
       ? '<span style="background:rgba(247,147,26,.12);color:var(--a);border:1px solid rgba(247,147,26,.25);font-family:var(--mono);font-size:.6rem;padding:2px 7px;border-radius:10px;flex-shrink:0">PREMIUM</span>'
       : '<span style="background:rgba(255,51,85,.1);color:var(--err);border:1px solid rgba(255,51,85,.2);font-family:var(--mono);font-size:.6rem;padding:2px 7px;border-radius:10px;flex-shrink:0">FREE</span>';
-    return `<a href="https://mempool.space/tx/${item.txid}" target="_blank" rel="noopener"
+    return `<a href="https://mempool.space/tx/${safeTxid}" target="_blank" rel="noopener noreferrer"
         style="display:flex;align-items:center;justify-content:space-between;gap:10px;
                background:${rowBg};border:1px solid ${rowBorder};border-radius:10px;
                margin:4px 8px;padding:10px 12px;text-decoration:none;cursor:pointer;
@@ -3544,7 +3581,8 @@ async function go() {
   }
 
   // ── SINGLE MODE ──
-  const txid = document.getElementById('txid').value.trim();
+  if (!rateLimit('go_btn', 3000)) return; // не чаще раза в 3 сек
+  const txid = sanitizeTxid(document.getElementById('txid').value.trim());
   if (!txid) return err('Введите TXID транзакции');
   if (!/^[a-fA-F0-9]{64}$/.test(txid)) return err('Неверный формат TXID — нужно 64 hex символа');
   if (plan === 'free' && getFreeLeft(_lastKnownUsed) <= 0) return err('Дневной лимит исчерпан. Попробуйте завтра или используйте Premium.');
@@ -3933,6 +3971,7 @@ async function applyPromo() {
   if (!inp || !res) return;
   const code = inp.value.trim().toUpperCase();
   if (!code) { inp.style.borderColor = 'rgba(255,51,85,.5)'; return; }
+  if (!rateLimit('promo_btn', 2000)) return; // защита от перебора
   res.style.display = 'block';
   res.style.color = 'var(--m)';
   res.textContent = '⏳ Проверяем код...';
@@ -3945,24 +3984,29 @@ async function applyPromo() {
 
   // Промокоды хранятся только как SHA-256 хеши, лимит 10 использований каждый
   const PROMO_HASHES = {
-    '529819add629a366ac59c78eb9984642412138ef411e27b46b7d86b0fbf20bc0': 'NOWKIE',        // блогер Nowkie
-    'fe30a859a1e76d4e661eccf3cf00fd6edc1141c65375ab56d1ad79c76fed8552': 'SATOSHI_FREE',  // рандом
-    '85462c1477d15d28a9ebe4420496d8f06779d9043c4187bd6fd642ad6720c6dd': 'ZERO_FEE',      // рандом
-    'dd8224ef1ba72ce30b3010f0e55cbd095e484d211275082bbe8d06ac9a9d7f91': 'MOON_TX',       // рандом
-    '50559abf35b86b0ce4b56ea0c34e32380b7010cfdd4c3f0bd320f0ee52ccd0ca': 'HODL_TURBO'    // рандом
+    '529819add629a366ac59c78eb9984642412138ef411e27b46b7d86b0fbf20bc0': 'NOWKIE',
+    'fe30a859a1e76d4e661eccf3cf00fd6edc1141c65375ab56d1ad79c76fed8552': 'SATOSHI_FREE',
+    '85462c1477d15d28a9ebe4420496d8f06779d9043c4187bd6fd642ad6720c6dd': 'ZERO_FEE',
+    'dd8224ef1ba72ce30b3010f0e55cbd095e484d211275082bbe8d06ac9a9d7f91': 'MOON_TX',
+    '50559abf35b86b0ce4b56ea0c34e32380b7010cfdd4c3f0bd320f0ee52ccd0ca': 'HODL_TURBO'
   };
   const PROMO_LIMIT = 10;
-  const STORAGE_KEY = 'turbo_promo_uses';
 
   const h = await sha256(code);
 
   if (PROMO_HASHES.hasOwnProperty(h)) {
-    // Читаем счётчики использований
-    let uses = {};
-    try { uses = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}'); } catch(e) { uses = {}; }
-
     const promoId = PROMO_HASHES[h];
-    const usedCount = uses[promoId] || 0;
+
+    // Читаем счётчик из Firebase
+    res.textContent = '⏳ Проверяем код...';
+    let usedCount = 0;
+    try {
+      const r = await fetch(FIREBASE_DB + '/promos/' + promoId + '/used.json', { cache: 'no-store' });
+      if (r.ok) {
+        const val = await r.json();
+        usedCount = (typeof val === 'number' && val >= 0) ? val : 0;
+      }
+    } catch(e) {}
 
     if (usedCount >= PROMO_LIMIT) {
       res.style.color = 'var(--err)';
@@ -3971,11 +4015,27 @@ async function applyPromo() {
       return;
     }
 
-    // Увеличиваем счётчик и сохраняем
-    uses[promoId] = usedCount + 1;
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(uses)); } catch(e) {}
+    // Атомарно увеличиваем счётчик в Firebase
+    let writeOk = false;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const r2 = await fetch(FIREBASE_DB + '/promos/' + promoId + '/used.json', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(usedCount + 1)
+        });
+        if (r2.ok) { writeOk = true; break; }
+        if (r2.status === 403) break; // Firebase отклонил (лимит)
+        await new Promise(r => setTimeout(r, 150));
+      } catch(e) { break; }
+    }
 
-    const remaining = PROMO_LIMIT - uses[promoId];
+    if (!writeOk) {
+      res.style.color = 'var(--err)';
+      res.textContent = '✗ Ошибка активации — попробуйте ещё раз';
+      return;
+    }
+
     res.style.color = 'var(--g)';
     res.textContent = '✓ Промокод принят — Premium активирован!';
     inp.value = '';
@@ -4962,7 +5022,8 @@ function renderHistory(page) {
     const pageItems = h.slice(_histPage * HIST_PER_PAGE, (_histPage + 1) * HIST_PER_PAGE);
 
     const itemsHTML = pageItems.map(item => {
-      const short = item.txid.slice(0,8) + '...' + item.txid.slice(-6);
+      const safeTxid = sanitizeTxid(item.txid || '');
+    const short = safeTxid.slice(0,8) + '...' + safeTxid.slice(-6);
       const ago = Math.round((Date.now() - item.ts) / 60000);
       const agoStr = ago < 1 ? 'только что' : ago < 60 ? ago+' мин' : ago < 1440 ? Math.floor(ago/60)+' ч' : Math.floor(ago/1440)+' дн';
       const isPrem = item.plan === 'premium';
@@ -4974,13 +5035,13 @@ function renderHistory(page) {
         : dc.map((c,i) => `<span style="width:7px;height:7px;border-radius:50%;background:${c};display:inline-block;flex-shrink:0;transition:background .4s"></span>`).join('');
       const statusText = confs === 0 ? 'ожидание...' : confs < 3 ? confs+' / 3' : `✓ ${confs} подтв.`;
       const statusColor = confs >= 3 ? 'var(--g)' : confs >= 1 ? '#ffd166' : 'var(--m)';
-      return `<div id="hist-${item.txid}" style="background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px 12px;transition:border-color .15s"
+      return `<div id="hist-${safeTxid}" style="background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px 12px;transition:border-color .15s"
         onmouseover="this.style.borderColor='rgba(247,147,26,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)'">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
-          <a href="https://mempool.space/tx/${item.txid}" target="_blank" style="font-family:var(--mono);font-size:.68rem;color:var(--m2);text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0" onmouseover="this.style.color='var(--a)'" onmouseout="this.style.color='var(--m2)'">${short}</a>
+          <a href="https://mempool.space/tx/${safeTxid}" target="_blank" rel="noopener noreferrer" style="font-family:var(--mono);font-size:.68rem;color:var(--m2);text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0" onmouseover="this.style.color='var(--a)'" onmouseout="this.style.color='var(--m2)'">${short}</a>
           <span style="font-family:var(--mono);font-size:.55rem;padding:2px 6px;border-radius:4px;flex-shrink:0;background:${isPrem?'rgba(247,147,26,.12)':'rgba(255,255,255,.05)'};color:${isPrem?'var(--a)':'var(--m)'}">${isPrem?'PREM':'FREE'}</span>
           <span style="font-family:var(--mono);font-size:.55rem;color:var(--m);flex-shrink:0">${agoStr}</span>
-          <button onclick="document.getElementById('txid').value='${item.txid}';document.getElementById('txid').dispatchEvent(new Event('input'));" title="Ускорить снова" style="width:24px;height:24px;flex-shrink:0;border-radius:6px;background:transparent;border:1px solid rgba(247,147,26,.2);cursor:pointer;font-size:.62rem;color:var(--a);transition:all .15s;display:flex;align-items:center;justify-content:center" onmouseover="this.style.background='rgba(247,147,26,.12)'" onmouseout="this.style.background='transparent'">↻</button>
+          <button onclick="document.getElementById('txid').value='${safeTxid}';document.getElementById('txid').dispatchEvent(new Event('input'));" title="Ускорить снова" style="width:24px;height:24px;flex-shrink:0;border-radius:6px;background:transparent;border:1px solid rgba(247,147,26,.2);cursor:pointer;font-size:.62rem;color:var(--a);transition:all .15s;display:flex;align-items:center;justify-content:center" onmouseover="this.style.background='rgba(247,147,26,.12)'" onmouseout="this.style.background='transparent'">↻</button>
         </div>
         <div style="display:flex;align-items:center;gap:5px"><div class="hist-dots" style="display:flex;gap:5px;align-items:center">${dotsHTML}</div><span class="hist-status" style="font-family:var(--mono);font-size:.58rem;color:${statusColor};margin-left:3px;transition:color .4s">${statusText}</span></div>
       </div>`;
