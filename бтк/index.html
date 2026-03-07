@@ -1658,7 +1658,8 @@ input[type=text]:focus {
 @keyframes blink-o{0%,100%{opacity:1}50%{opacity:.2}}
 .conf-dot-wait{animation:conf-wait 1.8s ease-in-out infinite}
 .conf-dot-active{animation:conf-pop .35s ease forwards}
-.queue-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;background:var(--a);animation:blink-o 1.8s ease-in-out infinite}
+.queue-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;background:var(--err);animation:blink-r 1.2s ease-in-out infinite;box-shadow:0 0 0 0 rgba(255,51,85,.4)}
+@keyframes blink-r{0%{opacity:1;box-shadow:0 0 6px 2px rgba(255,51,85,.5)}50%{opacity:.35;box-shadow:none}100%{opacity:1;box-shadow:0 0 6px 2px rgba(255,51,85,.5)}}
 
 /* ── FLOATING SOCIAL ── */
 #float-support{position:fixed;bottom:24px;left:16px;z-index:8900;display:flex;flex-direction:column;gap:8px}
@@ -1698,7 +1699,6 @@ input[type=text]:focus {
     <a href="javascript:void(0)" class="nav-link" onclick="document.getElementById('cpfp').scrollIntoView({behavior:'smooth'});return false;">CPFP</a>
     <a href="javascript:void(0)" class="nav-link" onclick="document.getElementById('rbf').scrollIntoView({behavior:'smooth'});return false;">RBF</a>
     <a href="javascript:void(0)" class="nav-link" onclick="document.getElementById('pools').scrollIntoView({behavior:'smooth'});return false;">Пулы</a>
-    <a href="javascript:void(0)" class="nav-link" onclick="document.getElementById('support').scrollIntoView({behavior:'smooth'});return false;">Поддержка</a>
     <a href="https://t.me/TurboTXAcel" target="_blank" class="nav-link" style="display:inline-flex;align-items:center;gap:5px;color:rgba(0,136,204,.8);border:1px solid rgba(0,136,204,.2);border-radius:6px;padding:5px 11px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d='M21.5 2.5L2 10.5l7 1.5 2 6 3-3 4 3 3.5-15.5z'/><line x1='9' y1='12' x2='14.5' y2='7.5'/></svg>Канал</a>
     <div class="live-badge"><div class="live-dot"></div>LIVE</div>
   </div>
@@ -2899,34 +2899,37 @@ async function _testFirebase() {
   return false;
 }
 
-// Ключ дня для Firebase — UTC дата. Сброс происходит автоматически
-// когда дата меняется в 22:00 UTC (01:00 МСК) — новый ключ = чистый счётчик
+// Ключ дня для Firebase — ОДИНАКОВЫЙ для всех часовых поясов.
+// "День" начинается в 22:00 UTC (01:00 МСК) и длится 24 часа.
+// Все пользователи в любом часовом поясе читают один ключ.
 function todayStr() {
-  const now = new Date();
-  // Период считается с 22:00 UTC предыдущего дня до 22:00 UTC текущего
-  // Смещаем время на 2 часа вперёд чтобы "день" начинался в 22:00 UTC
-  const shifted = new Date(now.getTime() - 22 * 3600 * 1000);
-  return shifted.toISOString().slice(0, 10);
+  // Берём чистое UTC-время — не зависит от локального часового пояса
+  const nowUtc = Date.now();
+  // Смещаем на 2 часа вперёд: UTC 22:00 → 00:00 следующего дня в смещённой шкале
+  // Таким образом 22:00 UTC становится "началом нового дня"
+  const shifted = new Date(nowUtc + 2 * 3600 * 1000);
+  // Берём UTC-дату смещённого времени — у всех пользователей результат одинаков
+  const y = shifted.getUTCFullYear();
+  const m = String(shifted.getUTCMonth() + 1).padStart(2, '0');
+  const d = String(shifted.getUTCDate()).padStart(2, '0');
+  return y + '-' + m + '-' + d;
 }
 
 // Получить текущий глобальный счётчик из Firebase
 async function getGlobalUsed() {
+  // Источник правды — только Firebase
   if (_fbReady) {
     try {
       const r = await fetch(`${FIREBASE_DB}/daily/${todayStr()}/used.json`, { cache: 'no-store' });
       if (r.ok) {
         const val = await r.json();
         if (typeof val === 'number' && val >= 0) return val;
+        if (val === null) return 0; // ещё никто не использовал сегодня
       }
-    } catch(e) { /* Firebase недоступен — тихий fallback */ }
+    } catch(e) {}
   }
-  // Fallback: localStorage
-  const lsDate = localStorage.getItem('turbotx_free_date');
-  if (lsDate !== todayStr()) {
-    localStorage.setItem('turbotx_free_date', todayStr());
-    localStorage.setItem('turbotx_free_used', '0');
-  }
-  return parseInt(localStorage.getItem('turbotx_free_used') || '0');
+  // Firebase недоступен — возвращаем последнее известное значение (уже синхронизированное)
+  return _lastKnownUsed;
 }
 
 // Атомарный инкремент через Firebase (ETag + retry 412)
@@ -2945,20 +2948,14 @@ async function incrementGlobalUsed() {
         const r2 = await fetch(url, { method:'PUT', headers:h, body:JSON.stringify(nv) });
         if (r2.ok) {
           _lastKnownUsed = nv;
-          localStorage.setItem('turbotx_free_date', todayStr());
-          localStorage.setItem('turbotx_free_used', nv);
           return nv;
         }
         if (r2.status !== 412) break;
       } catch(e) { break; }
     }
   }
-  const today = todayStr();
-  const lsDate = localStorage.getItem('turbotx_free_date');
-  const prev = lsDate === today ? parseInt(localStorage.getItem('turbotx_free_used') || '0') : 0;
-  const used = prev + 1;
-  localStorage.setItem('turbotx_free_date', today);
-  localStorage.setItem('turbotx_free_used', used);
+  // Firebase недоступен — инкрементируем _lastKnownUsed локально как временный fallback
+  const used = (_lastKnownUsed || 0) + 1;
   return used;
 }
 
@@ -2967,15 +2964,14 @@ let _lastKnownUsed = 0;
 
 function getFreeLeft(used) { return Math.max(0, FL_MAX - (typeof used === 'number' ? used : _lastKnownUsed)); }
 
-async function updateFreeUI(forceUsed) {
-  const used = typeof forceUsed === 'number' ? forceUsed : await getGlobalUsed();
-  if (typeof used !== 'number') return;
+// Единственная функция отрисовки счётчика — принимает только число
+// Источник правды: Firebase /daily/${todayStr()}/used
+function _applyFreeUI(used) {
+  if (typeof used !== 'number' || used < 0) return;
   _lastKnownUsed = used;
-  // Синхронизируем localStorage чтобы локальное состояние не расходилось
-  localStorage.setItem('turbotx_free_date', todayStr());
-  localStorage.setItem('turbotx_free_used', used);
-  const left = getFreeLeft(used);
-  const el = document.getElementById('free-left-num'); if (!el) return;
+  const left = Math.max(0, FL_MAX - used);
+  const el = document.getElementById('free-left-num');
+  if (!el) return;
   el.style.opacity = '';
   el.style.animation = '';
   el.textContent = left;
@@ -2986,6 +2982,16 @@ async function updateFreeUI(forceUsed) {
   document.getElementById('free-limit-bar').style.borderColor = empty ? 'rgba(255,68,102,.35)' : '';
   document.getElementById('limit-reached-msg').style.display = empty ? 'block' : 'none';
   document.getElementById('reset-timer-wrap').style.display = empty ? 'block' : 'none';
+}
+
+async function updateFreeUI(forceUsed) {
+  if (typeof forceUsed === 'number') {
+    _applyFreeUI(forceUsed);
+    return;
+  }
+  // Всегда берём из Firebase — localStorage не используем как источник
+  const used = await getGlobalUsed();
+  _applyFreeUI(used);
 }
 
 // Таймер до сброса лимита — сброс в 22:00 UTC (01:00 МСК)
@@ -3226,34 +3232,23 @@ async function initGlobalSync() {
   } catch(e) {}
 }
 
-// Показываем счётчик мгновенно из localStorage без ожидания Firebase
+// Показываем skeleton пока Firebase не вернул реальное значение
+// Локальный localStorage для счётчика НЕ используется — только Firebase
 function updateFreeUI_local() {
-  const lsDate = localStorage.getItem('turbotx_free_date');
-  const today = todayStr();
-  let used = 0;
-  if (lsDate === today) {
-    used = parseInt(localStorage.getItem('turbotx_free_used') || '0');
-  }
-  const left = Math.max(0, FL_MAX - used);
   const el = document.getElementById('free-left-num');
   if (!el) return;
-  el.style.opacity = '';
-  el.style.animation = '';
-  el.textContent = left;
-  el.className = 'flb-count' + (left <= 10 ? ' low' : '');
-  document.getElementById('free-bar-fill').style.width = (left / FL_MAX * 100) + '%';
-  document.getElementById('free-bar-fill').className = 'flb-bar-fill' + (left <= 10 ? ' low' : '');
-  const empty = left === 0;
-  document.getElementById('free-limit-bar').style.borderColor = empty ? 'rgba(255,68,102,.35)' : '';
-  document.getElementById('limit-reached-msg').style.display = empty ? 'block' : 'none';
-  document.getElementById('reset-timer-wrap').style.display = empty ? 'block' : 'none';
+  if (el.textContent === '—') return; // уже skeleton, не трогаем
+  // Оставляем skeleton до прихода данных из Firebase
+  el.style.opacity = '0.3';
+  el.style.animation = 'skeletonPulse 1.6s ease-in-out infinite';
+  el.textContent = '—';
 }
 initGlobalSync();
 
-// Резервный поллинг каждые 10/15/30 сек
-setInterval(syncGlobalQueue, 10000);
-setInterval(syncGlobalFeed, 15000);
-setInterval(syncCounterFromFirebase, 30000);
+// Резервный поллинг (SSE — основной канал, это fallback)
+setInterval(syncGlobalQueue, 15000);         // 15 сек
+setInterval(syncGlobalFeed, 20000);          // 20 сек
+setInterval(syncCounterFromFirebase, 30000); // 30 сек
 
 // ── FIREBASE SSE — мгновенные обновления для всех ──────────────
 function _makeSSE(url, onPut, onPatch) {
@@ -3271,6 +3266,9 @@ function _makeSSE(url, onPut, onPatch) {
   connect();
 }
 
+let _currentDayKey = '';
+let _dailySSEActive = false;
+
 function startRealtimeListeners() {
   if (!_fbReady) return;
   const ns = FIREBASE_DB.split('//')[1].split('.')[0];
@@ -3280,16 +3278,36 @@ function startRealtimeListeners() {
     if (d.__patch) { syncGlobalFeed(); return; }
     const feed = d.data;
     if (Array.isArray(feed)) renderFeedFromData(feed);
-    else if (feed === null) {} // не перетираем локальный
+    else if (feed === null) {}
     else syncGlobalFeed();
   });
   _makeSSE(`${FIREBASE_DB}/stats/total.json?ns=${ns}`, d => {
     if (d && typeof d.data==='number' && d.data>=0) _setCounterUI(d.data);
   });
-  _makeSSE(`${FIREBASE_DB}/daily/${todayStr()}/used.json?ns=${ns}`, d => {
-    if (d && typeof d.data==='number' && d.data>=0) { _lastKnownUsed=d.data; updateFreeUI(d.data); }
+  _startDailySSE(ns);
+}
+
+// SSE для счётчика дня — переподключается при смене даты (сброс в 01:00 МСК)
+function _startDailySSE(ns) {
+  _currentDayKey = todayStr();
+  _makeSSE(`${FIREBASE_DB}/daily/${_currentDayKey}/used.json?ns=${ns}`, d => {
+    if (d && typeof d.data==='number' && d.data>=0) _applyFreeUI(d.data);
+    if (d && d.data === null) _applyFreeUI(0); // новый день — счётчик сброшен
   });
 }
+
+// Проверяем смену дня каждую минуту — переподключаем SSE на новый ключ
+setInterval(() => {
+  if (!_fbReady) return;
+  const newDay = todayStr();
+  if (newDay !== _currentDayKey) {
+    _currentDayKey = newDay;
+    const ns = FIREBASE_DB.split('//')[1].split('.')[0];
+    _startDailySSE(ns);
+    // Сразу подтягиваем новый счётчик (должен быть 0)
+    updateFreeUI();
+  }
+}, 60000);
 
 // ── PLAN SELECT ────────────────────────────────────────────────
 function pick(p) {
@@ -3369,34 +3387,30 @@ function renderQueue() {
     const ago = Math.round((Date.now() - item.ts) / 60000);
     const agoStr = ago < 1 ? 'только что' : ago < 60 ? ago + ' мин' : Math.floor(ago/60) + ' ч';
     const short = item.txid.slice(0,8) + '...' + item.txid.slice(-6);
-    const rowBg     = isPrem ? 'rgba(247,147,26,.04)' : 'rgba(255,255,255,.015)';
-    const rowBorder = isPrem ? 'rgba(247,147,26,.22)' : 'rgba(255,255,255,.06)';
+    const rowBg     = isPrem ? 'rgba(247,147,26,.04)' : 'rgba(255,51,85,.03)';
+    const rowBorder = isPrem ? 'rgba(247,147,26,.22)' : 'rgba(255,51,85,.2)';
     const badge = isPrem
       ? '<span style="background:rgba(247,147,26,.12);color:var(--a);border:1px solid rgba(247,147,26,.25);font-family:var(--mono);font-size:.6rem;padding:2px 7px;border-radius:10px;flex-shrink:0">PREMIUM</span>'
-      : '<span style="background:rgba(107,107,138,.1);color:var(--m);border:1px solid rgba(107,107,138,.2);font-family:var(--mono);font-size:.6rem;padding:2px 7px;border-radius:10px;flex-shrink:0">FREE</span>';
-    return `<div style="background:${rowBg};border:1px solid ${rowBorder};border-radius:10px;
-              margin:4px 8px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px">
+      : '<span style="background:rgba(255,51,85,.1);color:var(--err);border:1px solid rgba(255,51,85,.2);font-family:var(--mono);font-size:.6rem;padding:2px 7px;border-radius:10px;flex-shrink:0">FREE</span>';
+    return `<a href="https://mempool.space/tx/${item.txid}" target="_blank" rel="noopener"
+        style="display:flex;align-items:center;justify-content:space-between;gap:10px;
+               background:${rowBg};border:1px solid ${rowBorder};border-radius:10px;
+               margin:4px 8px;padding:10px 12px;text-decoration:none;cursor:pointer;
+               transition:border-color .15s,background .15s"
+        onmouseover="this.style.borderColor='${isPrem?'rgba(247,147,26,.5)':'rgba(255,51,85,.5)'}';this.style.background='${isPrem?'rgba(247,147,26,.07)':'rgba(255,51,85,.06)'}'"
+        onmouseout="this.style.borderColor='${rowBorder}';this.style.background='${rowBg}'">
       <div style="display:flex;align-items:center;gap:9px;min-width:0">
         <div class="queue-dot"></div>
         <div style="min-width:0">
           <div style="font-family:var(--mono);font-size:.7rem;color:var(--t);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${short}</div>
-          <div style="font-family:var(--mono);font-size:.58rem;color:var(--m);margin-top:2px">⏱ ${agoStr} назад</div>
+          <div style="font-family:var(--mono);font-size:.58rem;color:rgba(255,51,85,.6);margin-top:2px">⏳ ожидает · ${agoStr} назад</div>
         </div>
       </div>
       <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
         ${badge}
-        <a href="https://mempool.space/tx/${item.txid}" target="_blank"
-          style="display:inline-flex;align-items:center;gap:3px;padding:3px 8px;border-radius:6px;
-                 background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);
-                 font-family:var(--mono);font-size:.58rem;color:var(--m);text-decoration:none;
-                 transition:border-color .15s,color .15s"
-          onmouseover="this.style.borderColor='rgba(247,147,26,.3)';this.style.color='var(--a)'"
-          onmouseout="this.style.borderColor='rgba(255,255,255,.07)';this.style.color='var(--m)'">
-          <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          статус
-        </a>
+        <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--m)" stroke-width="2" style="flex-shrink:0"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
       </div>
-    </div>`;
+    </a>`;
   }).join('');
 }
 
@@ -3405,30 +3419,41 @@ async function monitorQueue() {
   const q = loadQ();
   const active = q.filter(i => i.status === 'processing');
   if (!active.length) return;
-  let changed = false;
-  for (const item of active) {
+
+  // Получаем tip height один раз для всего батча
+  const tip = await getCurrentHeight();
+
+  // Параллельно проверяем все активные транзакции
+  const results = await Promise.all(active.map(async item => {
     try {
-      const r = await fetch('https://mempool.space/api/tx/' + item.txid);
-      if (!r.ok) continue;
-      const d = await r.json();
-      if (d.status && d.status.confirmed) {
-        item.status = 'done';
-        changed = true;
-        bumpCounter();
-        const mins = Math.max(1, Math.round((Date.now() - item.ts) / 60000));
-        // Добавляем в глобальный фид (Firebase + локальный)
-        fbFeedAdd(item.txid, item.plan, mins);
-        addFeedItem(item.txid, item.plan, mins);
-        // Удаляем из глобальной очереди Firebase
-        fbQueueRemove(item.txid);
-        sendPushNotification(item.txid);
-        switchFeedTab('confirmed');
-      }
-    } catch(e) {}
-    await new Promise(r => setTimeout(r, 300));
+      const r = await fetch('https://mempool.space/api/tx/' + item.txid + '/status', { cache: 'no-store' });
+      if (!r.ok) return null;
+      const s = await r.json();
+      if (!s.confirmed) return null;
+      const confs = tip > 0 ? Math.max(1, tip - (s.block_height || tip) + 1) : 1;
+      return { item, confs };
+    } catch(e) { return null; }
+  }));
+
+  let changed = false;
+  for (const res of results) {
+    if (!res) continue;
+    const { item, confs } = res;
+    // Перемещаем в фид только после 1 подтверждения
+    item.status = 'done';
+    changed = true;
+    bumpCounter();
+    const mins = Math.max(1, Math.round((Date.now() - item.ts) / 60000));
+    fbFeedAdd(item.txid, item.plan, mins);
+    addFeedItem(item.txid, item.plan, mins);
+    fbQueueRemove(item.txid);
+    // Обновляем историю с реальным числом подтверждений
+    updateHistoryConfs(item.txid, confs);
+    sendPushNotification(item.txid);
+    switchFeedTab('confirmed');
   }
+
   if (changed) {
-    // Удаляем подтверждённые из хранилища — они ушли в фид
     saveQ(q.filter(i => i.status !== 'done'));
     renderQueue();
   }
@@ -3453,8 +3478,8 @@ function addToQueue(txid, planType) {
 
 renderQueue();
 monitorQueue();
-setInterval(monitorQueue, 60000);
-setInterval(renderQueue, 15000);
+setInterval(monitorQueue, 30000);   // каждые 30 сек — быстрее реагируем на подтверждения
+setInterval(renderQueue, 15000);    // обновляем таймеры "X мин назад"
 
 // ── ACCELERATE ─────────────────────────────────────────────────
 const BTN_IDLE = '<span style="display:inline-flex;align-items:center;gap:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> УСКОРИТЬ ТРАНЗАКЦИЮ</span>';
@@ -3493,12 +3518,7 @@ async function go() {
         addToQueue(txid, plan);
         setTxidCooldown(txid);
         if (plan === 'free') {
-          // Мгновенно уменьшаем локально — не ждём Firebase
-          const localUsed = (_lastKnownUsed || 0) + 1;
-          _lastKnownUsed = localUsed;
-          updateFreeUI(localUsed);
-          // Записываем в Firebase асинхронно
-          incrementGlobalUsed().then(serverUsed => { if (serverUsed !== localUsed) updateFreeUI(serverUsed); });
+          incrementGlobalUsed().then(serverUsed => { updateFreeUI(serverUsed); });
         }
         results.push({ txid, ok: true, msg: plan === 'premium' ? '15–30 мин' : '1–3 ч' });
       } catch(e) { results.push({ txid, ok: false, msg: 'ошибка соединения' }); }
@@ -3599,12 +3619,8 @@ async function go() {
   addToQueue(txid, plan);
   setTxidCooldown(txid);
   if (plan === 'free') {
-    // Мгновенно уменьшаем локально — не ждём Firebase
-    const localUsed = (_lastKnownUsed || 0) + 1;
-    _lastKnownUsed = localUsed;
-    updateFreeUI(localUsed);
-    // Записываем в Firebase асинхронно
-    incrementGlobalUsed().then(serverUsed => { if (serverUsed !== localUsed) updateFreeUI(serverUsed); });
+    // Сначала инкрементируем в Firebase, потом показываем реальное число
+    incrementGlobalUsed().then(serverUsed => { updateFreeUI(serverUsed); });
   }
 
   rb.style.display = 'block'; rb.className = 'res-box';
@@ -4779,7 +4795,7 @@ function saveHistory(txid, plan) {
     const h = JSON.parse(localStorage.getItem('tx_history') || '[]');
     const filtered = h.filter(x => x.txid !== txid);
     filtered.unshift({ txid, plan, ts: Date.now(), confs: 0 });
-    localStorage.setItem('tx_history', JSON.stringify(filtered.slice(0, 10)));
+    localStorage.setItem('tx_history', JSON.stringify(filtered.slice(0, 50)));
   } catch(e) {}
 }
 
@@ -4808,12 +4824,29 @@ function _renderHistoryItem(txid, confs, confirmed) {
   const dw = wrap.querySelector('.hist-dots');
   const st = wrap.querySelector('.hist-status');
   if (!dw || !st) { renderHistory(); return; }
-  const colors = [confs>0?'var(--a)':'rgba(255,255,255,.12)', confs>1?'var(--a)':'rgba(255,255,255,.12)', confs>2?'var(--g)':'rgba(255,255,255,.12)'];
+  // 0=серая(пульс), 1=жёлтая, 2+=зелёная
+  const colors = [
+    confs >= 1 ? (confs >= 2 ? 'var(--g)' : '#ffd166') : 'rgba(255,255,255,.15)',
+    confs >= 2 ? 'var(--g)' : 'rgba(255,255,255,.15)',
+    confs >= 3 ? 'var(--g)' : 'rgba(255,255,255,.15)'
+  ];
   dw.innerHTML = colors.map((c,i) => '<span style="width:7px;height:7px;border-radius:50%;background:'+c+';display:inline-block;flex-shrink:0;'+(confs===0?'animation:conf-wait 1.8s ease-in-out infinite;animation-delay:'+(i*.3)+'s':'transition:background .4s')+'"></span>').join('');
   st.textContent = confs === 0 ? 'ожидание' : confs + ' / 3';
 }
 
-function renderHistory() {
+const HIST_PER_PAGE = 5;
+let _histPage = 0; // текущая страница (0-based)
+
+function _histDotColors(confs) {
+  // 0=серая(пульс), 1=жёлтая, 2+=зелёная
+  return [
+    confs >= 1 ? (confs >= 2 ? 'var(--g)' : '#ffd166') : 'rgba(255,255,255,.15)',
+    confs >= 2 ? 'var(--g)' : 'rgba(255,255,255,.15)',
+    confs >= 3 ? 'var(--g)' : 'rgba(255,255,255,.15)'
+  ];
+}
+
+function renderHistory(page) {
   try {
     const wrap = document.getElementById('history-block');
     const list = document.getElementById('history-list');
@@ -4821,14 +4854,21 @@ function renderHistory() {
     const h = JSON.parse(localStorage.getItem('tx_history') || '[]');
     if (!h.length) { wrap.style.display = 'none'; return; }
     wrap.style.display = 'block';
-    list.innerHTML = h.map(item => {
+
+    const totalPages = Math.ceil(h.length / HIST_PER_PAGE);
+    if (page !== undefined) _histPage = Math.max(0, Math.min(page, totalPages - 1));
+    _histPage = Math.max(0, Math.min(_histPage, totalPages - 1));
+
+    const pageItems = h.slice(_histPage * HIST_PER_PAGE, (_histPage + 1) * HIST_PER_PAGE);
+
+    const itemsHTML = pageItems.map(item => {
       const short = item.txid.slice(0,8) + '...' + item.txid.slice(-6);
       const ago = Math.round((Date.now() - item.ts) / 60000);
       const agoStr = ago < 1 ? 'только что' : ago < 60 ? ago+' мин' : ago < 1440 ? Math.floor(ago/60)+' ч' : Math.floor(ago/1440)+' дн';
       const isPrem = item.plan === 'premium';
       const confs = item.confs || 0;
       const confirmed = item.confirmed || confs >= 3;
-      const dotColors = [confs>0?'var(--a)':'rgba(255,255,255,.12)', confs>1?'var(--a)':'rgba(255,255,255,.12)', confs>2?'var(--g)':'rgba(255,255,255,.12)'];
+      const dotColors = _histDotColors(confs);
       const dotsHTML = confirmed
         ? `<span style="color:var(--g);font-family:var(--mono);font-size:.58rem;display:flex;align-items:center;gap:4px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>подтверждена</span>`
         : dotColors.map((c,i) => `<span style="width:7px;height:7px;border-radius:50%;background:${c};display:inline-block;flex-shrink:0;${confs===0?'animation:conf-wait 1.8s ease-in-out infinite;animation-delay:'+(i*.3)+'s':'transition:background .4s'}"></span>`).join('');
@@ -4843,6 +4883,26 @@ function renderHistory() {
         ${!confirmed ? `<div style="display:flex;align-items:center;gap:5px"><div class="hist-dots" style="display:flex;gap:5px;align-items:center">${dotsHTML}</div><span class="hist-status" style="font-family:var(--mono);font-size:.58rem;color:var(--m);margin-left:3px">${confs===0?'ожидание':confs+' / 3'}</span></div>` : ''}
       </div>`;
     }).join('');
+
+    // Пагинация
+    let pagHTML = '';
+    if (totalPages > 1) {
+      const btns = Array.from({length: totalPages}, (_, i) => {
+        const isActive = i === _histPage;
+        return `<button onclick="renderHistory(${i})" style="min-width:28px;height:26px;padding:0 7px;border-radius:6px;font-family:var(--mono);font-size:.6rem;cursor:pointer;transition:all .15s;
+          background:${isActive?'rgba(247,147,26,.15)':'rgba(255,255,255,.04)'};
+          border:1px solid ${isActive?'rgba(247,147,26,.4)':'rgba(255,255,255,.08)'};
+          color:${isActive?'var(--a)':'var(--m2)'}">${i+1}</button>`;
+      }).join('');
+      pagHTML = `<div style="display:flex;align-items:center;gap:5px;margin-top:8px;justify-content:center">
+        <button onclick="renderHistory(_histPage-1)" ${_histPage===0?'disabled':''} style="width:26px;height:26px;border-radius:6px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--m2);cursor:pointer;font-size:.7rem;transition:all .15s;${_histPage===0?'opacity:.3;cursor:not-allowed':''}">‹</button>
+        ${btns}
+        <button onclick="renderHistory(_histPage+1)" ${_histPage===totalPages-1?'disabled':''} style="width:26px;height:26px;border-radius:6px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--m2);cursor:pointer;font-size:.7rem;transition:all .15s;${_histPage===totalPages-1?'opacity:.3;cursor:not-allowed':''}">›</button>
+        <span style="font-family:var(--mono);font-size:.55rem;color:var(--m);margin-left:4px">${_histPage+1} / ${totalPages} · ${h.length} записей</span>
+      </div>`;
+    }
+
+    list.innerHTML = itemsHTML + pagHTML;
   } catch(e) {}
 }
 
