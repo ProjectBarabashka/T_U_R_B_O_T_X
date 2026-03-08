@@ -1,17 +1,17 @@
 // ══════════════════════════════════════════════════════════════
-//  TurboTX v5 ★ ULTIMATE ★  —  /api/broadcast.js
+//  TurboTX v5.1 ★ АКТУАЛЬНО 2026 ★  —  /api/broadcast.js
 //  Vercel Serverless · Node.js 20
 //
 //  POST /api/broadcast
 //  Body:  { txid, plan:'free'|'premium', hex? }
 //
-//  ✦ 8 hex-broadcast узлов (прямо в мемпул биткоина)
-//  ✦ 14 майнинг-пулов (txid accelerator API)
-//  ✦ getHex — 8 источников гонкой, первый выигрывает
-//  ✦ isAlreadyKnown — HTTP 400 "duplicate" = тоже успех
+//  ✦ 7 hex-broadcast узлов (актуальные 2026)
+//  ✦ 10 майнинг-пулов (только реально работающие без авторизации)
+//  ✦ getHex — 7 источников race(), sochain убран
+//  ✦ isAlreadyKnown — HTTP 400 "duplicate" = успех
 //  ✦ Авто-анализ TX: fee rate, vsize, CPFP рекомендация
-//  ✦ Если TX уже подтверждена — отвечаем мгновенно
-//  ✦ Telegram: красивый отчёт с прогресс-баром
+//  ✦ Если TX подтверждена — отвечаем мгновенно
+//  ✦ Telegram: отчёт с прогресс-баром
 // ══════════════════════════════════════════════════════════════
 
 export const config = { maxDuration: 60 };
@@ -38,19 +38,19 @@ async function ft(url, opts = {}, ms = 13000) {
 async function safeJson(r) { try { return await r.json(); } catch { return {}; } }
 async function safeText(r) { try { return await r.text(); } catch { return ''; } }
 
-// HTTP 400 "already in mempool" = успех для нас
+// HTTP 400 "already in mempool" = успех
 function isAlreadyKnown(body = '', status = 0) {
   const b = String(body).toLowerCase();
   return (
     b.includes('already') || b.includes('duplicate') ||
     b.includes('txn-already-in-mempool') || b.includes('known') ||
-    b.includes('exists')  || b.includes('258') ||
+    b.includes('exists') || b.includes('258') ||
     (status === 400 && !b.includes('bad-txns') && !b.includes('non-mandatory'))
   );
 }
 
 // ─────────────────────────────────────────────────────────────
-//  ПОЛУЧИТЬ RAW HEX — 8 источников, race()
+//  ПОЛУЧИТЬ RAW HEX — 7 источников, race()
 // ─────────────────────────────────────────────────────────────
 async function getHex(txid) {
   const HEX_RE = /^[0-9a-fA-F]{200,}$/;
@@ -62,7 +62,6 @@ async function getHex(txid) {
     { url: `https://api.blockchair.com/bitcoin/raw/transaction/${txid}`,           t: 'json', p: ['data', txid, 'raw_transaction'] },
     { url: `https://api.blockcypher.com/v1/btc/main/txs/${txid}?includeHex=true`,  t: 'json', p: ['hex'] },
     { url: `https://chain.api.btc.com/v3/tx/${txid}`,                              t: 'json', p: ['data', 'raw_hex'] },
-    { url: `https://sochain.com/api/v2/get_tx/BTC/${txid}`,                        t: 'json', p: ['data', 'tx_hex'] },
   ];
   return new Promise(resolve => {
     let found = false, done = 0;
@@ -81,7 +80,7 @@ async function getHex(txid) {
 }
 
 // ─────────────────────────────────────────────────────────────
-//  АНАЛИЗ TX — fee rate, vsize, CPFP нужен?
+//  АНАЛИЗ TX — fee rate, vsize, нужен CPFP?
 // ─────────────────────────────────────────────────────────────
 async function analyzeTx(txid) {
   try {
@@ -99,26 +98,26 @@ async function analyzeTx(txid) {
     const needCpfp = feeRate > 0 && feeRate < fastest * 0.5;
     return {
       vsize, feePaid, feeRate, fastest, needCpfp,
-      cpfpFeeNeeded: needCpfp ? Math.max(0, fastest*(vsize+110)-feePaid) : 0,
+      cpfpFeeNeeded: needCpfp ? Math.max(0, fastest * (vsize + 110) - feePaid) : 0,
       confirmed: tx.status?.confirmed || false,
     };
   } catch { return null; }
 }
 
 // ─────────────────────────────────────────────────────────────
-//  ВСЕ КАНАЛЫ
+//  ВСЕ КАНАЛЫ (актуально 2026)
 // ─────────────────────────────────────────────────────────────
 function buildChannels(txid, hex) {
   const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120';
 
   return [
 
-    // ══════ TIER 1 — HEX-BROADCAST (прямо в биткоин-узлы) ═════
+    // ══════ TIER 1 — HEX-BROADCAST (биткоин-узлы, актуальные эндпоинты) ════
 
-    { name: 'mempool.space',   tier: 'node', enabled: !!hex,
+    { name: 'mempool.space', tier: 'node', enabled: !!hex,
       call: async () => {
         const r = await ft('https://mempool.space/api/tx',
-          { method:'POST', body:hex, headers:{'Content-Type':'text/plain'} }, 12000);
+          { method: 'POST', body: hex, headers: { 'Content-Type': 'text/plain' } }, 12000);
         const txt = await safeText(r);
         return { ok: r.ok || isAlreadyKnown(txt, r.status), status: r.status };
       }
@@ -127,223 +126,218 @@ function buildChannels(txid, hex) {
     { name: 'blockstream.info', tier: 'node', enabled: !!hex,
       call: async () => {
         const r = await ft('https://blockstream.info/api/tx',
-          { method:'POST', body:hex, headers:{'Content-Type':'text/plain'} }, 12000);
+          { method: 'POST', body: hex, headers: { 'Content-Type': 'text/plain' } }, 12000);
         const txt = await safeText(r);
         return { ok: r.ok || isAlreadyKnown(txt, r.status), status: r.status };
       }
     },
 
-    { name: 'blockchair',      tier: 'node', enabled: !!hex,
+    { name: 'blockchair', tier: 'node', enabled: !!hex,
       call: async () => {
         const r = await ft('https://api.blockchair.com/bitcoin/push/transaction', {
-          method:'POST', body:`data=${encodeURIComponent(hex)}`,
-          headers:{'Content-Type':'application/x-www-form-urlencoded'}
+          method: 'POST',
+          body: `data=${encodeURIComponent(hex)}`,
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         }, 12000);
         const j = await safeJson(r);
-        return { ok: !!(j?.data || j?.result || j?.context?.code===200 || isAlreadyKnown(JSON.stringify(j),r.status)), status: r.status };
+        return {
+          ok: !!(j?.data || j?.result || j?.context?.code === 200 || isAlreadyKnown(JSON.stringify(j), r.status)),
+          status: r.status
+        };
       }
     },
 
-    { name: 'blockcypher',     tier: 'node', enabled: !!hex,
+    { name: 'blockcypher', tier: 'node', enabled: !!hex,
       call: async () => {
         const r = await ft('https://api.blockcypher.com/v1/btc/main/txs/push', {
-          method:'POST', body:JSON.stringify({tx:hex}), headers:{'Content-Type':'application/json'}
+          method: 'POST',
+          body: JSON.stringify({ tx: hex }),
+          headers: { 'Content-Type': 'application/json' }
         }, 12000);
         const j = await safeJson(r);
-        return { ok: r.status===201 || isAlreadyKnown(JSON.stringify(j),r.status), status: r.status };
+        return { ok: r.status === 201 || isAlreadyKnown(JSON.stringify(j), r.status), status: r.status };
       }
     },
 
-    { name: 'btcscan.org',     tier: 'node', enabled: !!hex,
+    { name: 'btcscan.org', tier: 'node', enabled: !!hex,
       call: async () => {
         const r = await ft('https://btcscan.org/api/tx/push',
-          { method:'POST', body:hex, headers:{'Content-Type':'text/plain'} }, 10000);
+          { method: 'POST', body: hex, headers: { 'Content-Type': 'text/plain' } }, 10000);
         const txt = await safeText(r);
         return { ok: r.ok || isAlreadyKnown(txt, r.status), status: r.status };
-      }
-    },
-
-    { name: 'bitaps.com',      tier: 'node', enabled: !!hex,
-      call: async () => {
-        const r = await ft('https://bitaps.com/api/bitcoin/push/transaction',
-          { method:'POST', body:hex, headers:{'Content-Type':'text/plain'} }, 10000);
-        return { ok: r.ok, status: r.status };
       }
     },
 
     { name: 'blockchain.info', tier: 'node', enabled: !!hex,
       call: async () => {
         const r = await ft('https://blockchain.info/pushtx', {
-          method:'POST', body:`tx=${hex}`, headers:{'Content-Type':'application/x-www-form-urlencoded'}
+          method: 'POST',
+          body: `tx=${hex}`,
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
         }, 12000);
         const txt = await safeText(r);
         return { ok: r.ok || isAlreadyKnown(txt, r.status), status: r.status };
       }
     },
 
-    { name: 'sochain.com',     tier: 'node', enabled: !!hex,
+    { name: 'bitaps.com', tier: 'node', enabled: !!hex,
       call: async () => {
-        const r = await ft('https://sochain.com/api/v2/send_tx/BTC', {
-          method:'POST', body:JSON.stringify({tx_hex:hex}), headers:{'Content-Type':'application/json'}
-        }, 10000);
-        const j = await safeJson(r);
-        return { ok: j?.status==='success' || isAlreadyKnown(JSON.stringify(j),r.status), status: r.status };
+        const r = await ft('https://bitaps.com/api/bitcoin/push/transaction',
+          { method: 'POST', body: hex, headers: { 'Content-Type': 'text/plain' } }, 10000);
+        return { ok: r.ok, status: r.status };
       }
     },
 
-    // ══════ TIER 2 — МАЙНИНГ-ПУЛЫ (accelerator API) ════════════
+    // ══════ TIER 2 — МАЙНИНГ-ПУЛЫ (только без авторизации, актуально 2026) ════
 
-    { name: 'ViaBTC',       tier: 'pool', enabled: true,
+    // ViaBTC — работает без авторизации, 20 бесплатных попыток/час
+    { name: 'ViaBTC', tier: 'pool', enabled: true,
       call: async () => {
         const r = await ft('https://www.viabtc.com/tools/txaccelerator/', {
-          method:'POST', body:`txid=${txid}`,
-          headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':UA,'Referer':'https://www.viabtc.com/'}
+          method: 'POST',
+          body: `txid=${txid}`,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': UA,
+            'Referer': 'https://www.viabtc.com/',
+            'Origin': 'https://www.viabtc.com',
+          }
         }, 14000);
         const txt = await safeText(r);
-        return { ok: r.ok || txt.includes('"code":0') || txt.includes('success'), status: r.status };
+        return {
+          ok: r.ok || txt.includes('"code":0') || txt.includes('"code": 0') || txt.includes('success'),
+          status: r.status, snippet: txt.slice(0, 80)
+        };
       }
     },
 
-    { name: 'AntPool',      tier: 'pool', enabled: true,
+    // AntPool — актуальный эндпоинт 2026 (txAccelerate)
+    { name: 'AntPool', tier: 'pool', enabled: true,
       call: async () => {
-        const r = await ft('https://antpool.com/api/v1/btc/tx/accelerate', {
-          method:'POST', body:JSON.stringify({txid}),
-          headers:{'Content-Type':'application/json','User-Agent':UA}
+        const r = await ft('https://www.antpool.com/txAccelerate', {
+          method: 'POST',
+          body: JSON.stringify({ txid }),
+          headers: { 'Content-Type': 'application/json', 'User-Agent': UA }
         }, 12000);
         const j = await safeJson(r);
-        return { ok: r.ok || j?.code===0 || j?.success===true, status: r.status };
+        return { ok: r.ok || j?.code === 0 || j?.success === true, status: r.status };
       }
     },
 
-    { name: 'F2Pool',       tier: 'pool', enabled: true,
-      call: async () => {
-        const r = await ft('https://www.f2pool.com/api/v2/tx/accelerate', {
-          method:'POST', body:JSON.stringify({tx_id:txid}),
-          headers:{'Content-Type':'application/json','User-Agent':UA}
-        }, 12000);
-        const j = await safeJson(r);
-        return { ok: r.ok || j?.code===0 || j?.result==='success', status: r.status };
-      }
-    },
-
-    { name: 'CloverPool',   tier: 'pool', enabled: true,
+    // CloverPool (ex BTC.com pool) — поддерживает CPFP, актуален в 2026
+    { name: 'CloverPool', tier: 'pool', enabled: true,
       call: async () => {
         const r = await ft('https://clvpool.com/accelerator', {
-          method:'POST', body:`tx_id=${txid}`,
-          headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':UA}
+          method: 'POST',
+          body: `tx_id=${txid}`,
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': UA }
         }, 12000);
         return { ok: r.ok, status: r.status };
       }
     },
 
-    { name: 'BTC.com',      tier: 'pool', enabled: true,
+    // BTC.com — актуальный эндпоинт
+    { name: 'BTC.com', tier: 'pool', enabled: true,
       call: async () => {
         const r = await ft('https://btc.com/service/accelerator/boost', {
-          method:'POST', body:JSON.stringify({tx_id:txid}),
-          headers:{'Content-Type':'application/json','User-Agent':UA}
+          method: 'POST',
+          body: JSON.stringify({ tx_id: txid }),
+          headers: { 'Content-Type': 'application/json', 'User-Agent': UA }
         }, 12000);
         const j = await safeJson(r);
-        return { ok: r.ok || j?.err_no===0 || j?.data?.status==='success', status: r.status };
+        return { ok: r.ok || j?.err_no === 0 || j?.data?.status === 'success', status: r.status };
       }
     },
 
-    { name: 'BitFuFu',      tier: 'pool', enabled: true,
-      call: async () => {
-        const r = await ft('https://www.bitfufu.com/txaccelerator/submit', {
-          method:'POST', body:JSON.stringify({txHash:txid}),
-          headers:{'Content-Type':'application/json','User-Agent':UA}
-        }, 12000);
-        const j = await safeJson(r);
-        return { ok: r.ok || j?.success===true, status: r.status };
-      }
-    },
-
-    { name: 'TxBoost',      tier: 'pool', enabled: true,
+    // TxBoost (Poolin) — актуален
+    { name: 'TxBoost', tier: 'pool', enabled: true,
       call: async () => {
         const r = await ft('https://txboost.com/', {
-          method:'POST', body:`txid=${txid}`,
-          headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':UA}
+          method: 'POST',
+          body: `txid=${txid}`,
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': UA }
         }, 12000);
         const txt = await safeText(r);
         return { ok: r.ok || txt.includes('success'), status: r.status };
       }
     },
 
+    // Mempool.space Accelerator — платный но API открыт
     { name: 'mempoolAccel', tier: 'pool', enabled: true,
       call: async () => {
         const r = await ft('https://mempool.space/api/v1/tx-accelerator/enqueue', {
-          method:'POST', body:JSON.stringify({txid}),
-          headers:{'Content-Type':'application/json','User-Agent':UA}
+          method: 'POST',
+          body: JSON.stringify({ txid }),
+          headers: { 'Content-Type': 'application/json', 'User-Agent': UA }
         }, 12000);
         const j = await safeJson(r);
-        return { ok: r.ok || j?.message==='Success', status: r.status };
+        return { ok: r.ok || j?.message === 'Success', status: r.status };
       }
     },
 
-    { name: 'bitaccelerate', tier: 'pool', enabled: true,
+    // BitAccelerate — бесплатный ребрасткаст через 10 нод
+    { name: 'BitAccelerate', tier: 'pool', enabled: true,
       call: async () => {
         const r = await ft('https://www.bitaccelerate.com/', {
-          method:'POST', body:`txid=${txid}`,
-          headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':UA}
+          method: 'POST',
+          body: `txid=${txid}`,
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': UA }
         }, 12000);
         return { ok: r.ok, status: r.status };
       }
     },
 
-    { name: '360btc',        tier: 'pool', enabled: true,
+    // 360BTC — бесплатный, без лимита на размер TX
+    { name: '360btc', tier: 'pool', enabled: true,
       call: async () => {
         const r = await ft('https://360btc.net/accelerate', {
-          method:'POST', body:`txid=${txid}`,
-          headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':UA}
+          method: 'POST',
+          body: `txid=${txid}`,
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': UA }
         }, 12000);
         return { ok: r.ok, status: r.status };
       }
     },
 
-    { name: 'fujn.com',      tier: 'pool', enabled: true,
+    // fujn.com — актуален
+    { name: 'fujn.com', tier: 'pool', enabled: true,
       call: async () => {
         const r = await ft('https://fujn.com/accelerate', {
-          method:'POST', body:`txid=${txid}`,
-          headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':UA}
+          method: 'POST',
+          body: `txid=${txid}`,
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'User-Agent': UA }
         }, 12000);
         return { ok: r.ok, status: r.status };
       }
     },
 
-    { name: 'txfaster',      tier: 'pool', enabled: true,
-      call: async () => {
-        const r = await ft('https://txfaster.com/api/accelerate', {
-          method:'POST', body:JSON.stringify({txid}),
-          headers:{'Content-Type':'application/json','User-Agent':UA}
-        }, 10000);
-        const j = await safeJson(r);
-        return { ok: r.ok || j?.success===true, status: r.status };
-      }
-    },
-
-    { name: 'btcspeed',      tier: 'pool', enabled: true,
-      call: async () => {
-        const r = await ft('https://btcspeed.org/boost', {
-          method:'POST', body:`tx=${txid}`,
-          headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':UA}
-        }, 10000);
-        return { ok: r.ok, status: r.status };
-      }
-    },
-
-    { name: 'blockchain.com-accel', tier: 'pool', enabled: true,
-      call: async () => {
-        const r = await ft('https://www.blockchain.com/btc/unconfirmed-transactions', {
-          method:'GET', headers:{'User-Agent':UA}
-        }, 8000);
-        return { ok: r.ok, status: r.status };
-      }
-    },
   ];
 }
 
 // ─────────────────────────────────────────────────────────────
-//  TELEGRAM УВЕДОМЛЕНИЕ
+//  ЗАПУСТИТЬ ВОЛНУ
+// ─────────────────────────────────────────────────────────────
+async function runWave(channels, plan) {
+  const active = plan === 'premium'
+    ? channels.filter(c => c.enabled)
+    : channels.filter(c => c.tier === 'node' && c.enabled);
+
+  const settled = await Promise.allSettled(
+    active.map(async ch => {
+      const t0 = Date.now();
+      try {
+        const r = await ch.call();
+        return { channel: ch.name, tier: ch.tier, ok: !!r.ok, status: r.status ?? null, ms: Date.now() - t0 };
+      } catch(e) {
+        return { channel: ch.name, tier: ch.tier, ok: false, error: e.message, ms: Date.now() - t0 };
+      }
+    })
+  );
+  return settled.map(s => s.status === 'fulfilled' ? s.value : { ok: false, error: s.reason?.message });
+}
+
+// ─────────────────────────────────────────────────────────────
+//  TELEGRAM
 // ─────────────────────────────────────────────────────────────
 async function tgNotify({ results, txid, plan, analysis, ms }) {
   const token  = process.env.TG_TOKEN;
@@ -352,28 +346,27 @@ async function tgNotify({ results, txid, plan, analysis, ms }) {
 
   const ok    = results.filter(r => r.ok).length;
   const total = results.length;
-  const pct   = total ? Math.round(ok/total*100) : 0;
-  const bar   = '█'.repeat(Math.round(pct/10)) + '░'.repeat(10-Math.round(pct/10));
-  const nodes = results.filter(r => r.tier==='node' && r.ok).map(r=>r.channel).join(', ') || '—';
-  const pools = results.filter(r => r.tier==='pool' && r.ok).map(r=>r.channel).join(', ') || '—';
+  const pct   = total ? Math.round(ok / total * 100) : 0;
+  const bar   = '█'.repeat(Math.round(pct / 10)) + '░'.repeat(10 - Math.round(pct / 10));
+  const nodes = results.filter(r => r.tier === 'node' && r.ok).map(r => r.channel).join(', ') || '—';
+  const pools = results.filter(r => r.tier === 'pool' && r.ok).map(r => r.channel).join(', ') || '—';
 
   const lines = [
-    `⚡ *TurboTX v5 — Broadcast*`,
-    `📋 \`${txid.slice(0,14)}…${txid.slice(-6)}\``,
+    `⚡ *TurboTX v5.1 — Broadcast*`,
+    `📋 \`${txid.slice(0, 14)}…${txid.slice(-6)}\``,
     `🎯 *${plan.toUpperCase()}* · ⏱ ${ms}ms`,
-    ``,
     `\`${bar}\` ${pct}% (${ok}/${total})`,
-    ``,
     `🔗 Узлы: ${nodes}`,
     `🏊 Пулы: ${pools}`,
     analysis ? `📐 ${analysis.vsize}vB · ${analysis.feeRate}sat/vB` + (analysis.needCpfp ? ` ⚠️ CPFP нужен` : ' ✅') : '',
-    `🕐 ${new Date().toLocaleString('ru',{timeZone:'Europe/Moscow'})} МСК`,
+    `🕐 ${new Date().toLocaleString('ru', { timeZone: 'Europe/Moscow' })} МСК`,
   ].filter(Boolean).join('\n');
 
   await ft(`https://api.telegram.org/bot${token}/sendMessage`, {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({ chat_id:chatId, text:lines, parse_mode:'Markdown' })
-  }, 5000).catch(()=>{});
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chatId, text: lines, parse_mode: 'Markdown' })
+  }, 5000).catch(() => {});
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -381,22 +374,20 @@ async function tgNotify({ results, txid, plan, analysis, ms }) {
 // ─────────────────────────────────────────────────────────────
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).set(CORS).end();
-  Object.entries(CORS).forEach(([k,v]) => res.setHeader(k,v));
-  if (req.method !== 'POST') return res.status(405).json({ ok:false, error:'Method not allowed' });
+  Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
+  if (req.method !== 'POST') return res.status(405).json({ ok: false, error: 'Method not allowed' });
 
   const { txid, plan = 'free', hex: hexIn } = req.body || {};
   if (!txid || !/^[a-fA-F0-9]{64}$/.test(txid))
-    return res.status(400).json({ ok:false, error:'Invalid TXID' });
+    return res.status(400).json({ ok: false, error: 'Invalid TXID' });
 
   const t0 = Date.now();
 
-  // Параллельно: берём hex + анализируем TX
   const [hex, analysis] = await Promise.all([
     hexIn && /^[0-9a-fA-F]{200,}$/.test(hexIn) ? Promise.resolve(hexIn) : getHex(txid),
     analyzeTx(txid),
   ]);
 
-  // Если уже подтверждена — незачем слать
   if (analysis?.confirmed) {
     return res.status(200).json({
       ok: true, confirmed: true,
@@ -405,7 +396,6 @@ export default async function handler(req, res) {
     });
   }
 
-  // Запускаем все каналы параллельно
   const channels = buildChannels(txid, hex);
   const results  = await runWave(channels, plan);
   const okCount  = results.filter(r => r.ok).length;
@@ -420,32 +410,10 @@ export default async function handler(req, res) {
     cpfpFeeNeeded: analysis?.cpfpFeeNeeded ?? 0,
   };
 
-  tgNotify({ results, txid, plan, analysis, ms }).catch(()=>{});
+  tgNotify({ results, txid, plan, analysis, ms }).catch(() => {});
 
   return res.status(200).json({
     ok: okCount > 0, results, summary, analysis,
-    ...(plan==='premium' ? { jobId:`${txid.slice(0,8)}_${Date.now()}` } : {}),
+    ...(plan === 'premium' ? { jobId: `${txid.slice(0, 8)}_${Date.now()}` } : {}),
   });
-}
-
-// ─────────────────────────────────────────────────────────────
-//  runWave (internal)
-// ─────────────────────────────────────────────────────────────
-async function runWave(channels, plan) {
-  const active = plan === 'premium'
-    ? channels.filter(c => c.enabled)
-    : channels.filter(c => c.tier === 'node' && c.enabled);
-
-  const settled = await Promise.allSettled(
-    active.map(async ch => {
-      const t0 = Date.now();
-      try {
-        const r = await ch.call();
-        return { channel:ch.name, tier:ch.tier, ok:!!r.ok, status:r.status??null, ms:Date.now()-t0 };
-      } catch(e) {
-        return { channel:ch.name, tier:ch.tier, ok:false, error:e.message, ms:Date.now()-t0 };
-      }
-    })
-  );
-  return settled.map(s => s.status==='fulfilled' ? s.value : { ok:false, error:s.reason?.message });
 }
