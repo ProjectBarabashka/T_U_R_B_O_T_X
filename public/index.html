@@ -205,7 +205,7 @@ bitcoin tx accelerator online, btc accelerator 2025, btc accelerator 2026,
 <meta property="og:url"               content="https://acelerat.vercel.app/">
 <meta property="og:site_name"         content="TurboTX">
 <meta property="og:title"             content="⚡ TurboTX — Bitcoin Transaction Accelerator #1">
-<meta property="og:description"       content="TurboTX v4 — серверный Bitcoin accelerator 2026. 13 каналов: ViaBTC, AntPool, F2Pool, CloverPool, BitAccelerate. Реальные ответы от пулов. Premium $3–18 динамично. Гарантия 4 часа.">
+<meta property="og:description"       content="TurboTX v5.1 — серверный Bitcoin accelerator 2026. 17 каналов: ViaBTC, AntPool, SpiderPool, CloverPool, BitFuFu. Rebroadcast + авто-повтор 6 волн. Premium $3–18 динамично. Гарантия 6 часов.">
 <meta property="og:image"             content="https://acelerat.vercel.app/og-image.png">
 <meta property="og:image:secure_url"  content="https://acelerat.vercel.app/og-image.png">
 <meta property="og:image:width"       content="1200">
@@ -221,7 +221,7 @@ bitcoin tx accelerator online, btc accelerator 2025, btc accelerator 2026,
 <meta name="twitter:site"        content="@TurboTXAcel">
 <meta name="twitter:creator"     content="@TurboTXAcel">
 <meta name="twitter:title"       content="⚡ TurboTX — Bitcoin Transaction Accelerator #1">
-<meta name="twitter:description" content="Застряла BTC транзакция? Rebroadcast в 15+ пулов + ViaBTC/BTC.com API. Бесплатно или Premium за 10–20 мин. Гарантия возврата.">
+<meta name="twitter:description" content="Застряла BTC транзакция? Rebroadcast в 17 каналов: ViaBTC, AntPool, SpiderPool, CloverPool, BitFuFu. Бесплатно или Premium за 10–20 мин. Гарантия возврата 6ч.">
 <meta name="twitter:image"       content="https://acelerat.vercel.app/og-image.png">
 <meta name="twitter:image:alt"   content="TurboTX Bitcoin Accelerator">
 
@@ -276,15 +276,19 @@ bitcoin tx accelerator online, btc accelerator 2025, btc accelerator 2026,
         "worstRating": "1"
       },
       "featureList": [
-        "Rebroadcast в 15+ майнинг-пулов",
+        "Rebroadcast в 17 каналов",
         "ViaBTC Accelerator API",
-        "BTC.com Accelerator API",
+        "AntPool Accelerator API",
+        "SpiderPool Accelerator — топ-5 хешрейт 2026",
+        "BitFuFu Accelerator",
+        "CloverPool Accelerator",
         "CPFP калькулятор",
         "RBF калькулятор",
         "Пакетное ускорение до 20 транзакций",
-        "Real-time мониторинг mempool",
+        "Real-time мониторинг mempool + хешрейт",
         "Бесплатное ускорение",
         "Premium ускорение 10-20 минут",
+        "Авто-повтор 6 волн (0/15/30/60/120/240 мин)",
         "Гарантия возврата 6 часов"
       ],
       "screenshot": "https://acelerat.vercel.app/og-image.png",
@@ -436,7 +440,7 @@ bitcoin tx accelerator online, btc accelerator 2025, btc accelerator 2026,
       "name": "Какие майнинг-пулы поддерживает TurboTX?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "TurboTX отправляет транзакции в 15+ ведущих майнинг-пулов: AntPool, ViaBTC, Foundry USA, F2Pool, BTC.com, MARA Pool, Luxor, Braiins Pool, BinancePool и другие. Premium также использует прямые API ViaBTC Accelerator и BTC.com Accelerator."
+        "text": "TurboTX v5.1 отправляет транзакции в 17 каналов: AntPool, ViaBTC, SpiderPool (топ-5 хешрейт 2026), Foundry USA, CloverPool, BitFuFu, MARA Pool, BitAccelerate и другие. Premium использует прямые API ViaBTC, AntPool, SpiderPool, CloverPool и мемпул-акселератор. F2Pool убран из прямых каналов в 2026 (требует авторизацию)."
       }
     },
     {
@@ -553,6 +557,8 @@ bitcoin tx accelerator online, btc accelerator 2025, btc accelerator 2026,
   --m:#50507a;
   --m2:#7878a0;
   --err:#ff3355;
+  --accent2:#7c5cfc;  /* 2026: purple accent for new pools */
+  --accent3:#26d0a8;  /* 2026: teal for SpiderPool */
   --r:12px;
   --r2:18px;
   --shadow:0 4px 24px rgba(0,0,0,.4);
@@ -642,9 +648,41 @@ input[type=text], input[type=email], textarea {
 
 
 
-/* Feed items — touch friendly */
-.feed-item {
-  min-height: 44px; /* минимальный размер для тапа по iOS HIG */
+/* 2026 — пульсирующий border для топ-пулов SpiderPool/BitFuFu */
+.pi.new-2026 {
+  border-color: rgba(38,208,168,.22);
+  background: rgba(38,208,168,.025);
+  position: relative;
+}
+.pi.new-2026 .pn::after {
+  content: ' ★';
+  color: var(--accent3);
+  font-size: .6em;
+}
+/* 2026 hashrate bar — под pools-grid */
+.hashrate-bar {
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 14px; margin-top: 12px;
+  background: rgba(247,147,26,.03);
+  border: 1px solid rgba(247,147,26,.1);
+  border-radius: var(--r);
+  font-family: var(--mono); font-size: .62rem; color: var(--m2);
+}
+.hashrate-fill-wrap {
+  flex: 1; height: 3px;
+  background: rgba(255,255,255,.06);
+  border-radius: 4px; overflow: hidden;
+}
+.hashrate-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--a), var(--accent3));
+  border-radius: 4px;
+  transition: width 1s ease;
+}
+
+/* Subtle improvement to plan card PREMIUM badge text */
+.plan-card.prem::after {
+  content: 'ВЫБОР 2026';
 }
 
 /* Кнопки — минимальный размер тапа */
@@ -701,8 +739,9 @@ body::after{
   transform:translateX(-50%);
   width:900px;height:900px;
   background:
-    radial-gradient(circle at 30% 50%,rgba(247,147,26,.05) 0%,transparent 55%),
-    radial-gradient(circle at 70% 50%,rgba(0,232,122,.03) 0%,transparent 55%);
+    radial-gradient(circle at 30% 50%,rgba(247,147,26,.06) 0%,transparent 55%),
+    radial-gradient(circle at 70% 50%,rgba(124,92,252,.04) 0%,transparent 55%),
+    radial-gradient(circle at 50% 80%,rgba(0,232,122,.02) 0%,transparent 50%);
   pointer-events:none;z-index:0;
   animation:bgPulse 12s ease-in-out infinite alternate
 }
@@ -2119,7 +2158,7 @@ input[type=text]:focus {
     <div class="logo-icon">₿</div>
     <div style="position:relative">
       <span class="logo-turbo">TURBO</span><span class="logo-tx">TX</span>
-      <span class="logo-tag">BTC Accelerator</span>
+      <span class="logo-tag">BTC Accelerator v5.1</span>
     </div>
   </a>
   <div class="nav-right">
@@ -2136,9 +2175,9 @@ input[type=text]:focus {
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-label" style="gap:10px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polygon points='13 2 3 14 12 14 11 22 21 10 12 10 13 2'/></svg> Bitcoin Accelerator</div>
+  <div class="hero-label" style="gap:10px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polygon points='13 2 3 14 12 14 11 22 21 10 12 10 13 2'/></svg> Bitcoin Accelerator 2026 · 17 каналов</div>
   <h1>Застрявшая BTC<br><span>транзакция?</span></h1>
-  <p>Серверный broadcast в 13 каналов: 5 CORS-узлов + 8 пул-акселераторов 2026.<br>Бесплатно · Premium в среднем <strong style="color:var(--a)">10–20 мин</strong> · Динамическая цена $3–18</p>
+  <p>Серверный broadcast в 17 каналов: 7 CORS-узлов + 10 пул-акселераторов.<br>Бесплатно · Premium в среднем <strong style="color:var(--a)">10–20 мин</strong> · Динамическая цена $3–18</p>
 
   <!-- HERO TRUST ROW -->
   <div style="display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;margin-bottom:36px;margin-top:-12px">
@@ -2149,7 +2188,7 @@ input[type=text]:focus {
     <div style="width:3px;height:3px;border-radius:50%;background:var(--b2)"></div>
     <div style="display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.6rem;color:var(--m2)">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--a)" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-      15 пулов · BTC + USDT
+      17 каналов · BTC + USDT
     </div>
     <div style="width:3px;height:3px;border-radius:50%;background:var(--b2)"></div>
     <div style="display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.6rem;color:var(--m2)">
@@ -2162,24 +2201,28 @@ input[type=text]:focus {
 </section>
 
 <!-- MEMPOOL ALERT BAR -->
-<div id="mempool-bar" style="display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 16px;margin-bottom:20px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:var(--r);font-family:var(--mono);font-size:.68rem;color:var(--m2)">
+<div id="mempool-bar" style="display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 16px;margin-bottom:20px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:var(--r);font-family:var(--mono);font-size:.68rem;color:var(--m2);flex-wrap:wrap">
   <span style="width:6px;height:6px;border-radius:50%;background:var(--g);flex-shrink:0;animation:livepulse 2s infinite"></span>
-  <span>Сейчас застряло в мемпуле:</span>
+  <span>Застряло в мемпуле:</span>
   <span id="tk-stuck" style="font-weight:700;font-size:.82rem;color:var(--t)">—</span>
-  <span>транзакций</span>
-  <span style="margin-left:6px;padding:2px 10px;border-radius:20px;font-size:.6rem" id="tk-stuck-badge">·</span>
+  <span>TX</span>
+  <span id="tk-stuck-badge" style="margin-left:6px;padding:2px 10px;border-radius:20px;font-size:.6rem">·</span>
   <span style="margin-left:8px;color:rgba(255,255,255,.15)">|</span>
-  <span style="margin-left:4px">Быстрая комиссия:</span>
+  <span style="margin-left:4px">Быстро:</span>
   <span id="tk-nextfee" class="ticker-val ok" style="font-weight:700;color:var(--t)">—</span>
   <span>sat/vB</span>
-  <span style="margin-left:6px;color:rgba(255,255,255,.1)">·</span>
+  <span style="color:rgba(255,255,255,.1)">·</span>
   <span>мин:</span>
   <span id="tk-minfee" class="ticker-val ok" style="font-weight:700;color:var(--t)">—</span>
   <span>sat/vB</span>
-  <span style="margin-left:6px;color:rgba(255,255,255,.1)">·</span>
+  <span style="color:rgba(255,255,255,.1)">·</span>
   <span>мемпул:</span>
   <span id="tk-size" class="ticker-val ok" style="font-weight:700;color:var(--t)">—</span>
   <span>МБ</span>
+  <span style="color:rgba(255,255,255,.1)">·</span>
+  <span>хешрейт:</span>
+  <span id="tk-hashrate" style="font-weight:700;color:var(--a)">—</span>
+  <span>EH/s</span>
 </div>
 
 <!-- STATS -->
@@ -2889,7 +2932,7 @@ input[type=text]:focus {
       <thead>
         <tr style="background:rgba(0,0,0,.2)">
           <th>Параметр</th>
-          <th class="us comp-us-col">TurboTX v4</th>
+          <th class="us comp-us-col">TurboTX v5.1</th>
           <th>ViaBTC</th>
           <th>CloverPool</th>
           <th>BitAccelerate</th>
@@ -2904,8 +2947,8 @@ input[type=text]:focus {
           <td class="no">—</td>
         </tr>
         <tr>
-          <td class="comp-row-label">Кол-во пулов</td>
-          <td class="us comp-us-col">13 каналов · сервер ⚡</td>
+          <td class="comp-row-label">Кол-во каналов</td>
+          <td class="us comp-us-col">17 каналов · сервер ⚡</td>
           <td class="maybe">1 пул (ViaBTC)</td>
           <td class="maybe">1 пул (CloverPool)</td>
           <td class="maybe">~20 нод (клиент)</td>
@@ -2933,10 +2976,17 @@ input[type=text]:focus {
         </tr>
         <tr>
           <td class="comp-row-label">Авто-повторы</td>
-          <td class="us comp-us-col" style="color:var(--g)">6 волн · 4 ч</td>
+          <td class="us comp-us-col" style="color:var(--g)">6 волн · 4 ч ⚡</td>
           <td class="no">—</td>
           <td class="no">—</td>
           <td class="maybe">раз в 6ч</td>
+        </tr>
+        <tr>
+          <td class="comp-row-label">SpiderPool/BitFuFu</td>
+          <td class="us comp-us-col" style="color:var(--g)">✓ топ-пулы 2026</td>
+          <td class="no">—</td>
+          <td class="no">—</td>
+          <td class="no">—</td>
         </tr>
         <tr>
           <td class="comp-row-label">RBF калькулятор</td>
@@ -2991,8 +3041,19 @@ input[type=text]:focus {
   <div style="display:flex;gap:16px;margin-bottom:10px;font-family:var(--mono);font-size:.62rem;color:var(--m)">
     <span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:var(--g);display:inline-block"></span>Прямой API</span>
     <span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:#7c5c9e;box-shadow:0 0 4px rgba(124,92,158,.4);display:inline-block"></span>Через p2p сеть</span>
+    <span style="display:flex;align-items:center;gap:5px"><span style="color:var(--accent3);font-size:.9em">★</span>Новый топ-пул 2026</span>
   </div>
   <div class="pools-grid" id="pg"></div>
+  <div class="hashrate-bar">
+    <span style="color:var(--a)">⚡</span>
+    <span>Глобальный хешрейт сети:</span>
+    <strong id="hr-display" style="color:var(--t)">—</strong>
+    <span>EH/s</span>
+    <div class="hashrate-fill-wrap">
+      <div class="hashrate-fill" id="hr-fill" style="width:0%"></div>
+    </div>
+    <span id="hr-label" style="color:var(--m)">загружаем…</span>
+  </div>
 </div>
 
 
@@ -3151,9 +3212,9 @@ input[type=text]:focus {
       </summary>
       <p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">
         Скопируйте <strong style="color:var(--t)">TXID (Transaction ID)</strong> вашей транзакции из кошелька — это строка из 64 символов.
-        Вставьте его в форму выше и нажмите «Ускорить транзакцию». TurboTX мгновенно отправит транзакцию
-        в 5–15 майнинг-пулов (ViaBTC, AntPool, F2Pool и другие), которые включат её в следующий блок.
-        Бесплатное ускорение занимает <strong style="color:var(--t)">1–3 часа</strong>, Premium — <strong style="color:var(--t)">10–20 минут</strong> (ViaBTC + BTC.com API + 15 пулов).
+        Вставьте его в форму выше и нажмите «Ускорить транзакцию». TurboTX v5.1 мгновенно отправит транзакцию
+        в 17 каналов (ViaBTC, AntPool, SpiderPool, CloverPool, BitFuFu и другие), которые включат её в следующий блок.
+        Бесплатное ускорение занимает <strong style="color:var(--t)">1–3 часа</strong>, Premium — <strong style="color:var(--t)">10–20 минут</strong> с авто-повтором каждые 15 мин.
       </p>
     </details>
 
@@ -3164,7 +3225,9 @@ input[type=text]:focus {
       </summary>
       <p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">
         Транзакция зависает в <strong style="color:var(--t)">mempool</strong> (очередь транзакций), когда сеть перегружена
-        или комиссия (fee) была установлена слишком низкой. Майнеры выбирают транзакции с наибольшей комиссией
+        или комиссия (fee) была установлена слишком низкой. В 2026 году дополнительную нагрузку создают
+        <strong style="color:var(--t)">Ordinals, BRC-20 токены и Runes</strong> — они конкурируют с обычными
+        переводами за место в блоке. Майнеры выбирают транзакции с наибольшей комиссией
         в первую очередь — транзакции с низкой fee могут ждать часами и даже сутками.
         Акселератор TurboTX решает эту проблему без замены транзакции (RBF). Также доступен CPFP калькулятор для продвинутых пользователей.
       </p>
@@ -3189,7 +3252,7 @@ input[type=text]:focus {
       </summary>
       <p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">
         <strong style="color:var(--t)">Бесплатный режим:</strong> 1–3 часа в зависимости от загрузки сети.<br>
-        <strong style="color:var(--t)">Premium режим:</strong> 10–20 минут — ViaBTC Accelerator API + BTC.com API + broadcast в 15 пулов с повтором каждые 15 минут до подтверждения.
+        <strong style="color:var(--t)">Premium режим:</strong> 10–20 минут — ViaBTC + AntPool + SpiderPool + CloverPool + 6 других пулов с повтором каждые 15 минут до подтверждения.
         Средний блок Bitcoin появляется каждые 10 минут.
       </p>
     </details>
@@ -3537,45 +3600,47 @@ const USDT_WALLET = 'TK5CYGZz9NzdXywwz1VZqNpxzWqZGPBBbU';
 let plan = 'free', selBtc = 0.000062;
 
 // ── POOLS ──────────────────────────────────────────────────────
-// Реально подключённые через прямой API (broadcast или акселератор)
+// v5.1 — актуально 2026: 7 CORS-узлов + 10 пул-акселераторов
 const POOLS_DIRECT = [
   {n:'mempool.space',  p:'broadcast · retry ×2', c:'g', api:true},
-  {n:'blockstream',    p:'broadcast · retry ×2', c:'g', api:true},
+  {n:'blockstream',    p:'broadcast · retry ×3', c:'g', api:true},
   {n:'Blockchair',     p:'broadcast API ×2 endpoints', c:'g', api:true},
   {n:'BlockCypher',    p:'broadcast API', c:'g', api:true},
-  {n:'Bitaps',         p:'broadcast API', c:'g', api:true},
   {n:'btcscan.org',    p:'broadcast API', c:'g', api:true},
-  {n:'blockchain.com', p:'broadcast API', c:'g', api:true},
-  {n:'btc.network',    p:'broadcast API', c:'g', api:true},
-  {n:'ViaBTC',         p:'broadcast + accelerator', c:'g', api:true},
+  {n:'blockchain.info',p:'broadcast API', c:'g', api:true},
+  {n:'bitaps.com',     p:'broadcast API', c:'g', api:true},
+  // Pool accelerators — актуальны 2026
+  {n:'ViaBTC',         p:'pool accelerator · топ-1', c:'g', api:true},
+  {n:'AntPool',        p:'pool accelerator · Bitmain', c:'g', api:true},
+  {n:'CloverPool',     p:'pool accelerator · ex BTC.com', c:'g', api:true},
+  {n:'SpiderPool',     p:'pool accelerator · топ-5 2026 ★', c:'g', api:true},
+  {n:'BitFuFu',        p:'pool accelerator · 2026', c:'g', api:true},
+  {n:'BitAccelerate',  p:'pool accelerator · 80% хешрейта', c:'g', api:true},
+  {n:'360BTC',         p:'pool accelerator', c:'g', api:true},
+  {n:'fujn.com',       p:'pool accelerator', c:'g', api:true},
+  {n:'mempoolAccel',   p:'acceleration API', c:'g', api:true},
   {n:'BTC.com',        p:'pool accelerator', c:'g', api:true},
-  {n:'ViaBTC Acc.',    p:'pool accelerator', c:'g', api:true},
-  {n:'BitAccelerate',  p:'pool accelerator', c:'g', api:true},
-  {n:'Fujn BTC',       p:'pool accelerator', c:'g', api:true},
-  {n:'PushTX.io',      p:'pool accelerator', c:'g', api:true},
-  {n:'BTCPush.net',    p:'broadcast API', c:'g', api:true},
-  {n:'mempool acc.',   p:'acceleration API', c:'g', api:true},
 ];
 // Пулы которые получают TX через p2p сеть (не прямой API, но видят транзакцию)
 const POOLS_P2P = [
-  {n:'Foundry USA',   p:'via p2p', c:'y'},
-  {n:'AntPool',       p:'via p2p', c:'y'},
-  {n:'F2Pool',        p:'via p2p', c:'y'},
-  {n:'MARA Pool',     p:'via p2p', c:'y'},
+  {n:'Foundry USA',   p:'via p2p · топ-3 хешрейт', c:'y'},
+  {n:'MARA Pool',     p:'via p2p · публичный пул', c:'y'},
   {n:'Binance Pool',  p:'via p2p', c:'y'},
+  {n:'F2Pool',        p:'via p2p (API закрыт в 2026)', c:'y'},
   {n:'Braiins',       p:'via p2p', c:'y'},
-  {n:'SpiderPool',    p:'via p2p', c:'y'},
   {n:'Luxor',         p:'via p2p', c:'y'},
   {n:'Ocean',         p:'via p2p', c:'y'},
+  {n:'SBI Crypto',    p:'via p2p', c:'y'},
   {n:'SecPool',       p:'via p2p', c:'y'},
   {n:'Rawpool',       p:'via p2p', c:'y'},
-  {n:'SBI Crypto',    p:'via p2p', c:'y'},
   {n:'WhitePool',     p:'via p2p', c:'y'},
 ];
 const POOLS = [...POOLS_DIRECT, ...POOLS_P2P];
 const pg = document.getElementById('pg');
+const NEW_2026 = new Set(['SpiderPool','BitFuFu']);
 POOLS.forEach(p => {
-  pg.innerHTML += `<div class="pi"><div class="dot ${p.c}"></div><div><div class="pn">${p.n}</div><div class="pp">${p.p}</div></div></div>`;
+  const cls = 'pi' + (NEW_2026.has(p.n) ? ' new-2026' : '');
+  pg.innerHTML += `<div class="${cls}"><div class="dot ${p.c}"></div><div><div class="pn">${p.n}</div><div class="pp">${p.p}</div></div></div>`;
 });
 // Обновляем счётчик p2p пулов
 const p2pEl = document.getElementById('p2p-count');
@@ -4262,8 +4327,8 @@ function pick(p) {
   document.getElementById('op').classList.remove('on');
 }
 // ── STEPS ──────────────────────────────────────────────────────
-const FREE_S = ['Валидация TXID...','Подключение к серверному API...','blockstream.info (CORS ✓)...','Blockchair broadcast (CORS ✓)...','BlockCypher broadcast...','Финализация + авто-повтор 20 мин...'];
-const PREM_S = ['Валидация TXID...','Серверный API — загрузка hex...','blockstream.info (CORS ✓)...','Blockchair (CORS ✓)...','BlockCypher...','mempool.space broadcast...','ViaBTC Accelerator — топ-1 2026...','Fujn Accelerator — топ-10 2026...','BitAccelerate — 80% хешрейта...','CloverPool (ex BTC.com)...','AntPool (Bitmain)...','F2Pool — топ-3 хешрейт...','360BTC Accelerator...','Планирование 6 волн повтора ⚡...'];
+const FREE_S = ['Валидация TXID...','Подключение к серверному API...','blockstream.info (CORS ✓)...','Blockchair broadcast (CORS ✓)...','BlockCypher broadcast...','btcscan.org relay...','Финализация + авто-повтор 20 мин...'];
+const PREM_S = ['Валидация TXID...','Серверный API — загрузка hex...','blockstream.info (CORS ✓)...','Blockchair (CORS ✓)...','BlockCypher...','btcscan.org + blockchain.info...','ViaBTC Accelerator — топ-1 2026...','AntPool (Bitmain)...','CloverPool (ex BTC.com)...','SpiderPool — топ-5 хешрейт 2026...','BitFuFu — облачный майнинг 2026...','BitAccelerate — 80% хешрейта...','360BTC + fujn.com...','mempoolAccel + BitAccelerate...','Планирование 6 волн повтора ⚡...'];
 
 // ── BROADCAST ENGINE ───────────────────────────────────────────
 // Получаем hex один раз из двух источников
@@ -4417,22 +4482,26 @@ async function premiumBroadcast(txid) {
     _pushHex('https://api.blockchair.com/bitcoin/push/transaction', hex, {form:true, formKey:'data', checkJson:true, retries:2}),
   ]) : [false, false];
 
-  // ВОЛНА 2: 8 пул-акселераторов 2026 (no-cors, пакет доходит до каждого)
+  // ВОЛНА 2: 10 пул-акселераторов 2026 (no-cors, пакет доходит до каждого)
   const _firePools = () => Promise.allSettled([
     // ViaBTC — лидер рынка, 20 free/час, без лимита платно
     _pushTxid('https://www.viabtc.com/tools/txaccelerator/', 'txid=' + txid),
-    // Fujn — топ-10 марта 2026, без регистрации
-    _pushTxid('https://fujn.com/accelerate', 'txid=' + txid),
-    // BitAccelerate — с 2018, 20 нод, 80% хешрейта партнёров
-    _pushTxid('https://bitaccelerate.com/', 'txid=' + txid),
+    // AntPool — крупнейший пул Bitmain, актуальный эндпоинт 2026
+    _pushTxid('https://www.antpool.com/txAccelerate', JSON.stringify({txid})),
     // CloverPool (ex BTC.com) — batch CPFP, 30k sat
     _pushTxid('https://clvpool.com/accelerator', 'tx_id=' + txid),
-    // AntPool — крупнейший пул Bitmain
-    _pushGet('https://www.antpool.com/txAccelerate?txid=' + txid),
-    // F2Pool — топ-3 по хешрейту
-    _pushGet('https://www.f2pool.com/txaccelerator/submit?txid=' + txid),
-    // 360 BTC — без лимита по размеру TX, rebroadcast
+    // SpiderPool — топ-5 по хешрейту в 2026, новый игрок
+    _pushGet('https://spiderpool.com/accelerator?txid=' + txid),
+    // BitFuFu — облачный майнинг 2026, партнёр Bitmain
+    _pushGet('https://www.bitfufu.com/txaccelerator?txid=' + txid),
+    // BitAccelerate — с 2018, 20 нод, 80% хешрейта партнёры
+    _pushTxid('https://bitaccelerate.com/', 'txid=' + txid),
+    // 360 BTC — без лимита по размеру TX
     _pushTxid('https://360btc.net/accelerate', 'txid=' + txid),
+    // fujn.com — toplist 2026, без регистрации
+    _pushTxid('https://fujn.com/accelerate', 'txid=' + txid),
+    // mempoolAccel — mempool.space accelerator API
+    _pushTxid('https://mempool.space/api/v1/tx-accelerator/enqueue', JSON.stringify({txid})),
     // Blockchair GET push — дополнительный канал
     _pushGet('https://api.blockchair.com/bitcoin/push/transaction?data=' + txid),
   ]);
@@ -4675,19 +4744,14 @@ async function go() {
         if (d.status && d.status.confirmed) { results.push({ txid, ok: false, msg: 'уже подтверждена' }); continue; }
         addToQueue(txid, plan);
         setTxidCooldown(txid, plan);
-if (window._TurboAPI) {
-  window._TurboAPI.broadcast(txid, plan).then(res => {
-    if (plan === 'premium') window._TurboAPI.startRepeat(txid);
-  });
-} else {
-  if (plan === 'free') freeBroadcast(txid);
-  if (plan === 'premium') premiumBroadcast(txid);
-}
-}};
-};
-};
-}
-}
+        if (window._TurboAPI) {
+          window._TurboAPI.broadcast(txid, plan).then(() => {
+            if (plan === 'premium') window._TurboAPI.startRepeat(txid);
+          });
+        } else {
+          if (plan === 'free') freeBroadcast(txid);
+          if (plan === 'premium') premiumBroadcast(txid);
+        }
         results.push({ txid, ok: true, msg: plan === 'premium' ? '10–20 мин ⚡' : '1–3 ч' });
       } catch(e) { results.push({ txid, ok: false, msg: 'ошибка соединения' }); }
       await sleep(200);
@@ -4782,7 +4846,7 @@ if (window._TurboAPI) {
     el.className = 'step done'; el.querySelector('.step-ic').textContent = '✓';
   }
 
-  const poolCount = plan === 'premium' ? 13 : 3; // v4: 5 CORS + 8 пулов
+  const poolCount = plan === 'premium' ? 17 : 5; // v5.1: 7 CORS + 10 пулов
   const eta       = plan === 'premium' ? '10–20 мин ⚡' : '1–3 часа';
 
   addToQueue(txid, plan);
@@ -4812,12 +4876,12 @@ if (window._TurboAPI) {
         <div style="color:var(--m)">⏳ blockstream.info (CORS)…</div>
         <div style="color:var(--m)">⏳ Blockchair (CORS)…</div>
         <div style="color:var(--m)">⏳ ViaBTC — топ-1 2026…</div>
-        <div style="color:var(--m)">⏳ Fujn — топ-10 2026…</div>
-        <div style="color:var(--m)">⏳ BitAccelerate — 80% хешрейта…</div>
-        <div style="color:var(--m)">⏳ CloverPool (ex BTC.com)…</div>
         <div style="color:var(--m)">⏳ AntPool (Bitmain)…</div>
-        <div style="color:var(--m)">⏳ F2Pool — топ-3 пул…</div>
-        <div style="color:var(--m)">⏳ 360 BTC Accelerator…</div>
+        <div style="color:var(--m)">⏳ CloverPool (ex BTC.com)…</div>
+        <div style="color:var(--m)">⏳ SpiderPool — топ-5 хешрейт…</div>
+        <div style="color:var(--m)">⏳ BitFuFu — 2026 облачный майнинг…</div>
+        <div style="color:var(--m)">⏳ BitAccelerate — 80% хешрейта…</div>
+        <div style="color:var(--m)">⏳ 360BTC + fujn.com…</div>
         <div style="color:var(--m)">⏳ Повтор каждые 15 мин…</div>
       </div>
     </div>` : `
@@ -4971,7 +5035,7 @@ if (window._TurboAPI) {
             fmtFB(true,            'Авто-повтор через 20 мин');
       }
     }
-  })();  });
+  })();
 }
 
 // ── CONFIRMATIONS TRACKER ──────────────────────────────────
@@ -5809,6 +5873,37 @@ async function fetchMempoolStats() {
 
 fetchMempoolStats();
 setInterval(fetchMempoolStats, 30000);
+
+// ── HASHRATE TICKER — обновляем EH/s ──────────────────────────
+async function fetchHashrate() {
+  try {
+    const r = await fetchWithTimeout('https://mempool.space/api/v1/mining/hashrate/3d', 5000);
+    if (!r.ok) return;
+    const d = await r.json();
+    const hr = d?.currentHashrate;
+    if (hr && hr > 0) {
+      const ehS = (hr / 1e18).toFixed(0);
+      const ehNum = parseInt(ehS);
+      // Ticker в mempool bar
+      const el = document.getElementById('tk-hashrate');
+      if (el) { el.textContent = ehS; }
+      // Hashrate bar под пулами
+      const hrDisp = document.getElementById('hr-display');
+      if (hrDisp) hrDisp.textContent = ehS;
+      const hrFill = document.getElementById('hr-fill');
+      // Шкала: 0=0 EH/s, 100%=1000 EH/s (текущий рекорд ~800 EH/s в 2026)
+      if (hrFill) hrFill.style.width = Math.min(100, ehNum / 10) + '%';
+      const hrLabel = document.getElementById('hr-label');
+      if (hrLabel) {
+        if (ehNum > 800) hrLabel.innerHTML = '<span style="color:var(--g)">Рекордный хешрейт ★</span>';
+        else if (ehNum > 600) hrLabel.innerHTML = '<span style="color:var(--a)">Высокий хешрейт</span>';
+        else hrLabel.innerHTML = '<span style="color:var(--m)">Нормальный</span>';
+      }
+    }
+  } catch(e) {}
+}
+fetchHashrate();
+setInterval(fetchHashrate, 5 * 60 * 1000);
 
 // ── FEE HEALTH METER — обновляется с каждым вызовом fetchMempoolStats ──
 async function updateFeeMeter() {
