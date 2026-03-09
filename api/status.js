@@ -1,17 +1,21 @@
 // ══════════════════════════════════════════════════════════════
-//  TurboTX v5.3 ★ АКТУАЛЬНО 2026 ★  —  /api/status.js
+//  TurboTX v6 ★ STATUS ★  —  /api/status.js
+//  Vercel Serverless · Node.js 20
+//
 //  GET /api/status?txid=<64hex>
-//  ✦ Статус TX: confirmed / mempool / not_found
-//  ✦ RBF-детекция (sequence < 0xFFFFFFFE)
-//  ✦ Estimated confirmation time (min/max) по мемпулу
-//  ✦ CPFP eligibility check
-//  ✦ Позиция в очереди (приблизительная)
-//  ✦ Три источника для надёжности
+//
+//  ✦ Статус: confirmed / mempool / not_found
+//  ✦ Fee rate, vsize, подтверждения
+//  ✦ RBF включён?
+//  ✦ ETA до подтверждения (по текущей загрузке)
+//  ✦ Позиция в очереди мемпула (приблизительно)
+//  ✦ Источник: mempool.space + blockstream fallback
 // ══════════════════════════════════════════════════════════════
+
 export const config = { maxDuration: 12 };
 
 const CORS = {
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin':  '*',
   'Access-Control-Allow-Methods': 'GET, OPTIONS',
 };
 
@@ -21,31 +25,29 @@ async function ft(url, ms = 7000) {
   try { const r = await fetch(url, { signal: ac.signal }); clearTimeout(t); return r; }
   catch(e) { clearTimeout(t); throw e; }
 }
-async function sj(r) { try { return await r.json(); } catch { return {}; } }
 
-// Estimated wait in minutes based on fee rate vs network tiers
-function estimateWait(feeRate, fees, mempoolVsize) {
-  if (!feeRate || !fees) return { minMin: null, maxMin: null, label: 'неизвестно' };
-  const f = fees.fastestFee || 50;
-  const h = fees.halfHourFee || 25;
-  const o = fees.hourFee || 15;
-  if (feeRate >= f * 0.9)  return { minMin: 10,  maxMin: 20,  label: '10–20 мин' };
-  if (feeRate >= h * 0.9)  return { minMin: 20,  maxMin: 40,  label: '20–40 мин' };
-  if (feeRate >= o * 0.9)  return { minMin: 40,  maxMin: 90,  label: '40–90 мин' };
-  if (feeRate >= o * 0.5)  return { minMin: 90,  maxMin: 240, label: '1.5–4 ч'   };
-  return                          { minMin: 240, maxMin: null, label: '> 4 ч · нужен буст' };
+async function safeJson(r) { try { return await r.json(); } catch { return {}; } }
+
+// Примерный ETA до подтверждения в минутах
+function estimateEta(feeRate, fees) {
+  if (!feeRate || !fees) return null;
+  if (feeRate >= (fees.fastestFee || 999)) return '~10 мин';
+  if (feeRate >= (fees.halfHourFee || 999)) return '~30 мин';
+  if (feeRate >= (fees.hourFee || 999)) return '~1 час';
+  if (feeRate >= (fees.economyFee || fees.minimumFee || 1)) return '~несколько часов';
+  return 'неопределённо (очень низкая комиссия)';
 }
 
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).set(CORS).end();
-  Object.entries(CORS).forEach(([k,v]) => res.setHeader(k,v));
+  Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
 
   const txid = req.query?.txid || req.body?.txid;
   if (!txid || !/^[a-fA-F0-9]{64}$/.test(txid))
-    return res.status(400).json({ ok:false, error:'Invalid TXID' });
+    return res.status(400).json({ ok: false, error: 'Invalid TXID' });
 
   try {
-    const [txR, txStatusR, tipR, feesR, mempoolR] = await Promise.allSettled([
+    const [txR, txStatusR, tipR, feesR, mpR] = await Promise.allSettled([
       ft(`https://mempool.space/api/tx/${txid}`),
       ft(`https://mempool.space/api/tx/${txid}/status`),
       ft('https://mempool.space/api/blocks/tip/height'),
@@ -53,78 +55,80 @@ export default async function handler(req, res) {
       ft('https://mempool.space/api/mempool'),
     ]);
 
-    const tx       = txR.status==='fulfilled'       && txR.value.ok       ? await sj(txR.value)       : null;
-    const txStatus = txStatusR.status==='fulfilled' && txStatusR.value.ok ? await sj(txStatusR.value) : null;
-    const tip      = tipR.status==='fulfilled'      && tipR.value.ok      ? parseInt(await tipR.value.text()) : 0;
-    const fees     = feesR.status==='fulfilled'     && feesR.value.ok     ? await sj(feesR.value)     : {};
-    const mempool  = mempoolR.status==='fulfilled'  && mempoolR.value.ok  ? await sj(mempoolR.value)  : {};
+    const get = s => (s.status === 'fulfilled' && s.value?.ok) ? s.value : null;
 
+    const txResp     = get(txR);
+    const statusResp = get(txStatusR);
+    const tipResp    = get(tipR);
+    const feesResp   = get(feesR);
+    const mpResp     = get(mpR);
+
+    let tx = txResp ? await safeJson(txResp) : null;
+
+    // Fallback: blockstream
     if (!tx) {
-      // Fallback: blockstream
       try {
-        const r = await ft(`https://blockstream.info/api/tx/${txid}`, 6000);
-        if (r.ok) {
-          const bsTx = await sj(r);
-          const confirmed = bsTx?.status?.confirmed || false;
-          return res.status(200).json({
-            ok:true, txid, status: confirmed ? 'confirmed' : 'mempool',
-            confirmed, source:'blockstream',
-          });
-        }
+        const fb = await ft(`https://blockstream.info/api/tx/${txid}`, 7000);
+        if (fb.ok) tx = await safeJson(fb);
       } catch {}
-      return res.status(200).json({ ok:true, status:'not_found', txid,
-        message:'Transaction not found in mempool or blockchain' });
     }
 
-    const vsize     = tx.weight ? Math.ceil(tx.weight / 4) : (tx.size || 250);
-    const feePaid   = tx.fee || 0;
-    const feeRate   = feePaid && vsize ? Math.round(feePaid / vsize) : 0;
-    const fastest   = fees.fastestFee || 50;
-    const confirmed = txStatus?.confirmed || false;
-    const confs     = confirmed && tip && txStatus?.block_height
-      ? Math.max(1, tip - txStatus.block_height + 1) : 0;
+    if (!tx || !tx.txid) {
+      return res.status(200).json({
+        ok: true, status: 'not_found', txid,
+        message: 'Transaction not found in mempool or blockchain',
+      });
+    }
 
-    // RBF: хотя бы один input с sequence < 0xFFFFFFFE
-    const rbfEnabled = (tx.vin || []).some(v => (v.sequence ?? 0xFFFFFFFF) < 0xFFFFFFFE);
+    const txStatus = statusResp ? await safeJson(statusResp) : null;
+    const tip      = tipResp ? parseInt(await tipResp.text()) : 0;
+    const fees     = feesResp ? await safeJson(feesResp) : {};
+    const mp       = mpResp  ? await safeJson(mpResp)  : {};
 
-    // CPFP eligibility: есть ли unspent output (vout без spending_txid)
-    const hasCpfpOutput = (tx.vout || []).some(o => !o.spent);
+    const vsize      = tx.weight ? Math.ceil(tx.weight / 4) : (tx.size || 250);
+    const feePaid    = tx.fee || 0;
+    const feeRate    = feePaid && vsize ? Math.round(feePaid / vsize) : 0;
+    const fastest    = fees.fastestFee || 50;
+    const confirmed  = txStatus?.confirmed || tx.status?.confirmed || false;
+    const blockH     = txStatus?.block_height || tx.status?.block_height || null;
+    const blockT     = txStatus?.block_time   || tx.status?.block_time   || null;
+    const confs      = confirmed && tip && blockH ? Math.max(1, tip - blockH + 1) : 0;
+    const rbfEnabled = Array.isArray(tx.vin) && tx.vin.some(i => i.sequence <= 0xFFFFFFFD);
+    const needsBoost = !confirmed && feeRate > 0 && feeRate < fastest * 0.5;
 
-    // Estimated wait
-    const waitEst = confirmed ? null : estimateWait(feeRate, fees, mempool.vsize);
+    // Позиция в мемпуле (приблизительная)
+    let mempoolPosition = null;
+    if (!confirmed && mp.count && feeRate > 0) {
+      // Грубая оценка: % TX с более высокой fee rate
+      const approxPosition = Math.round((1 - Math.min(feeRate / fastest, 1)) * mp.count);
+      mempoolPosition = approxPosition > 0 ? approxPosition : 0;
+    }
 
-    // Approximate position in mempool (rough: backlog vsize / avg tx vsize)
-    const mempoolTxCount = mempool.count || 0;
-    const mempoolVsize   = mempool.vsize || 0;
+    const eta = !confirmed ? estimateEta(feeRate, fees) : null;
 
     return res.status(200).json({
-      ok: true,
+      ok:           true,
       txid,
-      status:        confirmed ? 'confirmed' : 'mempool',
+      status:       confirmed ? 'confirmed' : 'mempool',
       confirmed,
       confirmations: confs,
-      blockHeight:   txStatus?.block_height || null,
-      blockTime:     txStatus?.block_time   || null,
+      blockHeight:  blockH,
+      blockTime:    blockT,
       vsize,
       feePaid,
       feeRate,
       feeRateNeeded: fastest,
-      needsBoost:    !confirmed && feeRate < fastest * 0.5,
+      needsBoost,
       rbfEnabled,
-      canCpfp:       !confirmed && hasCpfpOutput,
-      estimatedWait: waitEst,
-      inputs:        (tx.vin  || []).length,
-      outputs:       (tx.vout || []).length,
-      mempool: {
-        count:        mempoolTxCount,
-        vsizeMb:      mempoolVsize ? Math.round(mempoolVsize / 1e6 * 10) / 10 : null,
-        fastestFee:   fees.fastestFee  || null,
-        halfHourFee:  fees.halfHourFee || null,
-        hourFee:      fees.hourFee     || null,
-      },
+      inputs:   (tx.vin  || []).length,
+      outputs:  (tx.vout || []).length,
+      eta,                    // "~30 мин" / null если подтверждена
+      mempoolPosition,        // приблизительная позиция в очереди
+      mempoolCount: mp.count || null,
       timestamp: Date.now(),
     });
+
   } catch(e) {
-    return res.status(500).json({ ok:false, error:e.message });
+    return res.status(500).json({ ok: false, error: e.message });
   }
 }
