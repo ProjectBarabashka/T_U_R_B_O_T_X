@@ -1569,61 +1569,6 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
 <!-- POOLS -->
 <div id="pools" style="margin-bottom:36px"><div class="sh"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Подключённые узлы и пулы</div><div style="display:flex;gap:16px;margin-bottom:10px;font-family:var(--mono);font-size:.62rem;color:var(--m)"><span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:var(--g);display:inline-block"></span>Прямой API</span><span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:#7c5c9e;box-shadow:0 0 4px rgba(124,92,158,.4);display:inline-block"></span>Через p2p сеть</span><span style="display:flex;align-items:center;gap:5px"><span style="color:var(--accent3);font-size:.9em">★</span>Новый топ-пул 2026</span></div><div class="pools-grid" id="pg"></div></div>
 
-<!-- PAYMENT MODAL -->
-<div class="overlay" id="modal" onclick="if(event.target===this)closeM()">
-<div class="modal" style="max-width:500px">
-  <button class="mx" onclick="closeM()">✕</button>
-  <div class="mt" style="display:flex;align-items:center;gap:10px">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
-    Premium Ускорение
-  </div>
-  <div style="text-align:center;font-family:var(--mono);font-size:.65rem;color:var(--m);margin-bottom:14px">
-    Курс BTC: <span id="modal-rate-note" style="color:var(--a)">загружаем…</span>
-  </div>
-  <!-- ДИНАМИЧЕСКИЙ ПРАЙС -->
-  <div id="modal-price-block" style="background:rgba(247,147,26,.05);border:1px solid rgba(247,147,26,.18);border-radius:12px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
-    <div><div style="font-family:var(--mono);font-size:.58rem;color:var(--m);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">Цена сейчас</div><div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:2rem;font-weight:800;color:var(--a);font-family:var(--display)" id="modal-price-usd">…</span><span style="font-family:var(--mono);font-size:.72rem;color:var(--m2)" id="modal-price-btc">≈ … BTC</span></div><div style="font-family:var(--mono);font-size:.6rem;color:var(--m);margin-top:3px" id="modal-price-usdt">≈ … USDT</div></div>
-    <div style="text-align:right"><div id="modal-price-badge" style="display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.65rem;padding:5px 12px;border-radius:20px;background:rgba(247,147,26,.12);color:var(--a);margin-bottom:6px"><span class="net-heart calm sm" id="modal-heart-dot"><svg width="13" height="13" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g class="h-flame"><path d="M9 19 Q7 15 9.5 11 Q10.5 15 12 11 Q13.5 15 14.5 11 Q17 15 15 19" fill="#ff6b00" opacity=".85"/><path d="M10.5 20 Q9 17 10.5 14 Q11.5 17 12 14 Q12.5 17 13.5 14 Q15 17 13.5 20" fill="#ffe066" opacity=".7"/></g><path class="h-body" d="M12 20.5C12 20.5 2.5 14 2.5 8C2.5 5.2 4.7 3 7.5 3C9.1 3 10.6 3.8 12 5.2C13.4 3.8 14.9 3 16.5 3C19.3 3 21.5 5.2 21.5 8C21.5 14 12 20.5 12 20.5Z"/><g class="h-ice" stroke="#cff0ff" stroke-width="1" stroke-linecap="round" fill="none"><line x1="12" y1="5.5" x2="12" y2="8.5"/><line x1="10.4" y1="6.3" x2="13.6" y2="7.7"/><line x1="10.4" y1="7.7" x2="13.6" y2="6.3"/><line x1="7" y1="9.5" x2="7" y2="11.5"/><line x1="6" y1="10.1" x2="8" y2="10.9"/></g></svg></span><span id="modal-badge-text">загрузка…</span></div><div style="font-family:var(--mono);font-size:.57rem;color:var(--m);line-height:1.5">Цена меняется<br>с загрузкой сети</div></div>
-  </div>
-  <!-- ВКЛАДКИ СПОСОБА ОПЛАТЫ -->
-  <div class="pay-tabs" style="margin-bottom:14px">
-    <div class="pay-tab on" id="ptab-btc" onclick="switchModalTab('btc',this)">₿ Bitcoin <span class="network-badge nb-btc" style="margin-left:4px">BTC</span></div>
-    <div class="pay-tab" id="ptab-usdt" onclick="switchModalTab('usdt',this)">₮ USDT <span class="network-badge nb-trc" style="margin-left:4px">TRC-20</span></div>
-    <div class="pay-tab" id="ptab-promo" onclick="switchModalTab('promo',this)">🎟 Промокод</div>
-  </div>
-  <!-- ВКЛАДКА 1: BTC -->
-  <div id="mtab-btc" class="pay-tab-content show">
-    <div class="abox" style="margin-bottom:10px"><div class="al">Bitcoin адрес для оплаты</div><div class="av" id="direct-wallet-display" style="word-break:break-all;font-size:.7rem;cursor:pointer" onclick="cpDirect()" title="Нажмите чтобы скопировать">— загружаем —</div></div>
-    <div class="abox" style="margin-bottom:12px"><div class="al">Сумма к оплате</div><div class="av green" id="direct-amount">0.000062 BTC</div></div>
-    <button class="cpbtn" onclick="cpDirect()" id="direct-copy-btn"><span style="display:inline-flex;align-items:center;gap:8px;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Скопировать BTC адрес</span></button>
-    <div style="background:rgba(247,147,26,.05);border:1px solid rgba(247,147,26,.18);border-radius:10px;padding:11px 14px;margin-top:10px;font-family:var(--mono);font-size:.67rem;color:var(--m2);line-height:1.9"><div style="color:var(--a);font-weight:700;margin-bottom:3px">Инструкция:</div><div>① Скопируйте адрес выше</div><div>② Отправьте точную сумму BTC со своего кошелька</div><div>③ Нажмите «Я уже оплатил» ниже</div><div>④ Вставьте TXID платежа → Premium активируется</div></div>
-  </div>
-  <!-- ВКЛАДКА 2: USDT TRC-20 -->
-  <div id="mtab-usdt" class="pay-tab-content">
-    <div class="abox" style="margin-bottom:10px"><div class="al">USDT TRC-20 адрес для оплаты</div><div class="av" id="usdt-wallet-display" style="word-break:break-all;font-size:.7rem;cursor:pointer" onclick="cpUsdt()" title="Нажмите чтобы скопировать">— загружаем —</div></div>
-    <div class="abox" style="margin-bottom:12px"><div class="al">Сумма к оплате</div><div class="av green" id="usdt-amount">$4 USDT</div></div>
-    <button class="cpbtn" onclick="cpUsdt()" id="usdt-copy-btn"><span style="display:inline-flex;align-items:center;gap:8px;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Скопировать USDT адрес</span></button>
-    <div style="background:rgba(0,180,120,.05);border:1px solid rgba(0,180,120,.18);border-radius:10px;padding:11px 14px;margin-top:10px;font-family:var(--mono);font-size:.67rem;color:var(--m2);line-height:1.9"><div style="color:var(--g);font-weight:700;margin-bottom:3px">Инструкция:</div><div>① Скопируйте адрес выше</div><div>② Сеть: <span style="color:var(--g);font-weight:700">TRON TRC-20</span> (не ERC-20!)</div><div>③ Отправьте точную сумму USDT</div><div>④ Нажмите «Я уже оплатил» → вставьте TXID</div></div>
-  </div>
-  <!-- ВКЛАДКА 3: ПРОМОКОД -->
-  <div id="mtab-promo" class="pay-tab-content">
-    <div style="text-align:center;padding:8px 0 14px"><div style="font-size:1.8rem;margin-bottom:8px">🎟</div><div style="font-family:var(--mono);font-size:.7rem;color:var(--m2);line-height:1.7">Введите промокод для активации Premium</div></div>
-    <input type="text" id="promo-input" placeholder="Введите промокод..." style="width:100%;background:var(--bg);border:1px solid var(--b);border-radius:8px;padding:12px 14px;color:var(--t);font-family:var(--mono);font-size:.8rem;outline:none;margin-bottom:10px;transition:border-color .2s;letter-spacing:1px" oninput="this.style.borderColor=''" onkeydown="if(event.key==='Enter')applyPromo()">
-    <button class="okbtn" onclick="applyPromo()"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Применить промокод</span></button>
-    <div id="promo-result" style="margin-top:10px;font-family:var(--mono);font-size:.74rem;display:none"></div>
-  </div>
-  <!-- ВЕРИФИКАЦИЯ -->
-  <div id="verify-section" style="display:none;border-top:1px solid var(--b);padding-top:14px;margin-top:12px">
-    <div style="font-family:var(--mono);font-size:.62rem;color:var(--m);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Подтверждение оплаты</div>
-    <input type="text" id="pay-txid" placeholder="TXID / хэш транзакции оплаты..." maxlength="100" style="width:100%;background:var(--bg);border:1px solid var(--b);border-radius:8px;padding:11px 13px;color:var(--t);font-family:var(--mono);font-size:.75rem;outline:none;margin-bottom:10px;transition:border-color .2s">
-    <button class="okbtn" onclick="verifyPayment()" id="verify-btn"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Активировать Premium</span></button>
-    <div id="verify-result" style="margin-top:12px;font-family:var(--mono);font-size:.75rem;display:none"></div>
-  </div>
-  <div id="show-verify-btn" style="margin-top:8px"><button class="okbtn" onclick="showVerify()" style="background:rgba(255,255,255,.05);color:var(--m2);box-shadow:none;border:1px solid rgba(255,255,255,.08)"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Я уже оплатил — активировать</span></button></div>
-  <div class="mnote" style="margin-top:10px" id="modal-note">Прямая оплата Bitcoin — без посредников</div>
-</div>
-</div>
-
 <!-- FAQ (компактный) -->
 <section class="faq-section" style="background:var(--s);border:1px solid var(--b);border-radius:20px;padding:36px;margin-bottom:40px">
   <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:20px;display:flex;align-items:center;gap:12px">Часто задаваемые вопросы <span style="flex:1;height:1px;background:var(--b);display:block"></span></h2>
@@ -1819,6 +1764,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
 }
 </style>
 
+</div><!-- /.w -->
 <footer>
   <div style="margin-bottom:4px;letter-spacing:2px">TURBOTX</div>
   <div style="font-size:.58rem;color:var(--m);opacity:.6">© 2026 — Сервис ускорения BTC-транзакций через rebroadcast в майнинг-пулы</div>
@@ -1828,12 +1774,12 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
     <a href="https://viaBTC.com" target="_blank">ViaBTC</a>
     <a href="https://t.me/TurboTXAcel" target="_blank">TG Канал / @TurboTXAcel</a>
     <a href="https://t.me/Sup_TurboTX" target="_blank">TG Поддержка / @Sup_TurboTX</a>
-    <a id="em-link-ft" href="mailto:pollytrazlo@gmail.com">Email</a>
+    <a id="em-link-ft" href="/cdn-cgi/l/email-protection#6c1c03000015181e0d1600032c0b010d0500420f0301">Email</a>
   </div>
 </footer>
 
 <!-- ВСЕ СКРИПТЫ (идентичны исходному файлу, включая RBF, очередь, Firebase, историю, язык и т.д.) -->
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 // ═══════════════════════════════════════════════════════════════
 // RBF CALCULATOR — Replace-By-Fee
 // ═══════════════════════════════════════════════════════════════
@@ -1849,21 +1795,23 @@ function rbfOnInput() {
   const targetWrap = document.getElementById('rbf-target-wrap');
   const result = document.getElementById('rbf-result');
 
-  result.style.display = 'none';
+  if (result) result.style.display = 'none';
   _rbfTx = null;
+  if (!btn || !statusBlock) return;
 
   if (!/^[a-fA-F0-9]{64}$/.test(val)) {
     btn.disabled = true;
     statusBlock.style.display = 'none';
-    targetWrap.style.display = 'none';
+    if (targetWrap) targetWrap.style.display = 'none';
     return;
   }
 
   clearTimeout(_rbfDebounce);
   statusBlock.style.display = 'block';
-  document.getElementById('rbf-support-badge').innerHTML =
+  const _rbfBadge = document.getElementById('rbf-support-badge');
+  if (_rbfBadge) _rbfBadge.innerHTML =
     '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="animation:spin .8s linear infinite;transform-origin:center"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Проверяем транзакцию...';
-  document.getElementById('rbf-support-badge').style.cssText = 'display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:8px;font-family:var(--mono);font-size:.72rem;font-weight:700;margin-bottom:0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--m)';
+  if (_rbfBadge) _rbfBadge.style.cssText = 'display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:8px;font-family:var(--mono);font-size:.72rem;font-weight:700;margin-bottom:0;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:var(--m)';
 
   _rbfDebounce = setTimeout(() => rbfLoadTx(val), 600);
 }
@@ -1873,6 +1821,7 @@ async function rbfLoadTx(txid) {
   const statusBlock = document.getElementById('rbf-status-block');
   const targetWrap = document.getElementById('rbf-target-wrap');
   const btn = document.getElementById('rbf-btn');
+  if (!badge || !btn) return;
 
   try {
     const [rTx, rFees] = await Promise.all([
@@ -1969,6 +1918,7 @@ async function calcRbf() {
   const btn = document.getElementById('rbf-btn');
   const result = document.getElementById('rbf-result');
   const noSupMsg = document.getElementById('rbf-no-support-msg');
+  if (!btn || !result) return;
 
   btn.disabled = true;
   btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="animation:spin .8s linear infinite;transform-origin:center"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>Рассчитываем...</span>';
@@ -2774,14 +2724,21 @@ setInterval(() => {
 
 // ── PLAN SELECT ────────────────────────────────────────────────
 function pick(p) {
+  const _of = document.getElementById('of');
+  const _op = document.getElementById('op');
   if (p === 'premium') {
-    document.getElementById('of').classList.remove('on');
-    document.getElementById('op').classList.remove('on');
+    // Если уже оплачено — просто переключить визуально
+    if (plan === 'premium') {
+      if (_of) _of.classList.remove('on');
+      if (_op) _op.classList.add('on');
+      return;
+    }
+    // Открыть модал оплаты — FREE остаётся активным пока нет оплаты
     openM(); return;
   }
   plan = 'free';
-  document.getElementById('of').classList.add('on');
-  document.getElementById('op').classList.remove('on');
+  if (_of) _of.classList.add('on');
+  if (_op) _op.classList.remove('on');
 }
 
 const FREE_S = ['Валидация TXID...','Подключение к серверному API...','blockstream.info (CORS ✓)...','Blockchair broadcast (CORS ✓)...','BlockCypher broadcast...','btcscan.org relay...','Финализация + авто-повтор 20 мин...'];
@@ -3165,7 +3122,7 @@ async function go() {
   btn.disabled = true;
   btn.innerHTML = BTN_LOAD;
   rb.style.display = 'none';
-  pw.style.display = 'none';
+  if (pw) pw.style.display = 'none';
 
   let txData = null;
   try {
@@ -3206,13 +3163,13 @@ async function go() {
   pw.style.display = 'block';
 
   const steps = plan === 'premium' ? PREM_S : FREE_S;
-  sl.innerHTML = steps.map((s,i) => `<div class="step" id="s${i}"><span class="step-ic">·</span><span>${s}</span></div>`).join('');
+  if (sl) sl.innerHTML = steps.map((s,i) => `<div class="step" id="s${i}"><span class="step-ic">·</span><span>${s}</span></div>`).join('');
 
   for (let i = 0; i < steps.length; i++) {
     const el = document.getElementById('s' + i);
     if (!el) continue;
     el.className = 'step cur'; el.querySelector('.step-ic').textContent = '›';
-    pf.style.width = ((i + 1) / steps.length * 100) + '%';
+    if (pf) pf.style.width = ((i + 1) / steps.length * 100) + '%';
     await sleep(plan === 'premium' ? 460 : 360);
     el.className = 'step done'; el.querySelector('.step-ic').textContent = '✓';
   }
@@ -3594,6 +3551,7 @@ async function startConfTracker(txid) {
 
 function err(msg) {
   const rb = document.getElementById('rb');
+  if (!rb) return;
   rb.style.display = 'block'; rb.className = 'res-box err';
   rb.innerHTML = '<span style="color:var(--err);font-family:var(--mono);font-size:.82rem">× ' + msg + '</span>';
   const btn = document.getElementById('abtn');
@@ -3607,6 +3565,7 @@ async function chk() {
   const txid = document.getElementById('stxid').value.trim();
   if (!txid || !/^[a-fA-F0-9]{64}$/.test(txid)) return alert('Введите корректный TXID (64 hex символа)');
   const sr = document.getElementById('sr');
+  if (!sr) return;
   sr.style.display = 'block';
   sr.innerHTML = '<span style="color:var(--m);font-family:var(--mono);font-size:.78rem">... Проверяем через mempool.space</span>';
   try {
@@ -3712,11 +3671,18 @@ function openM() {
   const bc = document.getElementById('mtab-btc');
   if (bc) bc.classList.add('show');
 
-  document.getElementById('modal').classList.add('open');
+  // Показать кнопку premium как "ожидает оплаты"
+  const _op = document.getElementById('op');
+  if (_op && plan !== 'premium') {
+    _op.style.borderColor = 'rgba(247,147,26,.5)';
+    _op.style.background = 'rgba(247,147,26,.06)';
+  }
+
+  const _modal = document.getElementById('modal'); if (_modal) _modal.classList.add('open');
 }
 
 function closeM() {
-  document.getElementById('modal').classList.remove('open');
+  const _modalEl = document.getElementById('modal'); if (_modalEl) _modalEl.classList.remove('open');
   const vs = document.getElementById('verify-section');
   const svb = document.getElementById('show-verify-btn');
   if (vs) vs.style.display = 'none';
@@ -3725,6 +3691,17 @@ function closeM() {
   if (vr) { vr.style.display = 'none'; vr.innerHTML = ''; }
   const vt = document.getElementById('pay-txid');
   if (vt) vt.value = '';
+  // Если оплата не была подтверждена — вернуть FREE как активный план
+  if (plan !== 'premium') {
+    const _of = document.getElementById('of');
+    const _op = document.getElementById('op');
+    if (_of) _of.classList.add('on');
+    if (_op) {
+      _op.classList.remove('on');
+      _op.style.borderColor = '';
+      _op.style.background = '';
+    }
+  }
 }
 
 function switchModalTab(tab, el) {
@@ -3756,6 +3733,7 @@ function switchModalTab(tab, el) {
 async function applyPromo() {
   const inp = document.getElementById('promo-input');
   const res = document.getElementById('promo-result');
+  if (!res) return;
   if (!inp || !res) return;
   const code = inp.value.trim().toUpperCase();
   if (!code) { inp.style.borderColor = 'rgba(255,51,85,.5)'; return; }
@@ -3866,9 +3844,12 @@ function cpUsdt() {
 function cp() { cpDirect(); }
 
 function showVerify() {
-  document.getElementById('show-verify-btn').style.display = 'none';
-  document.getElementById('verify-section').style.display = 'block';
-  document.getElementById('pay-txid').focus();
+  const _svb = document.getElementById('show-verify-btn');
+  const _vs  = document.getElementById('verify-section');
+  const _vt  = document.getElementById('pay-txid');
+  if (_svb) _svb.style.display = 'none';
+  if (_vs)  _vs.style.display = 'block';
+  if (_vt)  _vt.focus();
 }
 
 const _VB_ORIG = '<span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>Активировать Premium</span>';
@@ -3878,6 +3859,7 @@ async function verifyPayment() {
   const vr = document.getElementById('verify-result');
   const vb = document.getElementById('verify-btn');
 
+  if (!vr || !vb) return;
   if (!txid || txid.length < 20) {
     vr.style.display = 'block';
     vr.innerHTML = '<span style="color:var(--err)">× Введите TXID транзакции</span>';
@@ -3946,8 +3928,8 @@ function toggleBatch() {
   const toggle = document.getElementById('batch-toggle');
   const single = document.getElementById('single-mode');
   const batch = document.getElementById('batch-mode');
-  toggle.classList.toggle('on', batchMode);
-  single.style.display = batchMode ? 'none' : 'block';
+  if (toggle) toggle.classList.toggle('on', batchMode);
+  if (single) single.style.display = batchMode ? 'none' : 'block';
   batch.classList.toggle('show', batchMode);
   if (batchMode) document.getElementById('batch-txids').focus();
 }
@@ -3976,7 +3958,9 @@ function onCpfpInput() {
 async function calcCpfp() {
   const txid = document.getElementById('cpfp-parent').value.trim();
   const btn = document.getElementById('cpfp-btn');
+  if (!btn) return;
   const res = document.getElementById('cpfp-result');
+  if (!res) return;
 
   if (!txid || !/^[a-fA-F0-9]{64}$/.test(txid)) {
     document.getElementById('cpfp-parent').style.borderColor = 'var(--err)'; return;
@@ -4166,9 +4150,16 @@ function activatePremium(paidStr, method, txShort) {
   _tgNotify(paidStr, method, txShort);
   closeM();
   plan = 'premium';
-  document.getElementById('of').classList.remove('on');
-  document.getElementById('op').classList.add('on');
+  const _ofEl = document.getElementById('of');
+  const _opEl = document.getElementById('op');
+  if (_ofEl) _ofEl.classList.remove('on');
+  if (_opEl) {
+    _opEl.style.borderColor = '';
+    _opEl.style.background = '';
+    _opEl.classList.add('on');
+  }
   const rb = document.getElementById('rb');
+  if (!rb) return;
   rb.style.display = 'block'; rb.className = 'res-box';
   rb.innerHTML =
     '<div class="res-ok">✓ ОПЛАТА ПОДТВЕРЖДЕНА — Premium активирован!</div>' +
@@ -4194,9 +4185,10 @@ function activatePremium(paidStr, method, txShort) {
   }
   function unlock() {
     if (_active) return; _active = true; plan = 'premium';
-    document.getElementById('of').classList.remove('on');
-    document.getElementById('op').classList.add('on');
+    const _ofe = document.getElementById('of'); if (_ofe) _ofe.classList.remove('on');
+    const _ope = document.getElementById('op'); if (_ope) _ope.classList.add('on');
     const rb = document.getElementById('rb');
+    if (!rb) return;
     rb.style.display = 'block'; rb.className = 'res-box';
     rb.innerHTML = '<div class="res-ok">✓ PREMIUM АКТИВИРОВАН</div><div class="rr"><span class="rk">Режим</span><span class="rv a">PREMIUM</span></div><div style="color:var(--g);font-size:.75rem;margin-top:10px;font-family:var(--mono)">Введите TXID транзакции и нажмите Ускорить ↑</div>';
     window.scrollTo({top:0, behavior:'smooth'});
@@ -4370,7 +4362,7 @@ async function analyzeTx(txid) {
     document.getElementById('fc-rate').textContent = rate + ' sat/vB';
     document.getElementById('fc-pos').textContent = pos;
     const etaEl = document.getElementById('fc-eta');
-    etaEl.textContent = eta; etaEl.className = 'fee-val ' + etaClass;
+    if (etaEl) { etaEl.textContent = eta; etaEl.className = 'fee-val ' + etaClass; }
     calc.classList.add('visible');
   } catch(e) { calc.classList.remove('visible'); }
 }
@@ -4943,7 +4935,66 @@ function _startHistoryConfPolling() {
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
   </a>
 </div>
-<script src="/client-api.js"></script>
+<script>
+// ══════════════════════════════════════════════════════════════
+//  TurboTX — client-api.js (inlined)
+//  Серверный broadcast, волны Premium, динамическая цена
+// ══════════════════════════════════════════════════════════════
+
+const _API = '';
+
+async function serverBroadcast(txid, plan) {
+  try {
+    const r = await fetch(_API + '/api/broadcast', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ txid, plan }),
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  } catch(e) {
+    console.warn('[TurboTX] Server broadcast failed, falling back to client:', e.message);
+    return plan === 'premium' ? premiumBroadcast(txid) : freeBroadcast(txid);
+  }
+}
+
+const _WAVE_MS = [15, 30, 60, 120, 240].map(m => m * 60000);
+
+function startServerRepeat(txid) {
+  if (typeof stopPremiumRepeat === 'function') stopPremiumRepeat();
+  _WAVE_MS.forEach(function(delayMs, i) {
+    setTimeout(async function() {
+      try {
+        const r = await fetch(_API + '/api/repeat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ txid: txid, wave: i + 1 }),
+        });
+        const data = await r.json();
+        if (data.confirmed) {
+          console.log('[TurboTX] TX confirmed at wave', i + 1);
+          if (typeof stopPremiumRepeat === 'function') stopPremiumRepeat();
+        } else if (data.broadcasted) {
+          console.log('[TurboTX] Wave', i + 1, 'ok:', data.broadcastSummary);
+          if (data.cpfpNeeded) console.warn('[TurboTX] CPFP recommended, fee needed:', data.cpfpFeeNeeded);
+        }
+      } catch(e) {
+        if (typeof premiumBroadcast === 'function') premiumBroadcast(txid);
+      }
+    }, delayMs);
+  });
+}
+
+window._TurboAPI = {
+  broadcast: serverBroadcast,
+  startRepeat: startServerRepeat,
+  fetchPrice: function() {
+    return window._TurboPrice ? window._TurboPrice.load() : Promise.resolve(null);
+  },
+};
+
+console.log('[TurboTX] Server API connected ✓');
+</script>
 
 <!-- DYNAMIC PRICE -->
 <script>
@@ -5070,10 +5121,68 @@ function _startHistoryConfPolling() {
     setInterval(loadPrice, 180000);
   }
 
-  window._TurboPrice = { load: loadPrice, apply: applyPrice, _setNet: _setNetState };
-  console.log('[TurboTX v5.3] Dynamic price loaded ✓');
+  window._TurboPrice = {
+    load: loadPrice,
+  };
 })();
 </script>
+
+
+
+<!-- PAYMENT MODAL --><div class="overlay" id="modal" onclick="if(event.target===this)closeM()">
+<div class="modal" style="max-width:500px">
+  <button class="mx" onclick="closeM()">✕</button>
+  <div class="mt" style="display:flex;align-items:center;gap:10px">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+    Premium Ускорение
+  </div>
+  <div style="text-align:center;font-family:var(--mono);font-size:.65rem;color:var(--m);margin-bottom:14px">
+    Курс BTC: <span id="modal-rate-note" style="color:var(--a)">загружаем…</span>
+  </div>
+  <!-- ДИНАМИЧЕСКИЙ ПРАЙС -->
+  <div id="modal-price-block" style="background:rgba(247,147,26,.05);border:1px solid rgba(247,147,26,.18);border-radius:12px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+    <div><div style="font-family:var(--mono);font-size:.58rem;color:var(--m);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">Цена сейчас</div><div style="display:flex;align-items:baseline;gap:8px"><span style="font-size:2rem;font-weight:800;color:var(--a);font-family:var(--display)" id="modal-price-usd">…</span><span style="font-family:var(--mono);font-size:.72rem;color:var(--m2)" id="modal-price-btc">≈ … BTC</span></div><div style="font-family:var(--mono);font-size:.6rem;color:var(--m);margin-top:3px" id="modal-price-usdt">≈ … USDT</div></div>
+    <div style="text-align:right"><div id="modal-price-badge" style="display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.65rem;padding:5px 12px;border-radius:20px;background:rgba(247,147,26,.12);color:var(--a);margin-bottom:6px"><span class="net-heart calm sm" id="modal-heart-dot"><svg width="13" height="13" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g class="h-flame"><path d="M9 19 Q7 15 9.5 11 Q10.5 15 12 11 Q13.5 15 14.5 11 Q17 15 15 19" fill="#ff6b00" opacity=".85"/><path d="M10.5 20 Q9 17 10.5 14 Q11.5 17 12 14 Q12.5 17 13.5 14 Q15 17 13.5 20" fill="#ffe066" opacity=".7"/></g><path class="h-body" d="M12 20.5C12 20.5 2.5 14 2.5 8C2.5 5.2 4.7 3 7.5 3C9.1 3 10.6 3.8 12 5.2C13.4 3.8 14.9 3 16.5 3C19.3 3 21.5 5.2 21.5 8C21.5 14 12 20.5 12 20.5Z"/><g class="h-ice" stroke="#cff0ff" stroke-width="1" stroke-linecap="round" fill="none"><line x1="12" y1="5.5" x2="12" y2="8.5"/><line x1="10.4" y1="6.3" x2="13.6" y2="7.7"/><line x1="10.4" y1="7.7" x2="13.6" y2="6.3"/><line x1="7" y1="9.5" x2="7" y2="11.5"/><line x1="6" y1="10.1" x2="8" y2="10.9"/></g></svg></span><span id="modal-badge-text">загрузка…</span></div><div style="font-family:var(--mono);font-size:.57rem;color:var(--m);line-height:1.5">Цена меняется<br>с загрузкой сети</div></div>
+  </div>
+  <!-- ВКЛАДКИ СПОСОБА ОПЛАТЫ -->
+  <div class="pay-tabs" style="margin-bottom:14px">
+    <div class="pay-tab on" id="ptab-btc" onclick="switchModalTab('btc',this)">₿ Bitcoin <span class="network-badge nb-btc" style="margin-left:4px">BTC</span></div>
+    <div class="pay-tab" id="ptab-usdt" onclick="switchModalTab('usdt',this)">₮ USDT <span class="network-badge nb-trc" style="margin-left:4px">TRC-20</span></div>
+    <div class="pay-tab" id="ptab-promo" onclick="switchModalTab('promo',this)">🎟 Промокод</div>
+  </div>
+  <!-- ВКЛАДКА 1: BTC -->
+  <div id="mtab-btc" class="pay-tab-content show">
+    <div class="abox" style="margin-bottom:10px"><div class="al">Bitcoin адрес для оплаты</div><div class="av" id="direct-wallet-display" style="word-break:break-all;font-size:.7rem;cursor:pointer" onclick="cpDirect()" title="Нажмите чтобы скопировать">— загружаем —</div></div>
+    <div class="abox" style="margin-bottom:12px"><div class="al">Сумма к оплате</div><div class="av green" id="direct-amount">0.000062 BTC</div></div>
+    <button class="cpbtn" onclick="cpDirect()" id="direct-copy-btn"><span style="display:inline-flex;align-items:center;gap:8px;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Скопировать BTC адрес</span></button>
+    <div style="background:rgba(247,147,26,.05);border:1px solid rgba(247,147,26,.18);border-radius:10px;padding:11px 14px;margin-top:10px;font-family:var(--mono);font-size:.67rem;color:var(--m2);line-height:1.9"><div style="color:var(--a);font-weight:700;margin-bottom:3px">Инструкция:</div><div>① Скопируйте адрес выше</div><div>② Отправьте точную сумму BTC со своего кошелька</div><div>③ Нажмите «Я уже оплатил» ниже</div><div>④ Вставьте TXID платежа → Premium активируется</div></div>
+  </div>
+  <!-- ВКЛАДКА 2: USDT TRC-20 -->
+  <div id="mtab-usdt" class="pay-tab-content">
+    <div class="abox" style="margin-bottom:10px"><div class="al">USDT TRC-20 адрес для оплаты</div><div class="av" id="usdt-wallet-display" style="word-break:break-all;font-size:.7rem;cursor:pointer" onclick="cpUsdt()" title="Нажмите чтобы скопировать">— загружаем —</div></div>
+    <div class="abox" style="margin-bottom:12px"><div class="al">Сумма к оплате</div><div class="av green" id="usdt-amount">$4 USDT</div></div>
+    <button class="cpbtn" onclick="cpUsdt()" id="usdt-copy-btn"><span style="display:inline-flex;align-items:center;gap:8px;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Скопировать USDT адрес</span></button>
+    <div style="background:rgba(0,180,120,.05);border:1px solid rgba(0,180,120,.18);border-radius:10px;padding:11px 14px;margin-top:10px;font-family:var(--mono);font-size:.67rem;color:var(--m2);line-height:1.9"><div style="color:var(--g);font-weight:700;margin-bottom:3px">Инструкция:</div><div>① Скопируйте адрес выше</div><div>② Сеть: <span style="color:var(--g);font-weight:700">TRON TRC-20</span> (не ERC-20!)</div><div>③ Отправьте точную сумму USDT</div><div>④ Нажмите «Я уже оплатил» → вставьте TXID</div></div>
+  </div>
+  <!-- ВКЛАДКА 3: ПРОМОКОД -->
+  <div id="mtab-promo" class="pay-tab-content">
+    <div style="text-align:center;padding:8px 0 14px"><div style="font-size:1.8rem;margin-bottom:8px">🎟</div><div style="font-family:var(--mono);font-size:.7rem;color:var(--m2);line-height:1.7">Введите промокод для активации Premium</div></div>
+    <input type="text" id="promo-input" placeholder="Введите промокод..." style="width:100%;background:var(--bg);border:1px solid var(--b);border-radius:8px;padding:12px 14px;color:var(--t);font-family:var(--mono);font-size:.8rem;outline:none;margin-bottom:10px;transition:border-color .2s;letter-spacing:1px" oninput="this.style.borderColor=''" onkeydown="if(event.key==='Enter')applyPromo()">
+    <button class="okbtn" onclick="applyPromo()"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Применить промокод</span></button>
+    <div id="promo-result" style="margin-top:10px;font-family:var(--mono);font-size:.74rem;display:none"></div>
+  </div>
+  <!-- ВЕРИФИКАЦИЯ -->
+  <div id="verify-section" style="display:none;border-top:1px solid var(--b);padding-top:14px;margin-top:12px">
+    <div style="font-family:var(--mono);font-size:.62rem;color:var(--m);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Подтверждение оплаты</div>
+    <input type="text" id="pay-txid" placeholder="TXID / хэш транзакции оплаты..." maxlength="100" style="width:100%;background:var(--bg);border:1px solid var(--b);border-radius:8px;padding:11px 13px;color:var(--t);font-family:var(--mono);font-size:.75rem;outline:none;margin-bottom:10px;transition:border-color .2s">
+    <button class="okbtn" onclick="verifyPayment()" id="verify-btn"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Активировать Premium</span></button>
+    <div id="verify-result" style="margin-top:12px;font-family:var(--mono);font-size:.75rem;display:none"></div>
+  </div>
+  <div id="show-verify-btn" style="margin-top:8px"><button class="okbtn" onclick="showVerify()" style="background:rgba(255,255,255,.05);color:var(--m2);box-shadow:none;border:1px solid rgba(255,255,255,.08)"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Я уже оплатил — активировать</span></button></div>
+  <div class="mnote" style="margin-top:10px" id="modal-note">Прямая оплата Bitcoin — без посредников</div>
+</div>
+</div>
+
 
 </body>
 </html>
