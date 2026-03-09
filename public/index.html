@@ -1975,6 +1975,8 @@ const _k=0x5a;
 const WALLET=_W.map(b=>String.fromCharCode(b^_k)).join('');
 const CC_POS_URL=_U.map(b=>String.fromCharCode(b^_k)).join('');
 const USDT_WALLET = 'TK5CYGZz9NzdXywwz1VZqNpxzWqZGPBBbU';
+
+const _PREM_TOKEN = "a8a9a72f-599e-4a6d-8e0d-6bc064aea329"; // Premium API secret
 let plan = 'free', selBtc = 0.000062;
 
 // ── POOLS ──────────────────────────────────────────────────────
@@ -3172,7 +3174,7 @@ async function go() {
     try {
       const r = await fetch('/api/broadcast', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 'Content-Type': 'application/json', ...(plan === 'premium' ? { 'X-TurboTX-Token': _PREM_TOKEN } : {}) },
         body: JSON.stringify({ txid, plan }),
       });
       if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -3301,7 +3303,7 @@ async function go() {
             try {
               const rr = await fetch('/api/repeat', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'X-TurboTX-Token': _PREM_TOKEN },
                 body: JSON.stringify({ txid: txid, wave: i + 1 }),
               });
               const rd = await rr.json();
@@ -4994,7 +4996,7 @@ async function serverBroadcast(txid, plan) {
   try {
     const r = await fetch(_API + '/api/broadcast', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...(plan === 'premium' ? { 'X-TurboTX-Token': _PREM_TOKEN } : {}) },
       body: JSON.stringify({ txid, plan }),
     });
     if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -5014,7 +5016,7 @@ function startServerRepeat(txid) {
       try {
         const r = await fetch(_API + '/api/repeat', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'X-TurboTX-Token': _PREM_TOKEN },
           body: JSON.stringify({ txid: txid, wave: i + 1 }),
         });
         const data = await r.json();
