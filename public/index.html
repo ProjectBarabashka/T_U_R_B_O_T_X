@@ -2193,7 +2193,7 @@ input[type=text]:focus {
     <div style="width:3px;height:3px;border-radius:50%;background:var(--b2)"></div>
     <div style="display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.6rem;color:var(--m2)">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-      Бесплатно · Premium от $4
+      Бесплатно · Premium от <span id="hero-price-badge">$3–18</span>
     </div>
   </div>
 
@@ -2598,7 +2598,7 @@ input[type=text]:focus {
       <div class="plan-opt" id="op" onclick="pick('premium')">
         <div class="po-title" style="display:flex;align-items:center;gap:7px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polygon points='12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2'/></svg> Premium</div>
         <div class="po-desc">15 пулов + приоритет</div>
-        <div class="po-price" style="color:var(--a);font-weight:700">от $4</div>
+        <div class="po-price" style="color:var(--a);font-weight:700">от <span id="plan-opt-price">…</span></div>
 
       </div>
     </div>
@@ -3075,16 +3075,19 @@ input[type=text]:focus {
     Курс BTC: <span id="modal-rate-note" style="color:var(--a)">загружаем…</span>
   </div>
 
-  <!-- ПЛАН -->
-  <div class="price-row" style="margin-bottom:16px">
-    <div class="popt on" id="plan-std" onclick="selectPlan(this,4)">
-      <div class="poa">$4</div><div class="pol">Standard</div><div class="pob" id="pob-std">≈ … BTC</div>
+  <!-- ДИНАМИЧЕСКИЙ ПРАЙС -->
+  <div id="modal-price-block" style="background:rgba(247,147,26,.05);border:1px solid rgba(247,147,26,.18);border-radius:12px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+    <div>
+      <div style="font-family:var(--mono);font-size:.58rem;color:var(--m);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:4px">Цена сейчас</div>
+      <div style="display:flex;align-items:baseline;gap:8px">
+        <span style="font-size:2rem;font-weight:800;color:var(--a);font-family:var(--display)" id="modal-price-usd">…</span>
+        <span style="font-family:var(--mono);font-size:.72rem;color:var(--m2)" id="modal-price-btc">≈ … BTC</span>
+      </div>
+      <div style="font-family:var(--mono);font-size:.6rem;color:var(--m);margin-top:3px" id="modal-price-usdt">≈ … USDT</div>
     </div>
-    <div class="popt" id="plan-fast" onclick="selectPlan(this,10)">
-      <div class="poa">$10</div><div class="pol">Fast</div><div class="pob" id="pob-fast">≈ … BTC</div>
-    </div>
-    <div class="popt" id="plan-inst" onclick="selectPlan(this,25)">
-      <div class="poa">$25</div><div class="pol">Instant</div><div class="pob" id="pob-inst">≈ … BTC</div>
+    <div style="text-align:right">
+      <div id="modal-price-badge" style="font-family:var(--mono);font-size:.65rem;padding:4px 10px;border-radius:20px;background:rgba(247,147,26,.12);color:var(--a);margin-bottom:6px">🟡 загрузка…</div>
+      <div style="font-family:var(--mono);font-size:.57rem;color:var(--m);line-height:1.5">Цена меняется<br>с загрузкой сети</div>
     </div>
   </div>
 
@@ -5213,30 +5216,18 @@ function fmtBtc(val) {
   return val.toFixed(6) + ' BTC';
 }
 
-const PLANS_USD = [
-  { usd: 4,  id: 'pob-std'  },
-  { usd: 10, id: 'pob-fast' },
-  { usd: 25, id: 'pob-inst' }
-];
+// updateBtcPrices вызывается при открытии модалки и каждые 3 мин
 
 async function updateBtcPrices() {
   const rate = await fetchBtcPrice();
-  const opts = document.querySelectorAll('.popt');
-
-  PLANS_USD.forEach((plan, i) => {
-    const btc = rate > 0 ? (plan.usd / rate) : null;
-    const pobEl = document.getElementById(plan.id);
-    if (pobEl) pobEl.textContent = btc !== null ? ('≈ ' + btc.toFixed(6) + ' BTC') : '≈ … BTC';
-    if (opts[i] && btc !== null) opts[i].dataset.btc = btc.toFixed(8);
-  });
-
-  // Обновляем selBtc для выбранного плана
-  const activeOpt = document.querySelector('.popt.on');
-  if (activeOpt && activeOpt.dataset.btc) {
-    selBtc = parseFloat(activeOpt.dataset.btc);
+  if (rate > 0 && selectedUsd > 0) {
+    selBtc = selectedUsd / rate;
     _updateDirectAmount();
+    _updateUsdtAmount();
+    // Обновляем BTC-сумму в модальном прайс-блоке
+    const modalBtc = document.getElementById('modal-price-btc');
+    if (modalBtc) modalBtc.textContent = '≈ ' + selBtc.toFixed(6) + ' BTC';
   }
-
   // Курс в модалке
   const rateEl = document.getElementById('modal-rate-note');
   if (rateEl && rate > 0) {
@@ -5257,17 +5248,9 @@ function openM() {
   const eu = document.getElementById('usdt-wallet-display');
   if (eu) eu.textContent = USDT_WALLET;
 
-  // Сбрасываем на план $4 (Standard)
-  selectedUsd = 4;
-  document.querySelectorAll('.popt').forEach(o => o.classList.remove('on'));
-  const stdOpt = document.getElementById('plan-std');
-  if (stdOpt) stdOpt.classList.add('on');
-
-  // Обновляем курс и суммы при открытии
-  updateBtcPrices().then(() => {
-    _updateDirectAmount();
-    _updateUsdtAmount();
-  });
+  // Применяем актуальную динамическую цену
+  if (window._TurboPrice) window._TurboPrice.load();
+  else { _updateDirectAmount(); _updateUsdtAmount(); }
 
   // Сбрасываем на таб BTC
   activeModalTab = 'btc';
@@ -5413,18 +5396,7 @@ function _updateUsdtAmount() {
   if (amtEl) amtEl.textContent = (selectedUsd || 4) + ' USDT';
 }
 
-function selectPlan(el, usd) {
-  document.querySelectorAll('.popt').forEach(o => o.classList.remove('on'));
-  el.classList.add('on');
-  selectedUsd = usd;
-  if (_btcUsd > 0) {
-    selBtc = usd / _btcUsd;
-  } else if (el.dataset.btc) {
-    selBtc = parseFloat(el.dataset.btc);
-  }
-  _updateDirectAmount();
-  _updateUsdtAmount();
-}
+// selectPlan удалён — цена теперь полностью динамическая из /api/price
 
 
 function cpDirect() {
@@ -6622,40 +6594,74 @@ function _startHistoryConfPolling() {
     if (!p) return;
     const usd = p.usd;
     const tier = PRICE_TIERS.find(t => usd <= t.usd) || PRICE_TIERS.at(-1);
+    const emoji = p.emoji || tier?.emoji || '🟡';
+    const text  = p.text  || tier?.text  || '';
+    const isLow = usd <= 4, isMid = usd <= 7;
+    const accentColor = isLow ? 'var(--g)' : isMid ? 'var(--a)' : '#ff5555';
+    const bgColor     = isLow ? 'rgba(0,232,122,.13)' : isMid ? 'rgba(247,147,26,.13)' : 'rgba(255,50,50,.13)';
 
-    // Карточка Premium — цена
+    // Синхронизируем selectedUsd с реальной ценой
+    selectedUsd = usd;
+
+    // Пересчитываем BTC сумму
+    const btcVal = (_btcUsd > 0) ? (usd / _btcUsd) : (p.btc || null);
+    if (btcVal) {
+      selBtc = btcVal;
+      window._selBtc = btcVal;
+    }
+
+    // ── Карточка Premium — цена ──
     const priceEl = document.getElementById('plan-price-usd');
     if (priceEl) priceEl.textContent = '$' + usd;
 
-    // Тег состояния сети рядом с ценой
+    // ── Тег состояния сети рядом с ценой в карточке ──
     const tagEl = document.getElementById('plan-price-tag');
     if (tagEl) {
-      tagEl.textContent = (p.emoji || '🟡') + ' ' + (p.text || '');
-      tagEl.style.background = usd <= 4 ? 'rgba(0,232,122,.13)' : usd <= 7 ? 'rgba(247,147,26,.13)' : 'rgba(255,50,50,.13)';
-      tagEl.style.color = usd <= 4 ? 'var(--g)' : usd <= 7 ? 'var(--a)' : '#ff5555';
+      tagEl.textContent = emoji + ' ' + text;
+      tagEl.style.background = bgColor;
+      tagEl.style.color = accentColor;
     }
 
-    // Кнопка "Купить Premium"
+    // ── Кнопка "Купить Premium" ──
     const btnEl = document.getElementById('plan-btn-price');
     if (btnEl) btnEl.textContent = '$' + usd;
 
-    // Ячейка в таблице сравнения
+    // ── "от …" в плане-опции формы ──
+    const optEl = document.getElementById('plan-opt-price');
+    if (optEl) optEl.textContent = '$' + usd;
+
+    // ── Герой trust badge ──
+    const heroEl = document.getElementById('hero-price-badge');
+    if (heroEl) heroEl.textContent = '$' + usd;
+
+    // ── Таблица сравнения ──
     const compEl = document.getElementById('comp-price-cell');
-    if (compEl) {
-      compEl.innerHTML = '<strong>$' + usd + '</strong> сейчас ' + (p.emoji || '🟡');
+    if (compEl) compEl.innerHTML = '<strong>$' + usd + '</strong> сейчас ' + emoji;
+
+    // ── Модальный динамический блок ──
+    const modalUsd  = document.getElementById('modal-price-usd');
+    const modalBtc  = document.getElementById('modal-price-btc');
+    const modalUsdt = document.getElementById('modal-price-usdt');
+    const modalBadge= document.getElementById('modal-price-badge');
+    if (modalUsd)  modalUsd.textContent  = '$' + usd;
+    if (modalBtc)  modalBtc.textContent  = btcVal ? '≈ ' + btcVal.toFixed(6) + ' BTC' : '≈ … BTC';
+    if (modalUsdt) modalUsdt.textContent = '≈ ' + usd + ' USDT';
+    if (modalBadge) {
+      modalBadge.textContent = emoji + ' ' + text;
+      modalBadge.style.background = bgColor;
+      modalBadge.style.color = accentColor;
     }
 
-    // BTC сумма в платёжной форме
-    if (p.btc && typeof selBtc !== 'undefined') {
-      selBtc = p.btc;
-      const amtEl = document.getElementById('direct-amount');
-      if (amtEl) amtEl.textContent = p.btc + ' BTC';
-    }
+    // ── Прямая сумма в поле BTC ──
+    const amtEl = document.getElementById('direct-amount');
+    if (amtEl && btcVal) amtEl.textContent = btcVal.toFixed(6) + ' BTC';
+
+    // ── USDT поле ──
+    const usdtEl = document.getElementById('usdt-amount');
+    if (usdtEl) usdtEl.textContent = usd + ' USDT';
 
     // Если /api/price вернул BTC → обновляем _btcUsd
-    if (p.btcPrice && typeof _btcUsd !== 'undefined') {
-      window._btcUsd = p.btcPrice;
-    }
+    if (p.btcPrice) _btcUsd = p.btcPrice;
   }
 
   // Загружаем при старте + каждые 3 мин
@@ -6670,7 +6676,7 @@ function _startHistoryConfPolling() {
   }
 
   window._TurboPrice = { load: loadPrice, apply: applyPrice };
-  console.log('[TurboTX v4.0] Dynamic price loaded ✓');
+  console.log('[TurboTX v5.1] Dynamic price loaded ✓');
 })();
 </script>
 
