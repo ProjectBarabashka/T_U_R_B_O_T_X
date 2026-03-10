@@ -1,148 +1,237 @@
 // ══════════════════════════════════════════════════════════════
-//  TurboTX — client-api.js
-//  Этот код вставляется в index.html перед закрывающим </body>
-//  Подключает серверные API вместо прямых fetch из браузера
+//  TurboTX v11 — client-api.js
+//  Вставляется в index.html перед </body>
+//
+//  ✦ serverBroadcast    — одиночный broadcast через /api/broadcast
+//  ✦ batchBroadcast     — пакетный broadcast (массив txids)
+//  ✦ startServerRepeat  — волны повтора с wave recovery
+//  ✦ fetchDynamicPrice  — цена с кэшем 3 мин + sats для Lightning
+//  ✦ createLightningInvoice / checkLightningPayment — LN оплата
+//  ✦ applyDynamicPrice  — обновляет UI элементы
 // ══════════════════════════════════════════════════════════════
 
-// ── СЕРВЕРНЫЙ BROADCAST (заменяет freeBroadcast / premiumBroadcast) ──
-// Фронт вызывает /api/broadcast → сервер делает всё без CORS-ограничений
+const _API = ''; // тот же origin (acelerat.vercel.app)
 
-const _API = ''; // пустая строка = тот же origin (acelerat.vercel.app)
-
-async function serverBroadcast(txid, plan) {
+// ─── BROADCAST ────────────────────────────────────────────────
+async function serverBroadcast(txid, plan, token) {
   try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['X-TurboTX-Token'] = token;
+
     const r = await fetch(`${_API}/api/broadcast`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ txid, plan }),
+      method:  'POST',
+      headers,
+      body:    JSON.stringify({ txid, plan }),
     });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     return r.json();
-  } catch (e) {
-    console.warn('[TurboTX] Server broadcast failed, falling back to client:', e.message);
-    // Fallback: старый клиентский broadcast
-    return plan === 'premium' ? premiumBroadcast(txid) : freeBroadcast(txid);
+  } catch(e) {
+    console.warn('[TurboTX] Server broadcast failed:', e.message);
+    // Fallback на клиентский broadcast если есть
+    if (typeof freeBroadcast === 'function' && plan !== 'premium')
+      return freeBroadcast(txid);
+    throw e;
   }
 }
 
-// ── АВТО-ПОВТОРЫ PREMIUM (серверный вариант) ──────────────────────
-// Планируем волны через setTimeout — фронт пингует /api/repeat
-// Даже если пользователь закроет вкладку — волны уже запланированы на сервере
+// ─── BATCH BROADCAST ──────────────────────────────────────────
+// Уникально для TurboTX v11 — ни один конкурент не умеет
+async function batchBroadcast(txids, token) {
+  if (!Array.isArray(txids) || txids.length === 0) throw new Error('txids array required');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) headers['X-TurboTX-Token'] = token;
 
-const WAVE_SCHEDULE_MS = [15, 30, 60, 120, 240].map(m => m * 60000);
+  const r = await fetch(`${_API}/api/broadcast`, {
+    method:  'POST',
+    headers,
+    body:    JSON.stringify({ txids, plan: 'premium' }),
+  });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return r.json();
+  // → { ok, batch:true, total, succeeded, failed, ms, items:[...] }
+}
 
-function startServerRepeat(txid) {
-  stopPremiumRepeat(); // остановить старый клиентский interval
-  let waveNum = 1;
+// ─── АВТО-ПОВТОРЫ ─────────────────────────────────────────────
+// Планируем волны через setTimeout, передаём startedAt для wave recovery
+// Даже если пользователь закроет вкладку — сервер уже знает когда запускать
 
-  WAVE_SCHEDULE_MS.forEach((delayMs, i) => {
-    setTimeout(async () => {
+const _activeRepeats = new Map(); // txid → [timerIds]
+
+function startServerRepeat(txid, token, onWave) {
+  stopServerRepeat(txid);
+
+  const startedAt     = Date.now();
+  const waveSchedule  = [15, 30, 60, 120, 120, 120, 120, 120]; // минуты
+  const timers        = [];
+
+  let cumulativeMs = 0;
+  waveSchedule.forEach((mins, i) => {
+    cumulativeMs += mins * 60_000;
+    const waveIntervalMs = mins * 60_000;
+
+    const tid = setTimeout(async () => {
       try {
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['X-TurboTX-Token'] = token;
+
         const r = await fetch(`${_API}/api/repeat`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ txid, wave: i + 1 }),
+          method:  'POST',
+          headers,
+          body: JSON.stringify({
+            txid,
+            wave:          i + 1,
+            startedAt,           // для wave recovery на сервере
+            waveIntervalMs,
+          }),
         });
         const data = await r.json();
 
         if (data.confirmed) {
-          console.log(`[TurboTX] TX confirmed at wave ${i + 1}`);
-          stopPremiumRepeat();
+          console.log(`[TurboTX] ✅ TX confirmed at wave ${i+1}`);
+          stopServerRepeat(txid);
+          if (typeof onWave === 'function') onWave({ confirmed: true, wave: i+1, data });
         } else if (data.broadcasted) {
-          console.log(`[TurboTX] Wave ${i + 1} broadcast: ${data.broadcastSummary?.ok}/${data.broadcastSummary?.total} ok`);
+          console.log(`[TurboTX] ⚡ Wave ${i+1}: ${data.broadcastSummary?.ok}/${data.broadcastSummary?.total} ok`);
+          if (typeof onWave === 'function') onWave({ confirmed: false, wave: i+1, data });
         }
-      } catch (e) {
-        // Fallback: клиентский broadcast
-        premiumBroadcast(txid);
+      } catch(e) {
+        console.warn(`[TurboTX] Wave ${i+1} error:`, e.message);
       }
-    }, delayMs);
+    }, cumulativeMs);
+
+    timers.push(tid);
   });
+
+  _activeRepeats.set(txid, timers);
+  console.log(`[TurboTX] Scheduled ${waveSchedule.length} waves for ${txid.slice(0,8)}…`);
 }
 
-// ── ДИНАМИЧЕСКАЯ ЦЕНА ────────────────────────────────────────────
-let _priceData = null;
+function stopServerRepeat(txid) {
+  const timers = _activeRepeats.get(txid);
+  if (timers) {
+    timers.forEach(t => clearTimeout(t));
+    _activeRepeats.delete(txid);
+  }
+}
+
+// ─── ЦЕНА ─────────────────────────────────────────────────────
+let _priceCache     = null;
 let _priceFetchedAt = 0;
 
-async function fetchDynamicPrice() {
-  // Кешируем на 3 минуты
-  if (_priceData && Date.now() - _priceFetchedAt < 180000) return _priceData;
-
+async function fetchDynamicPrice(forceRefresh = false) {
+  if (!forceRefresh && _priceCache && Date.now() - _priceFetchedAt < 180_000)
+    return _priceCache;
   try {
     const r = await fetch(`${_API}/api/price`);
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
-    _priceData = await r.json();
+    _priceCache     = await r.json();
     _priceFetchedAt = Date.now();
-    applyDynamicPrice(_priceData);
-    return _priceData;
-  } catch (e) {
-    console.warn('[TurboTX] Dynamic price failed:', e.message);
-    return null;
+    applyDynamicPrice(_priceCache);
+    return _priceCache;
+  } catch(e) {
+    console.warn('[TurboTX] Price fetch failed:', e.message);
+    return _priceCache; // вернём старые данные если есть
   }
 }
 
 function applyDynamicPrice(p) {
   if (!p) return;
+  const { usd, btc, sats, emoji, text, congestion } = p;
 
-  // Обновляем все элементы с ценой на странице
-  const usd = p.usd;
-  const btc = p.btc;
-  const emoji = p.emoji;
-
-  // Кнопки оплаты
+  // Ценовые элементы
   document.querySelectorAll('[data-price-usd]').forEach(el => {
     el.textContent = `$${usd}`;
   });
-
-  // BTC сумма
   document.querySelectorAll('[data-price-btc]').forEach(el => {
     if (btc) el.textContent = `${btc} BTC`;
   });
+  document.querySelectorAll('[data-price-sats]').forEach(el => {
+    if (sats) el.textContent = `${sats.toLocaleString()} sats`;
+  });
 
-  // Индикатор загруженности сети (если есть на странице)
-  const congestionEl = document.getElementById('network-congestion');
-  if (congestionEl) {
-    congestionEl.textContent = `${emoji} ${p.text} · ${p.feeRate} sat/vB`;
-    congestionEl.style.color = p.congestion === 'low' ? 'var(--g)' :
-                                p.congestion === 'medium' ? 'var(--a)' : '#ff5555';
+  // Индикатор сети
+  const netEl = document.getElementById('network-congestion');
+  if (netEl) {
+    netEl.textContent = `${emoji} ${text} · ${p.feeRate} sat/vB`;
+    netEl.style.color = congestion === 'low'    ? 'var(--g)' :
+                        congestion === 'medium' ? 'var(--a)' : '#ff5555';
   }
 
-  // Обновляем selBtc для платёжной формы
+  // Глобальный selBtc для платёжной формы
   if (btc && typeof selBtc !== 'undefined') {
     selBtc = btc;
     const amtEl = document.getElementById('pay-amount');
     if (amtEl) amtEl.textContent = `${btc} BTC`;
-    const directEl = document.getElementById('direct-amount');
-    if (directEl) directEl.textContent = `${btc} BTC`;
   }
 }
 
-// ── ПЕРЕОПРЕДЕЛЯЕМ СТАРЫЕ ФУНКЦИИ ────────────────────────────────
-// Патч activateBroadcast чтобы использовал сервер
+// ─── LIGHTNING PAYMENT ────────────────────────────────────────
+// Создаём invoice и запускаем polling до оплаты
 
-const _origAccelerate = typeof doAccelerate !== 'undefined' ? doAccelerate : null;
+async function createLightningInvoice(amountUsd, txid) {
+  const r = await fetch(`${_API}/api/lightning`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ amountUsd, txid }),
+  });
+  if (!r.ok) throw new Error(`Lightning invoice failed: ${r.status}`);
+  const data = await r.json();
+  if (!data.ok) throw new Error(data.error || 'Invoice error');
+  return data;
+  // → { invoice, paymentHash, amountSats, lightningUri, expiresAt }
+}
 
-// Перехватываем на уровне нажатия кнопки
+async function checkLightningPayment(paymentHash) {
+  const r = await fetch(`${_API}/api/lightning?hash=${paymentHash}`);
+  if (!r.ok) throw new Error(`Check failed: ${r.status}`);
+  return r.json();
+  // → { paid, settled, amountSats, activationToken? }
+}
+
+// Polling до оплаты (max 1 час)
+function waitForLightningPayment(paymentHash, onStatus) {
+  const MAX_MS  = 60 * 60_000;
+  const start   = Date.now();
+  let   stopped = false;
+
+  const poll = async () => {
+    if (stopped || Date.now() - start > MAX_MS) return;
+    try {
+      const data = await checkLightningPayment(paymentHash);
+      if (typeof onStatus === 'function') onStatus(data);
+      if (data.paid) { stopped = true; return; }
+      if (data.expired) { stopped = true; return; }
+    } catch(e) {
+      console.warn('[TurboTX] LN poll error:', e.message);
+    }
+    if (!stopped) setTimeout(poll, 3000); // polling каждые 3с
+  };
+
+  poll();
+  return () => { stopped = true; }; // возвращаем функцию отмены
+}
+
+// ─── ИНИЦИАЛИЗАЦИЯ ────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  // Загружаем цену сразу
   fetchDynamicPrice();
-
-  // Обновляем цену каждые 3 минуты
-  setInterval(fetchDynamicPrice, 3 * 60000);
-
-  // Патчим кнопку Ускорить
-  const btn = document.getElementById('abtn');
-  if (btn) {
-    const origClick = btn.onclick;
-    // Сохраняем оригинальный обработчик — он выполняется как обычно,
-    // но broadcast идёт через сервер. Патч применяется через замену функций выше.
-  }
+  setInterval(fetchDynamicPrice, 3 * 60_000);
 });
 
-// ── ЭКСПОРТИРУЕМ ДЛЯ ИСПОЛЬЗОВАНИЯ В index.html ──────────────────
+// ─── ГЛОБАЛЬНЫЙ API ───────────────────────────────────────────
 window._TurboAPI = {
-  broadcast: serverBroadcast,
-  startRepeat: startServerRepeat,
-  fetchPrice: fetchDynamicPrice,
+  // Broadcast
+  broadcast:     serverBroadcast,
+  batchBroadcast,
+  // Repeat
+  startRepeat:   startServerRepeat,
+  stopRepeat:    stopServerRepeat,
+  // Price
+  fetchPrice:    fetchDynamicPrice,
+  applyPrice:    applyDynamicPrice,
+  // Lightning
+  createInvoice: createLightningInvoice,
+  checkPayment:  checkLightningPayment,
+  waitPayment:   waitForLightningPayment,
 };
 
-console.log('[TurboTX] Server API connected ✓');
+console.log('[TurboTX] v11 Server API connected ✓ (broadcast + batch + lightning + waves)');
