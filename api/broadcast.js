@@ -40,6 +40,38 @@ const _ipMap    = new Map(); // ip → { count, txids:Set, resetAt }
 const _txidMap  = new Map(); // txid → { lastSeen, plan }
 const _confirmed = new Set(); // подтверждённые TXID (кеш)
 
+// ─── BOOTSTRAP — загружаем dead/slow каналы из /api/health при старте ──
+// Vercel serverless не может импортировать другой API напрямую,
+// поэтому делаем HTTP-запрос к /api/health при первом cold start.
+// Это связывает health.js с broadcast.js — п.6 выполнен корректно.
+let _healthBootstrapped = false;
+async function bootstrapFromHealth() {
+  if (_healthBootstrapped) return;
+  _healthBootstrapped = true;
+  try {
+    const base = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
+    const r = await fetch(`${base}/api/health?verbose=1`, {
+      signal: AbortSignal.timeout(8000),
+    });
+    if (!r.ok) return;
+    const data = await r.json();
+    // Каналы которые не ответили при health-check — предзаполняем как подозрительные
+    (data.channels || []).forEach(ch => {
+      if (!ch.ok && ch.ms >= 3000) {
+        // Не сразу мёртвые — даём 1 провал (из 3 до блокировки)
+        _deadChannels.set(ch.name, { fails: 1, deadUntil: 0 });
+      }
+      // Сохраняем пинг из health в _pingCache
+      if (ch.ms > 0 && ch.ms < 3000) {
+        setPing && setPing(ch.name, ch.ms);
+      }
+    });
+    console.log(`[TurboTX] health bootstrap: ${(data.channels||[]).length} каналов загружено`);
+  } catch(e) {
+    // health недоступен — работаем с чистым состоянием
+  }
+}
+
 const LIMITS = {
   free:    { perHour: 3,  cooldownMs: 2 * 60 * 60 * 1000 },
   premium: { perHour: 30, cooldownMs: 15 * 60 * 1000     },
@@ -703,6 +735,9 @@ export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).set(CORS).end();
   Object.entries(CORS).forEach(([k,v]) => res.setHeader(k,v));
   if (req.method !== 'POST') return res.status(405).json({ ok:false, error:'Method not allowed' });
+
+  // Загружаем данные health.js при cold start (не блокирует запрос)
+  bootstrapFromHealth().catch(()=>{});
 
   const ip = getIp(req);
 
