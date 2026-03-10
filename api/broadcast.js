@@ -1,5 +1,5 @@
 // ══════════════════════════════════════════════════════════════
-//  TurboTX v8 ★ MAXIMUM POWER ★  —  /api/broadcast.js
+//  TurboTX v9 ★ MAXIMUM POWER ★  —  /api/broadcast.js
 //  Vercel Serverless · Node.js 20
 //
 //  УЛУЧШЕНИЯ v8:
@@ -89,6 +89,8 @@ function isBot(req) {
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function safeJson(r) { try { return await r.json(); } catch { return {}; } }
 async function safeText(r) { try { return await r.text(); } catch { return ''; } }
+// Извлекает x-vercel-error из Response (пусто если нет)
+function ve(r) { return r?.headers?.get?.('x-vercel-error') || ''; }
 
 async function ft(url, opts={}, ms=13000) {
   const ac = new AbortController();
@@ -437,6 +439,7 @@ const PING_URLS = {
   'SpiderPool': 'https://www.spiderpool.com/',  'F2Pool':    'https://www.f2pool.com/',
   'Luxor':      'https://luxor.tech/',          'CloverPool':'https://clvpool.com/',
   'BitFuFu':    'https://www.bitfufu.com/',     'BTC.com':   'https://btc.com/',
+  'Ocean':       'https://ocean.xyz/',
   'TxBoost':    'https://txboost.com/',         'mempoolAccel':'https://mempool.space/',
   'bitaccelerate':'https://www.bitaccelerate.com/', '360btc':'https://360btc.net/',
   'txfaster':   'https://txfaster.com/',        'btcspeed':  'https://btcspeed.org/',
@@ -458,10 +461,12 @@ async function pingChannel(name) {
 }
 
 // ─── HASHRATE TABLE Q1 2026 ───────────────────────────────────
+// Источник: mempool.space/mining — обновлено март 2026
+// SBI Crypto и Ocean добавлены как растущие пулы
 const HR = {
   Foundry:27, AntPool:16, MARA:11, ViaBTC:9, SpiderPool:8,
   F2Pool:7, Luxor:5, CloverPool:4, BitFuFu:4, 'BTC.com':3,
-  TxBoost:2, mempoolAccel:1, bitaccelerate:1, '360btc':1, txfaster:1, btcspeed:1,
+  Ocean:2, TxBoost:2, mempoolAccel:1, bitaccelerate:1, '360btc':1, txfaster:1, btcspeed:1,
 };
 
 // ─── ⑥ ГЕО-ГРУППЫ ПУЛОВ ──────────────────────────────────────
@@ -472,7 +477,7 @@ const HR = {
 // Vercel us-east-1 будет ближе к USA пулам.
 // Метка используется для логирования и будущего geo-routing.
 const POOL_GEO = {
-  Foundry:'usa', MARA:'usa', Luxor:'usa', TxBoost:'usa',
+  Foundry:'usa', MARA:'usa', Luxor:'usa', TxBoost:'usa', Ocean:'usa',
   AntPool:'asia', ViaBTC:'asia', SpiderPool:'asia', F2Pool:'asia',
   CloverPool:'asia', 'BTC.com':'asia', BitFuFu:'asia',
   mempoolAccel:'global', bitaccelerate:'global', '360btc':'global',
@@ -548,7 +553,7 @@ async function run(channels) {
         const t0 = Date.now();
         ch.call().then(r => {
           const ms  = Date.now()-t0;
-          const vercelCode = r.headers?.get?.('x-vercel-error') || '';
+          const vercelCode = r.ve || '';  // ← канал передаёт ve из Response заголовка
           const cls = classifyError(r.status, '', vercelCode);
           const isOk = r.ok || cls==='accepted';
 
@@ -709,16 +714,16 @@ function freeChannels(hex) {
   return [
     { name:'mempool.space',  tier:'node', call: async()=>{
       const r=await ftr('https://mempool.space/api/tx',{method:'POST',body:hex,headers:{'Content-Type':'text/plain'}},12000,2,'mempool.space','node');
-      return {ok:r.ok||ok400(await safeText(r),r.status), status:r.status};
+      return {ok:r.ok||ok400(await safeText(r),r.status), status:r.status, ve:ve(r)};
     }},
     { name:'blockstream.info', tier:'node', call: async()=>{
       const r=await ftr('https://blockstream.info/api/tx',{method:'POST',body:hex,headers:{'Content-Type':'text/plain'}},12000,2,'blockstream.info','node');
-      return {ok:r.ok||ok400(await safeText(r),r.status), status:r.status};
+      return {ok:r.ok||ok400(await safeText(r),r.status), status:r.status, ve:ve(r)};
     }},
     { name:'blockchair', tier:'node', call: async()=>{
       const r=await ftr('https://api.blockchair.com/bitcoin/push/transaction',{method:'POST',body:`data=${encodeURIComponent(hex)}`,headers:{'Content-Type':'application/x-www-form-urlencoded'}},12000,2,'blockchair','node');
       const j=await safeJson(r);
-      return {ok:!!(j?.data||j?.context?.code===200||ok400(JSON.stringify(j),r.status)), status:r.status};
+      return {ok:!!(j?.data||j?.context?.code===200||ok400(JSON.stringify(j),r.status)), status:r.status, ve:ve(r)};
     }},
   ];
 }
@@ -729,45 +734,45 @@ function premiumChannels(txid, hex) {
   const nodes = hex ? [
     { name:'mempool.space',  tier:'node', call: async()=>{
       const r=await ftr('https://mempool.space/api/tx',{method:'POST',body:hex,headers:{'Content-Type':'text/plain'}},12000,2,'mempool.space','node');
-      return {ok:r.ok||ok400(await safeText(r),r.status), status:r.status};
+      return {ok:r.ok||ok400(await safeText(r),r.status), status:r.status, ve:ve(r)};
     }},
     { name:'blockstream.info', tier:'node', call: async()=>{
       const r=await ftr('https://blockstream.info/api/tx',{method:'POST',body:hex,headers:{'Content-Type':'text/plain'}},12000,2,'blockstream.info','node');
-      return {ok:r.ok||ok400(await safeText(r),r.status), status:r.status};
+      return {ok:r.ok||ok400(await safeText(r),r.status), status:r.status, ve:ve(r)};
     }},
     { name:'blockchair', tier:'node', call: async()=>{
       const r=await ftr('https://api.blockchair.com/bitcoin/push/transaction',{method:'POST',body:`data=${encodeURIComponent(hex)}`,headers:{'Content-Type':'application/x-www-form-urlencoded'}},12000,2,'blockchair','node');
       const j=await safeJson(r);
-      return {ok:!!(j?.data||j?.context?.code===200||ok400(JSON.stringify(j),r.status)), status:r.status};
+      return {ok:!!(j?.data||j?.context?.code===200||ok400(JSON.stringify(j),r.status)), status:r.status, ve:ve(r)};
     }},
     { name:'blockcypher', tier:'node', call: async()=>{
       const r=await ftr('https://api.blockcypher.com/v1/btc/main/txs/push',{method:'POST',body:JSON.stringify({tx:hex}),headers:{'Content-Type':'application/json'}},12000,2,'blockcypher','node');
       const j=await safeJson(r);
-      return {ok:r.status===201||ok400(JSON.stringify(j),r.status), status:r.status};
+      return {ok:r.status===201||ok400(JSON.stringify(j),r.status), status:r.status, ve:ve(r)};
     }},
     { name:'btcscan.org', tier:'node', call: async()=>{
       const r=await ftr('https://btcscan.org/api/tx/push',{method:'POST',body:hex,headers:{'Content-Type':'text/plain'}},10000,2,'btcscan.org','node');
-      return {ok:r.ok||ok400(await safeText(r),r.status), status:r.status};
+      return {ok:r.ok||ok400(await safeText(r),r.status), status:r.status, ve:ve(r)};
     }},
     { name:'blockchain.info', tier:'node', call: async()=>{
       const r=await ftr('https://blockchain.info/pushtx',{method:'POST',body:`tx=${hex}`,headers:{'Content-Type':'application/x-www-form-urlencoded'}},12000,2,'blockchain.info','node');
-      return {ok:r.ok||ok400(await safeText(r),r.status), status:r.status};
+      return {ok:r.ok||ok400(await safeText(r),r.status), status:r.status, ve:ve(r)};
     }},
     { name:'bitaps.com', tier:'node', call: async()=>{
       const r=await ftr('https://bitaps.com/api/bitcoin/push/transaction',{method:'POST',body:hex,headers:{'Content-Type':'text/plain'}},10000,2,'bitaps.com','node');
-      return {ok:r.ok, status:r.status};
+      return {ok:r.ok, status:r.status, ve:ve(r)};
     }},
     { name:'sochain.com', tier:'node', call: async()=>{
       const r=await ftr('https://sochain.com/api/v2/send_tx/BTC',{method:'POST',body:JSON.stringify({tx_hex:hex}),headers:{'Content-Type':'application/json'}},10000,2,'sochain.com','node');
       const j=await safeJson(r);
-      return {ok:j?.status==='success'||ok400(JSON.stringify(j),r.status), status:r.status};
+      return {ok:j?.status==='success'||ok400(JSON.stringify(j),r.status), status:r.status, ve:ve(r)};
     }},
   ] : [];
 
   const pools = [
     { name:'Foundry', tier:'pool', call: async()=>{
       const r=await ftr('https://foundryusapool.com/accelerate',{method:'POST',body:JSON.stringify({txid}),headers:{'Content-Type':'application/json','User-Agent':UA}},14000,2,'Foundry','pool');
-      return {ok:r.ok||ok400(await safeText(r),r.status), status:r.status};
+      return {ok:r.ok||ok400(await safeText(r),r.status), status:r.status, ve:ve(r)};
     }},
     { name:'AntPool', tier:'pool', call: async()=>{
       try {
@@ -776,12 +781,12 @@ function premiumChannels(txid, hex) {
       } catch(_){}
       const r2=await ftr('https://antpool.com/txAccelerate.htm',{method:'POST',body:`txHash=${txid}`,headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':UA}},12000,2,'AntPool','pool');
       const t2=await safeText(r2);
-      return {ok:r2.ok||t2.includes('success')||ok400(t2,r2.status), status:r2.status};
+      return {ok:r2.ok||t2.includes('success')||ok400(t2,r2.status), status:r2.status, ve:ve(r2)};
     }},
     { name:'MARA', tier:'pool', call: async()=>{
       const r=await ftr('https://mara.com/api/transaction-accelerator',{method:'POST',body:JSON.stringify({txId:txid}),headers:{'Content-Type':'application/json','User-Agent':UA}},14000,2,'MARA','pool');
       const j=await safeJson(r);
-      return {ok:r.ok||j?.success===true||ok400(JSON.stringify(j),r.status), status:r.status};
+      return {ok:r.ok||j?.success===true||ok400(JSON.stringify(j),r.status), status:r.status, ve:ve(r)};
     }},
     { name:'ViaBTC', tier:'pool', call: async()=>{
       try {
@@ -790,62 +795,72 @@ function premiumChannels(txid, hex) {
       } catch(_){}
       const r2=await ft('https://www.viabtc.com/tools/txaccelerator/',{method:'POST',body:`txid=${txid}`,headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':UA}},14000);
       const t2=await safeText(r2);
-      return {ok:r2.ok||t2.includes('"code":0'), status:r2.status};
+      return {ok:r2.ok||t2.includes('"code":0'), status:r2.status, ve:ve(r2)};
     }},
     { name:'SpiderPool', tier:'pool', call: async()=>{
       const r=await ftr('https://www.spiderpool.com/api/v1/accelerate',{method:'POST',body:JSON.stringify({txid}),headers:{'Content-Type':'application/json','User-Agent':UA}},12000,2,'SpiderPool','pool');
       const j=await safeJson(r);
-      return {ok:r.ok||j?.code===0||j?.success===true, status:r.status};
+      return {ok:r.ok||j?.code===0||j?.success===true, status:r.status, ve:ve(r)};
     }},
     { name:'F2Pool', tier:'pool', call: async()=>{
       const r=await ftr('https://www.f2pool.com/api/v2/tx/accelerate',{method:'POST',body:JSON.stringify({tx_id:txid}),headers:{'Content-Type':'application/json','User-Agent':UA}},12000,2,'F2Pool','pool');
       const j=await safeJson(r);
-      return {ok:r.ok||j?.code===0, status:r.status};
+      return {ok:r.ok||j?.code===0, status:r.status, ve:ve(r)};
     }},
     { name:'Luxor', tier:'pool', call: async()=>{
       const r=await ftr('https://luxor.tech/api/accelerate',{method:'POST',body:JSON.stringify({txHash:txid}),headers:{'Content-Type':'application/json','User-Agent':UA}},12000,2,'Luxor','pool');
       const j=await safeJson(r);
-      return {ok:r.ok||j?.success===true||ok400(JSON.stringify(j),r.status), status:r.status};
+      return {ok:r.ok||j?.success===true||ok400(JSON.stringify(j),r.status), status:r.status, ve:ve(r)};
     }},
     { name:'CloverPool', tier:'pool', call: async()=>{
       const r=await ftr('https://clvpool.com/accelerator',{method:'POST',body:`tx_id=${txid}`,headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':UA}},12000,2,'CloverPool','pool');
-      return {ok:r.ok, status:r.status};
+      return {ok:r.ok, status:r.status, ve:ve(r)};
     }},
     { name:'BitFuFu', tier:'pool', call: async()=>{
       const r=await ftr('https://www.bitfufu.com/txaccelerator/submit',{method:'POST',body:JSON.stringify({txHash:txid}),headers:{'Content-Type':'application/json','User-Agent':UA}},12000,2,'BitFuFu','pool');
       const j=await safeJson(r);
-      return {ok:r.ok||j?.success===true, status:r.status};
+      return {ok:r.ok||j?.success===true, status:r.status, ve:ve(r)};
     }},
     { name:'BTC.com', tier:'pool', call: async()=>{
       const r=await ftr('https://btc.com/service/accelerator/boost',{method:'POST',body:JSON.stringify({tx_id:txid}),headers:{'Content-Type':'application/json','User-Agent':UA}},12000,2,'BTC.com','pool');
       const j=await safeJson(r);
-      return {ok:r.ok||j?.err_no===0, status:r.status};
+      return {ok:r.ok||j?.err_no===0, status:r.status, ve:ve(r)};
     }},
     { name:'mempoolAccel', tier:'pool', call: async()=>{
       const r=await ftr('https://mempool.space/api/v1/tx-accelerator/enqueue',{method:'POST',body:JSON.stringify({txid}),headers:{'Content-Type':'application/json','User-Agent':UA}},12000,2,'mempoolAccel','pool');
       const j=await safeJson(r);
-      return {ok:r.ok||j?.message==='Success', status:r.status};
+      return {ok:r.ok||j?.message==='Success', status:r.status, ve:ve(r)};
     }},
     { name:'TxBoost', tier:'pool', call: async()=>{
       const r=await ftr('https://txboost.com/',{method:'POST',body:`txid=${txid}`,headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':UA}},12000,2,'TxBoost','pool');
-      return {ok:r.ok||(await safeText(r)).includes('success'), status:r.status};
+      const t=await safeText(r);
+      return {ok:r.ok||t.includes('success'), status:r.status, ve:ve(r)};
+    }},
+    { name:'Ocean', tier:'pool', call: async()=>{
+      // Ocean.xyz — decentralised pool, growing in 2026
+      const r=await ftr('https://ocean.xyz/api/accelerate',{method:'POST',body:JSON.stringify({txid}),headers:{'Content-Type':'application/json','User-Agent':UA}},12000,2,'Ocean','pool');
+      const j=await safeJson(r);
+      return {ok:r.ok||j?.success===true||ok400(JSON.stringify(j),r.status), status:r.status, ve:ve(r)};
+    }},
+      const r=await ftr('https://txboost.com/',{method:'POST',body:`txid=${txid}`,headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':UA}},12000,2,'TxBoost','pool');
+      return {ok:r.ok||(await safeText(r)).includes('success'), status:r.status, ve:ve(r)};
     }},
     { name:'bitaccelerate', tier:'pool', call: async()=>{
       const r=await ftr('https://www.bitaccelerate.com/',{method:'POST',body:`txid=${txid}`,headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':UA}},12000,2,'bitaccelerate','pool');
-      return {ok:r.ok, status:r.status};
+      return {ok:r.ok, status:r.status, ve:ve(r)};
     }},
     { name:'360btc', tier:'pool', call: async()=>{
       const r=await ftr('https://360btc.net/accelerate',{method:'POST',body:`txid=${txid}`,headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':UA}},12000,2,'360btc','pool');
-      return {ok:r.ok, status:r.status};
+      return {ok:r.ok, status:r.status, ve:ve(r)};
     }},
     { name:'txfaster', tier:'pool', call: async()=>{
       const r=await ftr('https://txfaster.com/api/accelerate',{method:'POST',body:JSON.stringify({txid}),headers:{'Content-Type':'application/json','User-Agent':UA}},10000,2,'txfaster','pool');
       const j=await safeJson(r);
-      return {ok:r.ok||j?.success===true, status:r.status};
+      return {ok:r.ok||j?.success===true, status:r.status, ve:ve(r)};
     }},
     { name:'btcspeed', tier:'pool', call: async()=>{
       const r=await ftr('https://btcspeed.org/boost',{method:'POST',body:`tx=${txid}`,headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':UA}},10000,2,'btcspeed','pool');
-      return {ok:r.ok, status:r.status};
+      return {ok:r.ok, status:r.status, ve:ve(r)};
     }},
   ];
 
@@ -859,6 +874,31 @@ setInterval(() => {
   const cutoff = Date.now() - CONFIRMED_TTL;
   for (const [k, v] of _confirmed) if (v < cutoff) _confirmed.delete(k);
 }, 3_600_000); // every hour
+
+// ─── ГЛОБАЛЬНАЯ ОЧИСТКА ПАМЯТИ ────────────────────────────────
+// Vercel инстанс живёт часами — без чистки Maps растут вечно
+// Запускаем каждые 30 мин: удаляем просроченные записи
+setInterval(() => {
+  const now = Date.now();
+  // txidMap: записи старше 3 часов
+  for (const [k, v] of _txidMap)
+    if (now - v.lastSeen > 3 * 3_600_000) _txidMap.delete(k);
+  // cooldown: истёкшие
+  for (const [k, v] of _cooldown)
+    if (v.until < now) _cooldown.delete(k);
+  // negCache: истёкшие
+  for (const [k, v] of _negCache)
+    if (v < now) _negCache.delete(k);
+  // pingCache: старше 20 мин
+  for (const [k, v] of _pingCache)
+    if (now - v.updatedAt > 20 * 60_000) _pingCache.delete(k);
+  // stats: если канал мёртв давно (>24ч без вызовов) — сбрасываем счётчики
+  for (const [k, v] of _stats)
+    if (v.calls > 0 && !PING_URLS[k]) _stats.delete(k);
+  // circuit breaker: CLOSED записи с нулевыми провалами
+  for (const [k, v] of _cb)
+    if (v.state === 'CLOSED' && v.fails === 0) _cb.delete(k);
+}, 30 * 60_000);
 function siteBase() {
   return process.env.PRODUCTION_URL ||
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');

@@ -8,7 +8,7 @@ function checkRl(ip) {
 }
 
 // ══════════════════════════════════════════════════════════════
-//  TurboTX v6 ★ HEALTH CHECK ★  —  /api/health.js
+//  TurboTX v9 ★ HEALTH CHECK ★  —  /api/health.js
 //  Vercel Serverless · Node.js 20
 //
 //  GET /api/health
@@ -32,7 +32,7 @@ const CORS = {
 const HR = {
   Foundry:27, AntPool:16, MARA:11, ViaBTC:9, SpiderPool:8,
   F2Pool:7, Luxor:5, CloverPool:4, BitFuFu:4, 'BTC.com':3,
-  TxBoost:2, mempoolAccel:1, bitaccelerate:1, '360btc':1, txfaster:1, btcspeed:1,
+  Ocean:2, TxBoost:2, mempoolAccel:1, bitaccelerate:1, '360btc':1, txfaster:1, btcspeed:1,
 };
 
 // Пинг через HEAD/GET — просто проверяем доступность
@@ -57,6 +57,7 @@ const CHANNELS = [
   { name:'CloverPool',   tier:'pool', url:'https://clvpool.com/',                method:'HEAD' },
   { name:'BitFuFu',      tier:'pool', url:'https://www.bitfufu.com/',            method:'HEAD' },
   { name:'BTC.com',      tier:'pool', url:'https://btc.com/',                    method:'HEAD' },
+  { name:'Ocean',        tier:'pool', url:'https://ocean.xyz/',                  method:'HEAD' },
   { name:'TxBoost',      tier:'pool', url:'https://txboost.com/',                method:'HEAD' },
   { name:'mempoolAccel', tier:'pool', url:'https://mempool.space/',              method:'HEAD' },
   { name:'bitaccelerate',tier:'pool', url:'https://www.bitaccelerate.com/',      method:'HEAD' },

@@ -1,5 +1,5 @@
 // ══════════════════════════════════════════════════════════════
-//  TurboTX v6 ★ STATUS ★  —  /api/status.js
+//  TurboTX v9 ★ TX STATUS ★  —  /api/status.js
 //  Vercel Serverless · Node.js 20
 //
 //  GET /api/status?txid=<64hex>
@@ -9,6 +9,8 @@
 //  ✦ RBF включён?
 //  ✦ ETA до подтверждения (по текущей загрузке)
 //  ✦ Позиция в очереди мемпула (приблизительно)
+//  ✦ confidence score 0-100% — насколько уверены в ETA
+//  ✦ accelerationAdvice — точный совет: ускорить / подождать / CPFP / RBF
 //  ✦ Источник: mempool.space + blockstream fallback
 // ══════════════════════════════════════════════════════════════
 
@@ -28,14 +30,71 @@ async function ft(url, ms = 7000) {
 
 async function safeJson(r) { try { return await r.json(); } catch { return {}; } }
 
-// Примерный ETA до подтверждения в минутах
-function estimateEta(feeRate, fees) {
-  if (!feeRate || !fees) return null;
-  if (feeRate >= (fees.fastestFee || 999)) return '~10 мин';
-  if (feeRate >= (fees.halfHourFee || 999)) return '~30 мин';
-  if (feeRate >= (fees.hourFee || 999)) return '~1 час';
-  if (feeRate >= (fees.economyFee || fees.minimumFee || 1)) return '~несколько часов';
-  return 'неопределённо (очень низкая комиссия)';
+// ETA + confidence score 0-100
+// Confidence падает если: сеть нестабильна, TX на грани fee tier, мемпул большой
+function estimateEtaFull(feeRate, fees, mpVsizeMB) {
+  if (!feeRate || !fees) return { eta: null, etaMinutes: null, confidence: 0 };
+
+  const fastest  = fees.fastestFee    || 50;
+  const halfHour = fees.halfHourFee   || 30;
+  const hour     = fees.hourFee       || 20;
+  const economy  = fees.economyFee    || fees.minimumFee || 5;
+
+  let etaText, etaMinutes, confidence;
+
+  if (feeRate >= fastest) {
+    etaText = '~10 мин'; etaMinutes = 10;
+    // Высокий confidence только если feeRate заметно выше fastest
+    confidence = feeRate >= fastest * 1.2 ? 90 : 70;
+  } else if (feeRate >= halfHour) {
+    etaText = '~30 мин'; etaMinutes = 30;
+    confidence = feeRate >= halfHour * 1.1 ? 75 : 55;
+  } else if (feeRate >= hour) {
+    etaText = '~1 час'; etaMinutes = 60;
+    confidence = 50;
+  } else if (feeRate >= economy) {
+    etaText = '~несколько часов'; etaMinutes = 240;
+    confidence = 30;
+  } else {
+    etaText = 'неопределённо (очень низкая комиссия)'; etaMinutes = null;
+    confidence = 5;
+  }
+
+  // Снижаем confidence если мемпул большой (>50MB = затор)
+  if (mpVsizeMB > 100) confidence = Math.max(10, confidence - 30);
+  else if (mpVsizeMB > 50) confidence = Math.max(15, confidence - 15);
+
+  return { eta: etaText, etaMinutes, confidence };
+}
+
+// Точный совет что делать с TX
+function accelerationAdvice(feeRate, fees, rbfEnabled, vsize, feePaid) {
+  if (!fees) return null;
+  const fastest = fees.fastestFee || 50;
+  const ratio   = feeRate / fastest;
+
+  if (ratio >= 1.0) return { action: 'wait',   urgency: 'low',    text: 'Комиссия отличная — следующий блок' };
+  if (ratio >= 0.8) return { action: 'wait',   urgency: 'low',    text: 'Комиссия хорошая — подтверждение скоро' };
+  if (ratio >= 0.5) return { action: 'boost',  urgency: 'medium', text: 'Ускорение ускорит подтверждение на 1-3 часа' };
+
+  // Низкая комиссия — нужны конкретные действия
+  const cpfpFee  = Math.max(0, fastest * (vsize + 110) - feePaid);
+  const cpfpUrgency = cpfpFee < 10000 ? 'medium' : 'high';
+
+  if (rbfEnabled) {
+    return {
+      action:   'rbf',
+      urgency:  'high',
+      text:     `RBF доступен — замените TX с fee rate ${fastest} sat/vB`,
+      rbfTargetFeeRate: fastest,
+    };
+  }
+  return {
+    action:   'cpfp_or_boost',
+    urgency:  cpfpUrgency,
+    text:     `Комиссия слишком низкая (${feeRate}/${fastest} sat/vB). CPFP или ускорение TurboTX`,
+    cpfpFeeNeeded: cpfpFee,
+  };
 }
 
 // Simple rate limiter
@@ -108,16 +167,22 @@ export default async function handler(req, res) {
     const confs      = confirmed && tip && blockH ? Math.max(1, tip - blockH + 1) : 0;
     const rbfEnabled = Array.isArray(tx.vin) && tx.vin.some(i => i.sequence <= 0xFFFFFFFD);
     const needsBoost = !confirmed && feeRate > 0 && feeRate < fastest * 0.5;
+    const mpVsizeMB  = mp.vsize ? +(mp.vsize / 1e6).toFixed(1) : 0;
 
     // Позиция в мемпуле (приблизительная)
     let mempoolPosition = null;
     if (!confirmed && mp.count && feeRate > 0) {
-      // Грубая оценка: % TX с более высокой fee rate
       const approxPosition = Math.round((1 - Math.min(feeRate / fastest, 1)) * mp.count);
       mempoolPosition = approxPosition > 0 ? approxPosition : 0;
     }
 
-    const eta = !confirmed ? estimateEta(feeRate, fees) : null;
+    const { eta, etaMinutes, confidence } = !confirmed
+      ? estimateEtaFull(feeRate, fees, mpVsizeMB)
+      : { eta: null, etaMinutes: null, confidence: 100 };
+
+    const advice = !confirmed
+      ? accelerationAdvice(feeRate, fees, rbfEnabled, vsize, feePaid)
+      : null;
 
     return res.status(200).json({
       ok:           true,
@@ -135,9 +200,13 @@ export default async function handler(req, res) {
       rbfEnabled,
       inputs:   (tx.vin  || []).length,
       outputs:  (tx.vout || []).length,
-      eta,                    // "~30 мин" / null если подтверждена
-      mempoolPosition,        // приблизительная позиция в очереди
+      eta,
+      etaMinutes,
+      confidence,           // 0-100%: насколько уверены в ETA
+      accelerationAdvice:   advice,  // {action, urgency, text, ...}
+      mempoolPosition,
       mempoolCount: mp.count || null,
+      mempoolMB:    mpVsizeMB,
       timestamp: Date.now(),
     });
 
