@@ -98,6 +98,63 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function safeJson(r) { try { return await r.json(); } catch { return {}; } }
 async function safeText(r) { try { return await r.text(); } catch { return ''; } }
 
+// ─── DEAD CHANNEL REGISTRY (п.6) ─────────────────────────────
+// Канал считается мёртвым если подряд N провалов подряд.
+// Мёртвые каналы исключаются до следующей сессии или до TTL.
+const _deadChannels = new Map(); // name → { fails, deadUntil }
+const DEAD_THRESHOLD = 3;        // 3 провала подряд → мёртвый
+const DEAD_TTL_MS    = 30 * 60_000; // мёртвый на 30 мин
+
+function isDead(name) {
+  const e = _deadChannels.get(name);
+  if (!e) return false;
+  if (Date.now() > e.deadUntil) { _deadChannels.delete(name); return false; }
+  return e.fails >= DEAD_THRESHOLD;
+}
+function registerFail(name) {
+  const e = _deadChannels.get(name) ?? { fails: 0, deadUntil: 0 };
+  e.fails++;
+  if (e.fails >= DEAD_THRESHOLD) {
+    e.deadUntil = Date.now() + DEAD_TTL_MS;
+    console.warn(`[TurboTX] dead channel: ${name} (${e.fails} fails → 30 мин)`);
+  }
+  _deadChannels.set(name, e);
+}
+function registerChannelOk(name) {
+  if (_deadChannels.has(name)) _deadChannels.delete(name);
+}
+
+// ─── АДАПТИВНЫЕ ТАЙМАУТЫ (п.7) ───────────────────────────────
+// Таймаут = max(BASE, последний_пинг * MULT) но не больше CAP
+const TIMEOUT_BASE = 6_000;
+const TIMEOUT_MULT = 3.5;    // пинг 200мс → таймаут 700мс + base → ~6700
+const TIMEOUT_CAP  = 18_000;
+
+function adaptiveTimeout(name) {
+  const ping = getCachedPing ? getCachedPing(name) : null;
+  if (!ping || ping >= 5000) return TIMEOUT_CAP;
+  return Math.min(TIMEOUT_CAP, Math.max(TIMEOUT_BASE, Math.round(ping * TIMEOUT_MULT)));
+}
+
+// ─── КЛАССИФИКАЦИЯ ОШИБОК (п.9) ──────────────────────────────
+// temporary → повторить в следующей волне (5xx, timeout)
+// permanent → не повторять (400, 404, 409 duplicate)
+// rate_limit → cooldown (429)
+function classifyError(status, body = '') {
+  if (status === 429) return 'rate_limit';
+  if (status === 0)   return 'temporary';    // network / timeout
+  if (status >= 500)  return 'temporary';    // 5xx — временное
+  if (status === 400 || status === 404) {
+    const b = String(body).toLowerCase();
+    // "already known" / "duplicate" → не ошибка, TX уже принята
+    if (b.includes('already') || b.includes('duplicate') || b.includes('known'))
+      return 'accepted';
+    return 'permanent';
+  }
+  if (status >= 400)  return 'permanent';
+  return 'ok';
+}
+
 async function ft(url, opts = {}, ms = 13000) {
   const ac = new AbortController();
   const t  = setTimeout(() => ac.abort(), ms);
@@ -144,9 +201,11 @@ function registerSuccess(name) {
 }
 
 async function ftr(url, opts = {}, ms = 13000, tries = 2, channelName = '') {
+  // Адаптивный таймаут: если знаем пинг канала — подстраиваем (п.7)
+  const timeout = channelName ? adaptiveTimeout(channelName) : ms;
   for (let i = 0; i <= tries; i++) {
     try {
-      const r = await ft(url, opts, ms);
+      const r = await ft(url, opts, timeout);
       if (r.status === 429) {
         registerHit(channelName || url);
         // Не ретраим 429 — сразу возвращаем, канал исключится в run()
@@ -180,14 +239,41 @@ async function getHex(txid) {
     { url: `https://chain.api.btc.com/v3/tx/${txid}`,                             t:'json', p:['data','raw_hex'] },
     { url: `https://sochain.com/api/v2/get_tx/BTC/${txid}`,                       t:'json', p:['data','tx_hex'] },
   ];
+
+  // Один AbortController на всю группу —
+  // первый валидный hex → ac.abort() → все остальные запросы отменяются немедленно
+  const ac = new AbortController();
+  const TIMEOUT_MS = 9000;
+
+  // Комбинируем групповой abort + индивидуальный таймаут на каждый запрос
+  const makeSignal = () => {
+    if (typeof AbortSignal.any === 'function') {
+      return AbortSignal.any([ac.signal, AbortSignal.timeout(TIMEOUT_MS)]);
+    }
+    // Fallback для Node < 20.3
+    const tc = new AbortController();
+    const tm = setTimeout(() => tc.abort(), TIMEOUT_MS);
+    ac.signal.addEventListener('abort', () => { clearTimeout(tm); tc.abort(); }, { once:true });
+    return tc.signal;
+  };
+
   return new Promise(res => {
     let found = false, done = 0;
     for (const { url, t, p } of S) {
-      ft(url, { cache:'no-store' }, 9000).then(async r => {
-        if (!r.ok) throw 0;
-        const h = t === 'json' ? p.reduce((o, k) => o?.[k], await safeJson(r)) : (await safeText(r)).trim();
-        if (!found && HEX_RE.test(h) && h.length < MAX_HEX_BYTES * 2) { found = true; res(h); }
-      }).catch(() => {}).finally(() => { if (++done === S.length && !found) res(null); });
+      fetch(url, { cache:'no-store', signal: makeSignal() })
+        .then(async r => {
+          if (!r.ok) return;
+          const h = t === 'json'
+            ? p.reduce((o, k) => o?.[k], await safeJson(r))
+            : (await safeText(r)).trim();
+          if (!found && h && HEX_RE.test(h) && h.length < MAX_HEX_BYTES * 2) {
+            found = true;
+            ac.abort(); // ← отменяем все оставшиеся запросы
+            res(h);
+          }
+        })
+        .catch(() => {}) // AbortError и сетевые — тихо
+        .finally(() => { if (++done === S.length && !found) res(null); });
     }
   });
 }
@@ -528,6 +614,15 @@ async function run(channels) {
       waveChannels.forEach((ch, i) => {
         const globalIdx = waveIdx * WAVE_SIZE + i;
 
+        // Пропускаем мёртвые каналы (п.6)
+        if (isDead(ch.name)) {
+          results[globalIdx] = { channel:ch.name, tier:ch.tier, ok:false,
+            skipped:true, reason:'dead_channel', ms:0 };
+          finished++;
+          if (finished === sorted.length) resolve();
+          return;
+        }
+
         // Пропускаем канал если он на cooldown после 429
         if (isCooling(ch.name)) {
           const e    = _cooldown.get(ch.name);
@@ -548,19 +643,29 @@ async function run(channels) {
 
         const t0 = Date.now();
         ch.call().then(r => {
-          const ms = Date.now() - t0;
+          const ms     = Date.now() - t0;
+          const body   = r._body || '';
+          const cls    = classifyError(r.status, body);
+          const isOk   = r.ok || cls === 'accepted';
+
           setPing(ch.name, ms);
-          // Регистрируем 429 — канал уйдёт на cooldown
-          if (r.status === 429) registerHit(ch.name);
-          else if (r.ok)        registerSuccess(ch.name);
-          results[globalIdx] = { channel:ch.name, tier:ch.tier, ok:!!r.ok,
-            ms, ...(r.status===429 ? { reason:'rate_limited' } : {}) };
-          if (r.ok) okCount++;
+
+          if (r.status === 429)   registerHit(ch.name);
+          else if (isOk)        { registerChannelOk(ch.name); registerSuccess(ch.name); }
+          else if (cls === 'temporary') registerFail(ch.name);  // 5xx / timeout → счётчик провалов
+          // permanent → не трогаем dead counter (это нормальный отказ)
+
+          results[globalIdx] = { channel:ch.name, tier:ch.tier, ok:isOk, ms,
+            ...(cls !== 'ok' && !isOk ? { reason: cls } : {}) };
+          if (isOk) okCount++;
           finished++;
           if (!aborted && okCount >= EARLY_STOP) aborted = true;
           if (finished === sorted.length) resolve();
         }).catch(e => {
-          results[globalIdx] = { channel:ch.name, tier:ch.tier, ok:false, error:e.message, ms:Date.now()-t0 };
+          const ms = Date.now() - t0;
+          registerFail(ch.name); // network error → считаем провалом
+          results[globalIdx] = { channel:ch.name, tier:ch.tier, ok:false,
+            error:e.message, reason:'temporary', ms };
           finished++;
           if (finished === sorted.length) resolve();
         });
