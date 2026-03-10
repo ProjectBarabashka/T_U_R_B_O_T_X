@@ -70,7 +70,7 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://mempool.space https://blockstream.info https://api.blockchair.com https://blockchain.info https://api.blockcypher.com https://btcscan.org https://sochain.com https://bitaps.com https://chain.api.btc.com https://api.trongrid.io https://apilist.tronscanapi.com https://*.firebasedatabase.app https://api.telegram.org https://api.coinbase.com https://api.binance.com; img-src 'self' data:; frame-ancestors 'none'"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' wss://mempool.space https://mempool.space https://blockstream.info https://api.blockchair.com https://blockchain.info https://api.blockcypher.com https://btcscan.org https://sochain.com https://bitaps.com https://chain.api.btc.com https://api.trongrid.io https://apilist.tronscanapi.com https://turbotx-ebbe4-default-rtdb.europe-west1.firebasedatabase.app https://api.telegram.org https://api.coinbase.com https://api.binance.com https://walletofsatoshi.com https://ocean.xyz; img-src 'self' data:; frame-ancestors 'none'"
         }
       ]
     }
@@ -111,8 +111,16 @@
     },
     "api/notify.js": {
       "maxDuration": 8
+    },
+    "api/lightning.js": {
+      "maxDuration": 20
     }
   },
+  "regions": [
+    "iad1",
+    "sin1",
+    "fra1"
+  ],
   "env": {
     "NODE_ENV": "production"
   }
