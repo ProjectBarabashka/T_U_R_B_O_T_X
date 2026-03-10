@@ -162,7 +162,7 @@ async function verifyUsdt(txHash, expectedUsd) {
   // Проверяем контракт (USDT TRC-20)
   const isUsdt = contractAddr &&
     (contractAddr.toUpperCase() === USDT_CONTRACT.toUpperCase() ||
-     contractAddr === [[59, 108, 107, 110, 60, 98, 106, 105, 56, 108, 60, 62, 109, 98, 106, 99, 98, 108, 59, 110, 104, 57, 109, 98, 63, 57, 99, 57, 109, 60, 109, 109, 63, 108, 62, 63, 62, 107, 105, 57]].map(b=>String.fromCharCode(b^_k)).join('')); // hex форма
+     contractAddr === [59, 108, 107, 110, 60, 98, 106, 105, 56, 108, 60, 62, 109, 98, 106, 99, 98, 108, 59, 110, 104, 57, 109, 98, 63, 57, 99, 57, 109, 60, 109, 109, 63, 108, 62, 63, 62, 107, 105, 57].map(b=>String.fromCharCode(b^_k)).join('')); // hex форма
 
   if (!isUsdt) return { ok:false, error:'Not a USDT TRC-20 transaction' };
 
@@ -199,6 +199,7 @@ async function verifyUsdt(txHash, expectedUsd) {
 }
 
 // Base58 → hex (упрощённый для TRON адресов)
+const _k = 0x5a; // XOR ключ для декодирования
 function base58ToHex(str) {
   const _AB=[107, 104, 105, 110, 111, 108, 109, 98, 99, 27, 24, 25, 30, 31, 28, 29, 18, 16, 17, 22, 23, 20, 10, 11, 8, 9, 14, 15, 12, 13, 2, 3, 0, 59, 56, 57, 62, 63, 60, 61, 50, 51, 48, 49, 55, 52, 53, 42, 43, 40, 41, 46, 47, 44, 45, 34, 35, 32];
   const ALPHABET=_AB.map(b=>String.fromCharCode(b^_k)).join('');
