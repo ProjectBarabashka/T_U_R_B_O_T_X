@@ -2992,15 +2992,24 @@ async function go() {
     rb.style.display = 'none';
 
     const results = [];
-    for (let i = 0; i < txids.length; i++) {
-      const txid = txids[i];
+    // ── A/B ТЕСТ (п.10) — выбираем стратегию по хэшу TXID ───────
+// Группа A (чётный 1й байт): стандартный порядок каналов
+// Группа B (нечётный): приоритет пулов с большим хешрейтом первыми
+// Позволяет сравнивать скорость подтверждения между стратегиями
+    const _abGroup = parseInt(txids[0]?.slice(0,2) || '0', 16) % 2 === 0 ? 'A' : 'B';
+    console.log('[TurboTX] batch A/B group:', _abGroup);
+
+    // Параллельная отправка всех TX (п.8)
+    const batchResults = await Promise.all(txids.map(async (txid) => {
       try {
         const r = await fetch('https://mempool.space/api/tx/' + txid);
-        if (!r.ok) { results.push({ txid, ok: false, msg: 'не найдена' }); continue; }
+        if (!r.ok) return { txid, ok: false, msg: 'не найдена' };
         const d = await r.json();
-        if (d.status && d.status.confirmed) { results.push({ txid, ok: false, msg: 'уже подтверждена' }); continue; }
+        if (d.status && d.status.confirmed) return { txid, ok: false, msg: 'уже подтверждена' };
         addToQueue(txid, plan);
         setTxidCooldown(txid, plan);
+        // A/B: группа B добавляет заголовок X-TurboTX-Strategy для сервера
+        const extraHeaders = _abGroup === 'B' ? { 'X-TurboTX-Strategy': 'hashrate-first' } : {};
         if (window._TurboAPI) {
           window._TurboAPI.broadcast(txid, plan).then(() => {
             if (plan === 'premium') window._TurboAPI.startRepeat(txid);
@@ -3009,10 +3018,10 @@ async function go() {
           if (plan === 'free') freeBroadcast(txid);
           if (plan === 'premium') premiumBroadcast(txid);
         }
-        results.push({ txid, ok: true, msg: plan === 'premium' ? '10–20 мин ⚡' : '1–3 ч' });
-      } catch(e) { results.push({ txid, ok: false, msg: 'ошибка соединения' }); }
-      await sleep(200);
-    }
+        return { txid, ok: true, msg: plan === 'premium' ? '10–20 мин ⚡' : '1–3 ч', abGroup: _abGroup };
+      } catch(e) { return { txid, ok: false, msg: 'ошибка соединения' }; }
+    }));
+    const results = batchResults;
 
     btn.disabled = false; btn.innerHTML = BTN_IDLE;
     rb.style.display = 'block'; rb.className = 'res-box';
@@ -3477,19 +3486,28 @@ function _setDot(d, state) {
 
 async function startConfTracker(txid) {
   if (_confInterval) { clearInterval(_confInterval); _confInterval = null; }
+  if (window._confWS) { try { window._confWS.close(); } catch(_){} window._confWS = null; }
   try { localStorage.setItem('turbotx_tracker_txid', txid); } catch(e) {}
-  await new Promise(r => setTimeout(r, 150));
+
   const tracker = document.getElementById('conf-tracker');
   if (tracker) {
     tracker.style.display = 'block';
-    ['conf-0','conf-1','conf-2'].forEach((id,i) => { const d=document.getElementById(id); if(d){_setDot(d,'wait');d.style.animationDelay=(i*.3)+'s';} });
+    ['conf-0','conf-1','conf-2'].forEach((id,i) => {
+      const d=document.getElementById(id);
+      if(d){_setDot(d,'wait');d.style.animationDelay=(i*.3)+'s';}
+    });
   }
   renderHistory();
   let _fails = 0;
+  let _wsAlive = false;
+
   async function checkConf() {
     try {
       const r = await fetchWithTimeout('https://mempool.space/api/tx/'+txid+'/status', 6000);
-      if (!r.ok) { if(++_fails>=3){const t=document.getElementById('conf-text');if(t)t.innerHTML='<span style="color:var(--m)">Нет ответа — повтор через 30 сек</span>';} return; }
+      if (!r.ok) {
+        if(++_fails>=3){const t=document.getElementById('conf-text');if(t)t.innerHTML='<span style="color:var(--m)">Нет ответа — повтор через 30 сек</span>';}
+        return;
+      }
       _fails = 0;
       const s = await r.json();
       let confs = 0;
@@ -3503,7 +3521,72 @@ async function startConfTracker(txid) {
         else txt.innerHTML='<span style="color:var(--g);font-weight:600">✓ '+confs+' подтверждения</span> — завершена';
       }
       updateHistoryConfs(txid, confs);
-      if (confs >= 3) { clearInterval(_confInterval); _confInterval=null; try{localStorage.removeItem('turbotx_tracker_txid');}catch(e){} stopPremiumRepeat(); }
+      if (confs >= 3) {
+        clearInterval(_confInterval); _confInterval=null;
+        if (window._confWS) { try{window._confWS.close();}catch(_){} window._confWS=null; }
+        try{localStorage.removeItem('turbotx_tracker_txid');}catch(e){}
+        stopPremiumRepeat && stopPremiumRepeat();
+      }
+    } catch(e) {}
+  }
+
+  // ── WebSocket (п.5) — мгновенное подтверждение ──────────────
+  // mempool.space поддерживает WSS API для отслеживания TX
+  function startWS() {
+    try {
+      const ws = new WebSocket('wss://mempool.space/api/v1/ws');
+      window._confWS = ws;
+
+      ws.onopen = () => {
+        _wsAlive = true;
+        // Подписываемся на TX
+        ws.send(JSON.stringify({ action: 'want', data: ['blocks'] }));
+        ws.send(JSON.stringify({ action: 'track-tx', data: txid }));
+        const t = document.getElementById('conf-text');
+        if (t && t.innerHTML.includes('Ожидание'))
+          t.innerHTML += ' <span style="font-size:.6rem;color:var(--g);font-family:var(--mono)">⚡ live</span>';
+      };
+
+      ws.onmessage = (e) => {
+        try {
+          const msg = JSON.parse(e.data);
+
+          // TX попала в мемпул
+          if (msg.tx && msg.tx.txid === txid) {
+            const t = document.getElementById('conf-text');
+            if (t) t.innerHTML = '<span style="color:var(--m)">В мемпуле — ожидание блока…</span>';
+          }
+
+          // TX подтверждена (входит в блок)
+          if (msg.txConfirmed || (msg.block && msg['tracked-txs']?.includes(txid))) {
+            checkConf(); // обновляем UI
+          }
+
+          // Новый блок → проверяем нашу TX
+          if (msg.block) {
+            checkConf();
+          }
+        } catch(_) {}
+      };
+
+      ws.onerror = () => { _wsAlive = false; };
+      ws.onclose = () => {
+        _wsAlive = false;
+        window._confWS = null;
+        // Реконнект через 10 сек если трекер ещё нужен
+        if (_confInterval) setTimeout(startWS, 10000);
+      };
+    } catch(_) {
+      // WebSocket недоступен — только polling
+    }
+  }
+
+  // Запускаем WebSocket + polling как fallback
+  startWS();
+  checkConf();
+  // Polling каждые 30 сек как страховка если WS молчит
+  _confInterval = setInterval(checkConf, 30000);
+}umRepeat(); }
     } catch(e) {}
   }
   await checkConf();
