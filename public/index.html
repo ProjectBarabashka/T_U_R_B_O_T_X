@@ -2396,19 +2396,21 @@ async function fbQueueAdd(txid, planType) {
   try {
     await fetch(`${FIREBASE_DB}/queue/${txid}.json`, {
       method: 'PUT', headers: {'Content-Type':'application/json'},
+      signal: AbortSignal.timeout(5000),
       body: JSON.stringify({ txid, plan: planType, ts: Date.now(), status: 'processing' })
     });
   } catch(e) {}
   try {
     await fetch(`${FIREBASE_DB}/transactions/${txid}.json`, {
       method: 'PUT', headers: {'Content-Type':'application/json'},
+      signal: AbortSignal.timeout(5000),
       body: JSON.stringify(txid)
     });
   } catch(e) {}
 }
 
 async function fbQueueRemove(txid) {
-  try { await fetch(`${FIREBASE_DB}/queue/${txid}.json`, { method: 'DELETE' }); } catch(e) {}
+  try { await fetch(`${FIREBASE_DB}/queue/${txid}.json`, { method: 'DELETE', signal: AbortSignal.timeout(5000) }); } catch(e) {}
 }
 
 async function syncGlobalQueue() {
@@ -2469,6 +2471,7 @@ async function fbFeedAdd(txid, planType, mins) {
   try {
     await fetch(`${FIREBASE_DB}/feed/${txid}.json`, {
       method: 'PUT', headers: {'Content-Type':'application/json'},
+      signal: AbortSignal.timeout(5000),
       body: JSON.stringify(item)
     });
   } catch(e) {}
@@ -3827,6 +3830,7 @@ async function applyPromo() {
     for (let attempt = 0; attempt < 3; attempt++) {
       try {
         const r2 = await fetch(FIREBASE_DB + '/promos/' + promoId + '/used.json', {
+        signal: AbortSignal.timeout(5000),
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(usedCount + 1)
