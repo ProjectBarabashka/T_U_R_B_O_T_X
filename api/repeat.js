@@ -148,5 +148,9 @@ export default async function handler(req, res) {
     needCpfp, cpfpFeeNeeded: cpfpFee,
     broadcastSummary: broadcastData?.summary      ?? null,
     hashrateReach:    broadcastData?.summary?.hashrateReach ?? 0,
+    // ③ Стратегия волн из broadcast (адаптивное кол-во волн)
+    waveStrategy: broadcastData?.waveStrategy ?? null,
+    // Если broadcast вернул другой интервал — используем его
+    recommendedNextWaveMs: broadcastData?.waveStrategy?.intervalMs ?? nextWaveMs,
   });
 }
