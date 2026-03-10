@@ -149,8 +149,8 @@ async function cmdPrice(chatId) {
 async function cmdMempool(chatId) {
   try {
     const [feesR, mpR] = await Promise.all([
-      ft('https://mempool.space/api/v1/fees/recommended', 7000),
-      ft('https://mempool.space/api/mempool', 7000),
+      ft('https://mempool.space/api/v1/fees/recommended', {}, 7000),
+      ft('https://mempool.space/api/mempool', {}, 7000),
     ]);
     const fees = feesR.ok ? await feesR.json() : {};
     const mp   = mpR.ok   ? await mpR.json()   : {};

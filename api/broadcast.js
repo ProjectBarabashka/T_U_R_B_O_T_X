@@ -450,9 +450,9 @@ async function run(channels) {
         const t0 = Date.now();
         ch.call().then(r => {
           const ms  = Date.now()-t0;
-          const vercelCode = r.headers?.get?.('x-vercel-error') || '';
-          const cls = classifyError(r.status, '', vercelCode);
-          const isOk = r.ok || cls==='accepted';
+          // r = {ok, status} from channel call() — vercelCode already handled inside ftr()
+          const isOk = r.ok === true;
+          const cls = isOk ? 'ok' : (r.status === 429 ? 'rate_limit' : 'retry_now');
 
           // ① Статистика надёжности
           recordStat(ch.name, isOk, ms);
@@ -460,16 +460,13 @@ async function run(channels) {
 
           if (cls==='rate_limit')  registerHit(ch.name);
           else if (isOk)         { registerChannelOk(ch.name); registerSuccess(ch.name); }
-          else if (cls==='skip') { registerFail(ch.name); setNegCache(ch.name); }   // 504/throttle
-          else if (cls==='retry_later') { registerFail(ch.name); setNegCache(ch.name); } // исчерпали
-          else if (cls==='retry_now')   { registerFail(ch.name); } // temporary, neg cache не ставим
+          else                   { registerFail(ch.name); }
 
           results[globalIdx] = {
             channel:ch.name, tier:ch.tier, ok:isOk, ms,
             score: +reliabilityScore(ch.name).toFixed(2),
             geo: POOL_GEO[ch.name] || (ch.tier==='node'?'node':null),
-            ...(vercelCode ? {vercelError:vercelCode} : {}),
-            ...(cls!=='ok'&&!isOk ? {reason:cls} : {}),
+            ...(!isOk ? {reason:cls} : {}),
           };
           if (isOk) okCount++;
           if (++finished===sorted.length) resolve();
