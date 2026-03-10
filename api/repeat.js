@@ -99,10 +99,12 @@ export default async function handler(req, res) {
     return res.status(400).json({ ok: false, error: 'Wave must be 1-5' });
 
   // 1. Проверка + fee rates параллельно
-  const [status, { tx, fees }] = await Promise.all([
+  const [statusRes, dataRes] = await Promise.allSettled([
     isTxConfirmed(txid),
     getTxAndFees(txid),
   ]);
+  const status = statusRes.status === 'fulfilled' ? statusRes.value : { confirmed: false };
+  const { tx, fees } = dataRes.status === 'fulfilled' ? dataRes.value : { tx: null, fees: null };
 
   if (status.confirmed) {
     return res.status(200).json({

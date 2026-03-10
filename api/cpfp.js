@@ -1,3 +1,12 @@
+// Rate limiter — 20 req/min per IP
+const _rl = new Map();
+function checkRl(ip) {
+  const now = Date.now(), min = 60_000;
+  if (_rl.size > 2000) for (const [k,v] of _rl) if (v.r < now) _rl.delete(k);
+  let e = _rl.get(ip); if (!e || e.r < now) { e = {c:0, r:now+min}; _rl.set(ip,e); }
+  return ++e.c <= 20;
+}
+
 // ══════════════════════════════════════════════════════════════
 //  TurboTX v6 ★ CPFP CALCULATOR ★  —  /api/cpfp.js
 //  Vercel Serverless · Node.js 20
@@ -48,7 +57,7 @@ async function safeJson(r){ try{ return await r.json(); } catch{ return {}; } }
 
 async function getBtcPrice() {
   try {
-    const r = await ft('https://mempool.space/api/v1/prices', 5000);
+    const r = await ft('https://mempool.space/api/v1/prices', {}, 5000);
     if (r.ok) { const j = await safeJson(r); return j.USD||null; }
   } catch {}
   return null;
@@ -68,6 +77,9 @@ function detectAddrType(scriptpubkey_type) {
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).set(CORS).end();
   Object.entries(CORS).forEach(([k,v]) => res.setHeader(k,v));
+  const _ip = req.headers['x-real-ip'] || req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
+  if (!checkRl(_ip)) return res.status(429).json({ ok:false, error:'Too many requests' });
+
 
   const txid        = req.query?.txid;
   const outputIndex = parseInt(req.query?.outputIndex ?? '0');
@@ -77,22 +89,28 @@ export default async function handler(req, res) {
     return res.status(400).json({ ok:false, error:'Invalid TXID' });
 
   try {
-    const [txR, feesR, mpR, priceP] = await Promise.all([
+    const [txR, feesR, mpR, priceP] = await Promise.allSettled([
       ft(`https://mempool.space/api/tx/${txid}`),
       ft('https://mempool.space/api/v1/fees/recommended'),
       ft('https://mempool.space/api/mempool'),
       getBtcPrice(),
     ]);
 
-    if (!txR.ok) {
+    const getR = s => s.status === 'fulfilled' ? s.value : null;
+    const txRsp   = getR(txR);
+    const feesRsp = getR(feesR);
+    const mpRsp   = getR(mpR);
+    const priceVal = getR(priceVal);
+
+    if (!txRsp?.ok) {
       // Fallback: blockstream
-      const fb = await ft(`https://blockstream.info/api/tx/${txid}`, 6000);
+      const fb = await ft(`https://blockstream.info/api/tx/${txid}`, {}, 6000);
       if (!fb.ok) return res.status(404).json({ ok:false, error:'TX not found' });
     }
 
-    const tx   = await safeJson(txR.ok ? txR : { json:()=>({}) });
-    const fees = feesR.ok ? await safeJson(feesR) : {};
-    const mp   = mpR.ok  ? await safeJson(mpR)   : {};
+    const tx   = await safeJson(txRsp?.ok ? txRsp : { json:()=>({}) });
+    const fees = feesRsp?.ok ? await safeJson(feesRsp) : {};
+    const mp   = mpRsp?.ok  ? await safeJson(mpRsp)   : {};
 
     if (tx.status?.confirmed)
       return res.status(200).json({ ok:true, needed:false, reason:'already_confirmed' });
@@ -140,8 +158,8 @@ export default async function handler(req, res) {
     const canAfford = bestOutput && bestOutput.value > childFeeNeeded + 546; // 546 dust limit
 
     // USD
-    const feeUsd = priceP && childFeeNeeded
-      ? +((childFeeNeeded/1e8)*priceP).toFixed(4) : null;
+    const feeUsd = priceVal && childFeeNeeded
+      ? +((childFeeNeeded/1e8)*priceVal).toFixed(4) : null;
 
     // Позиция в мемпуле до и после CPFP
     const mpCount = mp.count || 0;
@@ -202,7 +220,7 @@ export default async function handler(req, res) {
       targetMode,
       parent: {
         vsize, feePaid, feeRate,
-        feeUsd: priceP ? +((feePaid/1e8)*priceP).toFixed(4) : null,
+        feeUsd: priceVal ? +((feePaid/1e8)*priceVal).toFixed(4) : null,
       },
       targets: {
         eco:  targets.eco,
@@ -235,7 +253,7 @@ export default async function handler(req, res) {
       allOutputs,
       mempoolPosition: { before: posBefore, after: posAfter },
       walletInstructions,
-      btcPrice: priceP,
+      btcPrice: priceVal,
       timestamp: Date.now(),
     });
 

@@ -24,7 +24,16 @@ const CORS = {
 // ─── RATE LIMITER ─────────────────────────────────────────────
 const _ipMap     = new Map();
 const _txidMap   = new Map();
-const _confirmed = new Set();
+// Confirmed TX cache with TTL (prevents Set growing forever)
+const _confirmed = new Map(); // txid → confirmedAt timestamp
+const CONFIRMED_TTL = 24 * 3_600_000; // 24 hours
+function isConfirmed(txid) {
+  const t = _confirmed.get(txid);
+  if (!t) return false;
+  if (Date.now() - t > CONFIRMED_TTL) { _confirmed.delete(txid); return false; }
+  return true;
+}
+function setConfirmed(txid) { _confirmed.set(txid, Date.now()); }
 
 const LIMITS = {
   free:    { perHour: 3,  cooldownMs: 2 * 3_600_000 },
@@ -399,9 +408,9 @@ async function run(channels) {
   if (channels.length === 0) return [];
 
   // Пинг параллельно
-  const pings = await Promise.all(
+  const pings = await Promise.allSettled(
     channels.map(ch => pingChannel(ch.name).then(ms => ({ch, ms})))
-  );
+  ).then(rs => rs.map((r, i) => r.status === 'fulfilled' ? r.value : {ch: channels[i], ms: 9999}));
 
   // ② Сортируем по приоритету (score + ping), узлы перед пулами
   pings.sort((a,b) => {
@@ -450,9 +459,9 @@ async function run(channels) {
         const t0 = Date.now();
         ch.call().then(r => {
           const ms  = Date.now()-t0;
-          // r = {ok, status} from channel call() — vercelCode already handled inside ftr()
-          const isOk = r.ok === true;
-          const cls = isOk ? 'ok' : (r.status === 429 ? 'rate_limit' : 'retry_now');
+          const vercelCode = r.headers?.get?.('x-vercel-error') || '';
+          const cls = classifyError(r.status, '', vercelCode);
+          const isOk = r.ok || cls==='accepted';
 
           // ① Статистика надёжности
           recordStat(ch.name, isOk, ms);
@@ -460,13 +469,16 @@ async function run(channels) {
 
           if (cls==='rate_limit')  registerHit(ch.name);
           else if (isOk)         { registerChannelOk(ch.name); registerSuccess(ch.name); }
-          else                   { registerFail(ch.name); }
+          else if (cls==='skip') { registerFail(ch.name); setNegCache(ch.name); }   // 504/throttle
+          else if (cls==='retry_later') { registerFail(ch.name); setNegCache(ch.name); } // исчерпали
+          else if (cls==='retry_now')   { registerFail(ch.name); } // temporary, neg cache не ставим
 
           results[globalIdx] = {
             channel:ch.name, tier:ch.tier, ok:isOk, ms,
             score: +reliabilityScore(ch.name).toFixed(2),
             geo: POOL_GEO[ch.name] || (ch.tier==='node'?'node':null),
-            ...(!isOk ? {reason:cls} : {}),
+            ...(vercelCode ? {vercelError:vercelCode} : {}),
+            ...(cls!=='ok'&&!isOk ? {reason:cls} : {}),
           };
           if (isOk) okCount++;
           if (++finished===sorted.length) resolve();
@@ -578,7 +590,7 @@ async function analyze(txid) {
     const fastest  = fees.fastestFee||50;
     const needCpfp = feeRate>0 && feeRate<fastest*0.5;
     const rbfEnabled = Array.isArray(tx.vin)&&tx.vin.some(i=>i.sequence<=0xFFFFFFFD);
-    if (tx.status?.confirmed) _confirmed.add(txid);
+    if (tx.status?.confirmed) setConfirmed(txid);
     return {
       vsize, feePaid, feeRate, fastest, needCpfp, rbfEnabled,
       cpfpFeeNeeded: needCpfp ? Math.max(0, fastest*(vsize+110)-feePaid) : 0,
@@ -753,6 +765,11 @@ function premiumChannels(txid, hex) {
 
 // ─── BOOTSTRAP ────────────────────────────────────────────────
 let _healthBootstrapped = false;
+// Periodic cleanup of stale confirmed entries
+setInterval(() => {
+  const cutoff = Date.now() - CONFIRMED_TTL;
+  for (const [k, v] of _confirmed) if (v < cutoff) _confirmed.delete(k);
+}, 3_600_000); // every hour
 async function bootstrapFromHealth() {
   if (_healthBootstrapped) return;
   _healthBootstrapped = true;
@@ -831,15 +848,17 @@ export default async function handler(req, res) {
     return res.status(429).json({ok:false,error:msgs[rl.reason]||'Rate limited',retryAfter:rl.retryAfter});
   }
 
-  if (_confirmed.has(txid)) return res.status(200).json({ok:true,confirmed:true,cached:true});
+  if (isConfirmed(txid)) return res.status(200).json({ok:true,confirmed:true,cached:true});
 
   const t0 = Date.now();
-  const [hex, analysis] = await Promise.all([
+  const [hexRes, analysisRes] = await Promise.allSettled([
     hexIn&&HEX_RE.test(hexIn) ? Promise.resolve(hexIn) : getHex(txid),
     analyze(txid),
   ]);
+  const hex      = hexRes.status === 'fulfilled' ? hexRes.value : null;
+  const analysis = analysisRes.status === 'fulfilled' ? analysisRes.value : null;
 
-  if (analysis?.confirmed) { _confirmed.add(txid); return res.status(200).json({ok:true,confirmed:true,analysis}); }
+  if (analysis?.confirmed) { setConfirmed(txid); return res.status(200).json({ok:true,confirmed:true,analysis}); }
   if (effectivePlan==='free'&&!hex) return res.status(200).json({ok:false,error:'TX hex not found.',analysis});
 
   // ③ Адаптивная стратегия волн

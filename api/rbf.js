@@ -1,3 +1,12 @@
+// Rate limiter — 20 req/min per IP
+const _rl = new Map();
+function checkRl(ip) {
+  const now = Date.now(), min = 60_000;
+  if (_rl.size > 2000) for (const [k,v] of _rl) if (v.r < now) _rl.delete(k);
+  let e = _rl.get(ip); if (!e || e.r < now) { e = {c:0, r:now+min}; _rl.set(ip,e); }
+  return ++e.c <= 20;
+}
+
 // ══════════════════════════════════════════════════════════════
 //  TurboTX v6 ★ RBF CALCULATOR ★  —  /api/rbf.js
 //  Vercel Serverless · Node.js 20
@@ -28,7 +37,7 @@ async function ft(url, ms = 7000) {
 // BTC/USD
 async function getBtcPrice() {
   try {
-    const r = await ft('https://mempool.space/api/v1/prices', 5000);
+    const r = await ft('https://mempool.space/api/v1/prices', {}, 5000);
     if (r.ok) { const j = await r.json(); return j.USD || null; }
   } catch {}
   return null;
@@ -37,6 +46,9 @@ async function getBtcPrice() {
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).set(CORS).end();
   Object.entries(CORS).forEach(([k,v]) => res.setHeader(k,v));
+  const _ip = req.headers['x-real-ip'] || req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
+  if (!checkRl(_ip)) return res.status(429).json({ ok:false, error:'Too many requests' });
+
 
   const txid      = req.query?.txid;
   const targetFee = parseInt(req.query?.targetFee) || null;
@@ -45,15 +57,20 @@ export default async function handler(req, res) {
     return res.status(400).json({ ok:false, error:'Invalid TXID' });
 
   try {
-    const [txR, feesR, priceP] = await Promise.all([
+    const [txRes, feesRes, priceRes] = await Promise.allSettled([
       ft(`https://mempool.space/api/tx/${txid}`),
       ft('https://mempool.space/api/v1/fees/recommended'),
       getBtcPrice(),
     ]);
 
-    if (!txR.ok) return res.status(404).json({ ok:false, error:'TX not found' });
+    const getR = s => s.status === 'fulfilled' ? s.value : null;
+    const txR    = getR(txRes);
+    const feesR  = getR(feesRes);
+    const priceP = getR(priceRes);
+
+    if (!txR?.ok) return res.status(404).json({ ok:false, error:'TX not found' });
     const tx   = await txR.json();
-    const fees = feesR.ok ? await feesR.json() : {};
+    const fees = feesR?.ok ? await feesR.json() : {};
 
     if (tx.status?.confirmed)
       return res.status(200).json({ ok:true, rbfPossible:false, reason:'already_confirmed' });

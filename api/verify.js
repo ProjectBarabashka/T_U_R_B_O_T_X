@@ -30,6 +30,9 @@ const PREMIUM_SECRET = process.env.PREMIUM_SECRET || '';
 const _ipMap = new Map();
 function checkIpLimit(ip) {
   const now = Date.now(), hour = 3_600_000;
+  // Cleanup stale entries to prevent memory leak
+  if (_ipMap.size > 1000)
+    for (const [k,v] of _ipMap) if (v.resetAt < now) _ipMap.delete(k);
   let e = _ipMap.get(ip);
   if (!e || e.resetAt < now) { e = { count:0, resetAt:now+hour }; _ipMap.set(ip,e); }
   if (e.count >= 10) return false;

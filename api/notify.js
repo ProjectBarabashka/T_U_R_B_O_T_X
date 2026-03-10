@@ -24,6 +24,9 @@ const CORS = {
 const _ipMap = new Map();
 function checkLimit(ip) {
   const now=Date.now(), h=3_600_000;
+  // Cleanup stale entries to prevent memory leak
+  if (_ipMap.size > 1000)
+    for (const [k,v] of _ipMap) if (v.r < now) _ipMap.delete(k);
   let e=_ipMap.get(ip);
   if(!e||e.r<now){e={c:0,r:now+h};_ipMap.set(ip,e);}
   return ++e.c <= 30;

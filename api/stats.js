@@ -1,3 +1,12 @@
+// Rate limiter — 60 req/min per IP
+const _rl = new Map();
+function checkRl(ip) {
+  const now = Date.now(), min = 60_000;
+  if (_rl.size > 2000) for (const [k,v] of _rl) if (v.r < now) _rl.delete(k);
+  let e = _rl.get(ip); if (!e || e.r < now) { e = {c:0, r:now+min}; _rl.set(ip,e); }
+  return ++e.c <= 60;
+}
+
 // ══════════════════════════════════════════════════════════════
 //  TurboTX v6 ★ STATS ★  —  /api/stats.js
 //  Vercel Serverless · Node.js 20
@@ -50,6 +59,9 @@ async function sj(r){ try{ return await r.json(); } catch{ return {}; } }
 export default async function handler(req, res) {
   if (req.method==='OPTIONS') return res.status(204).set(CORS).end();
   Object.entries(CORS).forEach(([k,v])=>res.setHeader(k,v));
+  const _ip = req.headers['x-real-ip'] || req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
+  if (!checkRl(_ip)) return res.status(429).json({ ok:false, error:'Too many requests' });
+
 
   const isAdmin = req.query?.admin==='1' &&
     req.headers['x-turbotx-token']===process.env.PREMIUM_SECRET;

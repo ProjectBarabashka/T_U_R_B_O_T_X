@@ -38,9 +38,22 @@ function estimateEta(feeRate, fees) {
   return 'неопределённо (очень низкая комиссия)';
 }
 
+// Simple rate limiter
+const _rlMap = new Map();
+function checkRl(ip) {
+  const now = Date.now(), min = 60_000;
+  if (_rlMap.size > 2000) for (const [k,v] of _rlMap) if (v.r < now) _rlMap.delete(k);
+  let e = _rlMap.get(ip);
+  if (!e || e.r < now) { e = {c:0, r:now+min}; _rlMap.set(ip,e); }
+  return ++e.c <= 30; // 30 requests per minute per IP
+}
+
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(204).set(CORS).end();
   Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
+
+  const ip = req.headers['x-real-ip'] || req.headers['x-forwarded-for']?.split(',')[0]?.trim() || 'unknown';
+  if (!checkRl(ip)) return res.status(429).json({ ok:false, error:'Too many requests' });
 
   const txid = req.query?.txid || req.body?.txid;
   if (!txid || !/^[a-fA-F0-9]{64}$/.test(txid))
