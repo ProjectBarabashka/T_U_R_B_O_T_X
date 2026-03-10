@@ -1,13 +1,14 @@
 // ══════════════════════════════════════════════════════════════
-//  TurboTX v6 ★ PAYMENT VERIFY ★  —  /api/verify.js
+//  TurboTX v9 ★ PAYMENT VERIFY ★  —  /api/verify.js
 //  Vercel Serverless · Node.js 20
 //
 //  POST /api/verify
-//  Body: { txHash, expectedUsd?, method?:'btc'|'usdt'|'auto' }
+//  Body: { txHash, expectedUsd?, method?:'btc'|'usdt'|'lightning'|'auto' }
 //
 //  ✦ BTC: проверяет mempool.space + blockstream fallback
 //  ✦ USDT TRC-20: проверяет TronGrid + TronScan fallback
-//  ✦ Автодетект: 64hex → BTC или TRON hash
+//  ✦ Lightning: проверяет invoice по paymentHash через /api/lightning
+//  ✦ Автодетект: 64hex → BTC, иначе → Lightning hash или USDT
 //  ✦ Генерирует server-side токен активации Premium
 //  ✦ Уведомляет в Telegram при успехе
 //  ✦ Защита: rate limit 10/час с одного IP
@@ -52,6 +53,48 @@ async function ft(url, opts={}, ms=10000) {
   catch(e){ clearTimeout(t); throw e; }
 }
 async function sj(r){ try{ return await r.json(); } catch{ return {}; } }
+
+// ─── LIGHTNING VERIFICATION ───────────────────────────────────
+// Проверяем оплату invoice по paymentHash
+// Логика: /api/lightning хранит invoice в памяти и помечает paid
+// verify.js читает этот статус через internal call
+async function verifyLightning(paymentHash) {
+  if (!/^[a-f0-9]{64}$/i.test(paymentHash))
+    return { ok:false, error:'Invalid Lightning payment hash format' };
+
+  try {
+    const base = process.env.PRODUCTION_URL ||
+      (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+    const r = await ft(`${base}/api/lightning?hash=${paymentHash.toLowerCase()}`, {}, 8000);
+    if (!r.ok) return { ok:false, error:`Lightning check failed: ${r.status}` };
+
+    const data = await sj(r);
+    if (!data.ok) return { ok:false, error: data.error || 'Lightning check error' };
+
+    if (!data.paid)
+      return {
+        ok:      false,
+        method:  'lightning',
+        paid:    false,
+        expired: data.expired || false,
+        error:   data.expired ? 'Invoice expired' : 'Invoice not paid yet',
+        expiresIn: data.expiresIn || null,
+      };
+
+    return {
+      ok:        true,
+      method:    'lightning',
+      paid:      true,
+      txHash:    paymentHash,
+      paid:      `${data.amountSats?.toLocaleString() || '?'} sats`,
+      amountSats: data.amountSats,
+      confirmed: true,
+      amountOk:  true,
+    };
+  } catch(e) {
+    return { ok:false, error: `Lightning verify error: ${e.message}` };
+  }
+}
 
 // ─── BTC VERIFICATION ────────────────────────────────────────
 async function verifyBtc(txHash, expectedUsd) {
@@ -223,12 +266,17 @@ async function tgNotify(result, ip) {
   const chat  = process.env.TG_CHAT_ID;
   if (!token || !chat) return;
 
-  const emoji = result.method === 'btc' ? '₿' : '💚';
+  const emoji = result.method === 'btc' ? '₿'
+    : result.method === 'lightning'  ? '⚡'
+    : '💚';
+  const methodName = result.method === 'btc' ? 'Bitcoin'
+    : result.method === 'lightning'  ? 'Lightning Network'
+    : 'USDT TRC-20';
   const text = [
-    `💰 *ОПЛАТА — TurboTX v6*`,
+    `${emoji} *ОПЛАТА — TurboTX v9*`,
     `━━━━━━━━━━━━━━━━`,
     `${emoji} Сумма: \`${result.paid}\``,
-    `💳 Метод: ${result.method === 'btc' ? 'Bitcoin' : 'USDT TRC-20'}`,
+    `💳 Метод: ${methodName}`,
     `🔗 TX: \`${result.txHash?.slice(0,14)}…\``,
     `✅ Статус: ${result.confirmed ? 'Подтверждена' : 'В мемпуле'}`,
     `🌐 IP: \`${ip}\``,
@@ -237,7 +285,9 @@ async function tgNotify(result, ip) {
 
   const url = result.method === 'btc'
     ? `https://mempool.space/tx/${result.txHash}`
-    : `https://tronscan.org/#/transaction/${result.txHash}`;
+    : result.method === 'lightning'
+      ? `https://amboss.space/node` // Lightning не имеет публичного explorer для payment hash
+      : `https://tronscan.org/#/transaction/${result.txHash}`;
 
   await ft(`https://api.telegram.org/bot${token}/sendMessage`, {
     method:'POST', headers:{'Content-Type':'application/json'},
@@ -264,7 +314,12 @@ export default async function handler(req, res) {
 
   let result;
 
-  if (method === 'btc' || (method === 'auto' && /^[a-fA-F0-9]{64}$/.test(txHash))) {
+  // Lightning: метод явно указан или hash выглядит как LN payment hash (64hex, не BTC txid)
+  // LN payment hash и BTC txid оба 64hex — различаем по методу
+  if (method === 'lightning') {
+    result = await verifyLightning(txHash.trim());
+  }
+  else if (method === 'btc' || (method === 'auto' && /^[a-fA-F0-9]{64}$/.test(txHash))) {
     result = await verifyBtc(txHash.trim(), expectedUsd);
   } else {
     result = await verifyUsdt(txHash.trim(), expectedUsd);
