@@ -1,7 +1,7 @@
 {
   "name": "turbotx",
-  "version": "5.3.0",
-  "description": "TurboTX — Bitcoin Transaction Accelerator",
+  "version": "11.0.0",
+  "description": "TurboTX — Bitcoin Transaction Accelerator v11 · Best 2026",
   "type": "module",
   "engines": { "node": "20.x" },
   "private": true
