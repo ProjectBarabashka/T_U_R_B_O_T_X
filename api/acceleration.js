@@ -1,5 +1,5 @@
 // ══════════════════════════════════════════════════════════════
-//  TurboTX v12 ★ SMART ADVISOR ★  —  /api/acceleration.js
+//  TurboTX v13 ★ SMART ADVISOR ★  —  /api/acceleration.js
 //  Vercel Serverless · Node.js 20
 //
 //  GET /api/acceleration?txid=<64hex>[&hex=<rawHex>]

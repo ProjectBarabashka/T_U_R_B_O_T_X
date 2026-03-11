@@ -1,19 +1,19 @@
 // ══════════════════════════════════════════════════════════════
-//  TurboTX v12 ★ ADAPTIVE WAVES ★  —  /api/repeat.js
+//  TurboTX v13 ★ ADAPTIVE WAVES ★  —  /api/repeat.js
 //  Vercel Serverless · Node.js 20 · Hobby Plan
 //
 //  POST /api/repeat
 //  Body: { txid, wave:1-8, token?, startedAt?, waveIntervalMs? }
 //  Headers: X-TurboTX-Token: <secret>
 //
-//  ━━━ ИСПРАВЛЕНО В v12 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  ━━━ ИСПРАВЛЕНО В v13 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  🐛 BUG FIX: nextWaveMs был null при wave<5, должен быть null при wave>=MAX_WAVES
 //  🐛 BUG FIX: Восстановление пропущенных волн считало линейно,
 //     но интервалы нелинейные (15/15/30/60/120/120/120/120 мин)
 //  🐛 BUG FIX: Нет retry если /api/broadcast вернул ошибку — добавлен retry×2
 //  🐛 BUG FIX: waveNum validated after parseInt but not clamped properly
 //
-//  ━━━ НОВОЕ В v12 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  ━━━ НОВОЕ В v13 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  ① LAST-BLOCK-MINER per wave — каждая волна знает кто добыл
 //     последний блок и приоритизирует этот пул
 //  ② FEE TREND AWARENESS — если комиссии падают >30% → ускоряем

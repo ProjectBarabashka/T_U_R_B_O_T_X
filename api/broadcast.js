@@ -1,8 +1,8 @@
 // ══════════════════════════════════════════════════════════════
-//  TurboTX v12 ★ МАКСИМАЛЬНАЯ МОЩЬ 2026 ★  —  /api/broadcast.js
+//  TurboTX v13 ★ МАКСИМАЛЬНАЯ МОЩЬ 2026 ★  —  /api/broadcast.js
 //  Vercel Serverless · Node.js 20 · Hobby Plan
 //
-//  ━━━ НОВОЕ В v12 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+//  ━━━ НОВОЕ В v13 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 //  ⒜ LAST-BLOCK-MINER BOOST — определяем кто добыл последний блок
 //     и отправляем в этот пул ПЕРВЫМ (он сейчас ищет следующий блок!)
 //  ⒝ MARA SLIPSTREAM — прямая отправка в приватный мемпул MARA
@@ -1028,7 +1028,7 @@ async function tg({results, txid, plan, analysis, ms, hr, ip, blocked, waveStrat
     const trendEmoji = feeTrend?.direction==='dropping'?'📉':feeTrend?.direction==='rising'?'📈':'→';
 
     text=[
-      `⚡ *TurboTX v12 — ${plan.toUpperCase()}*`,
+      `⚡ *TurboTX v13 — ${plan.toUpperCase()}*`,
       `📋 \`${txid.slice(0,14)}…${txid.slice(-6)}\` · \`${ip}\``,
       `⏱ ${ms}ms · \`${bar}\` ${pct}% (${ok}/${tot})`,
       hr>0 ? `⛏ ~${hr}% хешрейта охвачено` : '',

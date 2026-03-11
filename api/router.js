@@ -50,7 +50,7 @@ function checkRl(ip, maxPerMin = 30) {
 // ══════════════════════════════════════════════════════════════
 //  HEALTH  —  GET /api/health[?verbose=1]
 // ══════════════════════════════════════════════════════════════
-// v12: хешрейт обновлён Q1 2026 + новые пулы
+// v13: хешрейт обновлён Q1 2026 + новые пулы
 const HR_HEALTH = {
   Foundry:27, AntPool:16, MARA:11, MaraSlipstream:11, ViaBTC:9, SpiderPool:8,
   F2Pool:7, Luxor:5, CloverPool:4, BitFuFu:4, 'BTC.com':3,
@@ -59,7 +59,7 @@ const HR_HEALTH = {
   '2Miners':1, Rawpool:1,
 };
 
-// v12: 8 nodes + 22 pools = 30 каналов, ~88% хешрейта
+// v13: 8 nodes + 22 pools = 30 каналов, ~88% хешрейта
 const HEALTH_CHANNELS = [
   // ── Hex nodes ─────────────────────────────────────────────
   { name:'mempool.space',    tier:'node', url:'https://mempool.space/api/blocks/tip/height',   method:'GET' },
@@ -141,7 +141,7 @@ async function handleHealth(req, res) {
 // ══════════════════════════════════════════════════════════════
 // ① STUCK DETECTION ② FEE TREND ③ MEMPOOL POS ④ RBF ANALYSIS
 // ⑤ BLOCKCOUNT FALLBACK ⑥ ETA FULL ⑦ ACCELERATION ADVICE
-// (слито из api/status.js v12 → router.js для экономии слотов Vercel)
+// (слито из api/status.js v13 → router.js для экономии слотов Vercel)
 
 function estimateEtaFull(feeRate, fees, mpVsizeMB) {
   if (!feeRate||!fees) return {eta:null,etaMinutes:null,confidence:0};

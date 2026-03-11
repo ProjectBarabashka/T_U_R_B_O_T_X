@@ -31,7 +31,7 @@
 </script>
 
 <!-- Description: 155-160 символов, все ключи, CTA -->
-<meta name="description" content="⚡ TurboTX v12 — самый мощный Bitcoin accelerator 2026. Серверный broadcast в 30 каналов: Foundry USA, AntPool, MARA, ViaBTC, SpiderPool, Luxor и 16 других. Реальные ответы. $3–18 динамично. Гарантия 6 часов.">
+<meta name="description" content="⚡ TurboTX v13 — мощнейший Bitcoin accelerator 2026. 30 каналов: MARA Slipstream, Foundry, AntPool, ViaBTC, SpiderPool, F2Pool, Luxor, EMCDPool и ещё 14 пулов. ~88% хешрейта. $3–18 динамично. Гарантия 6 ч.">
 
 <!-- KEYWORDS — максимальное покрытие RU + EN + длинные хвосты -->
 <meta name="keywords" content="bitcoin transaction accelerator, btc accelerator, btc transaction accelerator, bitcoin accelerator, stuck bitcoin transaction, unconfirmed bitcoin transaction, btc stuck transaction, bitcoin unconfirmed tx, ускоритель транзакций биткоин, ускорить биткоин транзакцию, застрявшая транзакция биткоин, ускорить btc транзакцию бесплатно, биткоин транзакция не подтверждается, mempool accelerator, bitcoin mempool booster, rebroadcast bitcoin tx, btc rebroadcast, viabTC accelerator, antpool accelerator, f2pool accelerator, foundry accelerator, cpfp calculator, rbf calculator, bitcoin fee calculator, комиссия биткоин, turbotx, turbo tx, turbotxacel, turbotxcoment, sup_turbotx, turbotx telegram, btc tx stuck fix, bitcoin confirmation speed up, how to speed up bitcoin transaction, как ускорить транзакцию биткоин, bitcoin transaction not confirming, btc unconfirmed fix, free bitcoin accelerator, premium btc accelerator, bitcoin pool rebroadcast, btc accelerator free, bitcoin accelerate transaction, btc boost, bitcoin boost, bitcoin tx accelerator online, btc accelerator 2025, btc accelerator 2026, лучший ускоритель биткоин транзакций, ускорение btc транзакции онлайн, биткоин транзакция зависла что делать, btc транзакция не проходит">
@@ -86,7 +86,7 @@
 <meta property="og:url"               content="https://acelerat.vercel.app/">
 <meta property="og:site_name"         content="TurboTX">
 <meta property="og:title"             content="⚡ TurboTX — Bitcoin Transaction Accelerator #1">
-<meta property="og:description"       content="TurboTX v12 — серверный Bitcoin accelerator 2026. 30 каналов: ViaBTC, AntPool, SpiderPool, CloverPool, BitFuFu. Rebroadcast + авто-повтор 6 волн. Premium $3–18 динамично. Гарантия 6 часов.">
+<meta property="og:description"       content="TurboTX v13 — серверный Bitcoin accelerator 2026. 30 каналов: MARA Slipstream, Foundry, AntPool, ViaBTC, SpiderPool, EMCDPool и другие. 8 волн. Premium $3–18. Гарантия 6 часов.">
 <meta property="og:image"             content="https://acelerat.vercel.app/og-image.png">
 <meta property="og:image:secure_url"  content="https://acelerat.vercel.app/og-image.png">
 <meta property="og:image:width"       content="1200">
@@ -275,7 +275,7 @@ body::after{
   animation:bgPulse 12s ease-in-out infinite alternate
 }
 @keyframes bgPulse{ from{opacity:.7;transform:translateX(-50%) scale(1)} to{opacity:1;transform:translateX(-50%) scale(1.08)} }
-.w{position:relative;z-index:1;max-width:940px;margin:0 auto;padding:0 28px}
+.w{position:relative;z-index:1;max-width:940px;width:100%;margin:0 auto;padding:0 28px;box-sizing:border-box}
 nav{
   position:-webkit-sticky;position:sticky;top:0;z-index:100;
   display:flex;align-items:center;justify-content:space-between;
@@ -470,7 +470,7 @@ footer a:hover{color:var(--a)}
 .q-row.prem{background:rgba(247,147,26,.03);border-color:rgba(247,147,26,.2)}
 .q-row.done{background:rgba(0,232,122,.03);border-color:rgba(0,232,122,.18)}
 @media(min-width:768px) and (max-width:1023px){
-  .w{max-width:100%;padding:0 32px}
+  .w{max-width:940px;padding:0 32px}
   h1{font-size:clamp(2.4rem,6vw,3.4rem)}
   .hero{padding:64px 0 44px}
   .stats{grid-template-columns:repeat(3,1fr)}
@@ -845,13 +845,13 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
 @keyframes blink-r{0%{opacity:1;box-shadow:0 0 6px 2px rgba(255,51,85,.5)}50%{opacity:.35;box-shadow:none}100%{opacity:1;box-shadow:0 0 6px 2px rgba(255,51,85,.5)}}
 #float-support{ position:fixed; bottom:24px; left: max(12px, calc(50% - 510px)); z-index:8900; display:flex; flex-direction:column; gap:8px }
 @media(max-width:1036px){
-  .w           { padding-left: 56px !important; }
+  .w           { padding-left: 56px; }
   nav          { padding-left: 56px !important; }
   .faq-section { padding-left: 56px !important; }
   #float-support { left: 10px; }
 }
 @media(max-width:480px){
-  .w           { padding-left: 52px !important; padding-right: 12px !important; }
+  .w           { padding-left: 52px; padding-right: 12px; }
   nav          { padding-left: 52px !important; }
   .faq-section { padding-left: 52px !important; }
   #float-support { left: 8px; bottom: 14px; }
@@ -953,6 +953,188 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
   line-height: 1.4 !important;
 }
 </style>
+
+<style>
+          #bolt-main {
+            animation: boltStrike 2.8s ease-in-out infinite;
+            transform-origin: 16px 4px;
+            filter: drop-shadow(0 0 4px #f7931a) drop-shadow(0 0 10px #ffe066);
+          }
+          @keyframes boltStrike {
+            0%   { opacity:0; transform: scaleY(0) scaleX(0.7); filter: drop-shadow(0 0 2px #f7931a); }
+            8%   { opacity:1; transform: scaleY(1) scaleX(1);   filter: drop-shadow(0 0 8px #fff) drop-shadow(0 0 18px #ffe066) drop-shadow(0 0 30px #f7931a); }
+            18%  { opacity:1; transform: scaleY(1) scaleX(1);   filter: drop-shadow(0 0 5px #fff) drop-shadow(0 0 12px #ffe066); }
+            38%  { opacity:.85; transform: scaleY(1) scaleX(1); filter: drop-shadow(0 0 3px #f7931a); }
+            55%  { opacity:0; transform: scaleY(1) scaleX(1); }
+            100% { opacity:0; transform: scaleY(0) scaleX(0.7); }
+          }
+          #bolt-flash { animation: flashImpact 2.8s ease-in-out infinite; }
+          @keyframes flashImpact {
+            0%,6%  { opacity:0; r:0; }
+            9%     { opacity:0.9; r:8; }
+            18%    { opacity:0.5; r:11; }
+            32%    { opacity:0; r:14; }
+            100%   { opacity:0; r:0; }
+          }
+          #spark-l { animation: sparkLeft 2.8s ease-in-out infinite; transform-origin: 12px 30px; }
+          @keyframes sparkLeft {
+            0%,7%  { opacity:0; transform: translate(0,0) rotate(0deg); }
+            10%    { opacity:1; transform: translate(-4px,-3px) rotate(-35deg); }
+            22%    { opacity:0; transform: translate(-9px,-1px) rotate(-50deg); }
+            100%   { opacity:0; transform: translate(0,0); }
+          }
+          #spark-r { animation: sparkRight 2.8s ease-in-out infinite; transform-origin: 20px 30px; }
+          @keyframes sparkRight {
+            0%,7%  { opacity:0; transform: translate(0,0) rotate(0deg); }
+            10%    { opacity:1; transform: translate(4px,-4px) rotate(30deg); }
+            22%    { opacity:0; transform: translate(8px,-1px) rotate(48deg); }
+            100%   { opacity:0; transform: translate(0,0); }
+          }
+          #spark-u { animation: sparkUp 2.8s ease-in-out infinite; }
+          @keyframes sparkUp {
+            0%,7%  { opacity:0; transform: translate(0,0); }
+            10%    { opacity:0.9; transform: translate(1px,-7px); }
+            20%    { opacity:0; transform: translate(2px,-12px); }
+            100%   { opacity:0; }
+          }
+          #ground-line { animation: groundGlow 2.8s ease-in-out infinite; }
+          @keyframes groundGlow {
+            0%,6%  { opacity:0; stroke-width:1; }
+            9%     { opacity:1; stroke-width:3; filter: drop-shadow(0 0 4px #f7931a); }
+            25%    { opacity:0.4; stroke-width:1.5; }
+            40%    { opacity:0; }
+            100%   { opacity:0; }
+          }
+          #shockwave { animation: shockwaveAnim 2.8s ease-in-out infinite; transform-origin: 16px 31px; }
+          @keyframes shockwaveAnim {
+            0%,7%  { opacity:0; transform: scale(0); }
+            11%    { opacity:0.7; transform: scale(0.4); }
+            30%    { opacity:0; transform: scale(1.2); }
+            100%   { opacity:0; transform: scale(0); }
+          }
+        </style>
+<style>
+          .wind-line { stroke:rgba(255,255,255,0.55); stroke-linecap:round; fill:none; }
+          #wind1 { animation: windPass 2.2s ease-in-out infinite; }
+          #wind2 { animation: windPass 2.2s ease-in-out 0.32s infinite; }
+          #wind3 { animation: windPass 2.2s ease-in-out 0.64s infinite; }
+          @keyframes windPass {
+            0%   { stroke-dashoffset: 36; opacity: 0; }
+            12%  { opacity: 0.7; }
+            55%  { opacity: 0.55; stroke-dashoffset: 0; }
+            80%  { opacity: 0; stroke-dashoffset: -10; }
+            100% { stroke-dashoffset: -10; opacity: 0; }
+          }
+          #sakura-petal {
+            animation: sakuraDrift 2.2s ease-in-out infinite;
+            transform-origin: 19px 18px;
+          }
+          @keyframes sakuraDrift {
+            0%   { transform: translate(-6px, 2px) rotate(-18deg); opacity:0.3; }
+            15%  { opacity:1; }
+            40%  { transform: translate(2px, -3px) rotate(8deg);   opacity:1; }
+            65%  { transform: translate(8px, 4px)  rotate(22deg);  opacity:1; }
+            85%  { transform: translate(13px, 9px) rotate(35deg);  opacity:0.5; }
+            100% { transform: translate(16px, 13px) rotate(45deg); opacity:0; }
+          }
+          #sakura-inner {
+            animation: petalWobble 2.2s ease-in-out infinite;
+            transform-origin: 19px 18px;
+          }
+          @keyframes petalWobble {
+            0%,100% { transform: rotate(0deg) scaleX(1); }
+            30%     { transform: rotate(-6deg) scaleX(0.92); }
+            60%     { transform: rotate(5deg)  scaleX(1.06); }
+          }
+        </style>
+<style>
+/* ── Tab bar ───────────────────────────────────────── */
+.utab-bar {
+  display: flex;
+  gap: 0;
+  background: var(--b);
+  border: 1px solid var(--b2);
+  border-radius: var(--r) var(--r) 0 0;
+  overflow: hidden;
+  border-bottom: none;
+}
+.utab {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 11px 6px 9px;
+  font-family: var(--mono);
+  font-size: .58rem;
+  letter-spacing: .5px;
+  color: var(--m);
+  cursor: pointer;
+  border-right: 1px solid var(--b2);
+  transition: background .15s, color .15s;
+  user-select: none;
+  position: relative;
+}
+.utab:last-child { border-right: none; }
+.utab:hover { background: rgba(255,255,255,.04); color: var(--t); }
+.utab.active {
+  background: rgba(247,147,26,.08);
+  color: var(--a);
+  border-bottom: 2px solid var(--a);
+}
+.utab.active svg { stroke: var(--a); }
+.utab svg { transition: stroke .15s; }
+.utab-label { text-transform: uppercase; }
+
+/* ── Panels ────────────────────────────────────────── */
+.utab-panels {
+  background: var(--s);
+  border: 1px solid var(--b2);
+  border-top: none;
+  border-radius: 0 0 var(--r) var(--r);
+  margin-bottom: 28px;
+  overflow: hidden;
+}
+.upanel { display: none; padding: 22px 20px 20px; }
+.upanel.active { display: block; }
+.upanel .card-title { border-bottom: 1px solid var(--b2); padding-bottom: 14px; margin-bottom: 18px; }
+.upanel .card-sub { font-family: var(--mono); font-size: .7rem; color: var(--m); margin-bottom: 18px; margin-top: -10px; }
+</style>
+<style>
+.adv-card { background:var(--b);border-radius:12px;padding:16px 18px;border:1px solid var(--b2) }
+.adv-urgent-critical { border-color:rgba(255,51,85,.35)!important;background:rgba(255,51,85,.04)!important }
+.adv-urgent-high     { border-color:rgba(255,107,53,.35)!important;background:rgba(255,107,53,.04)!important }
+.adv-urgent-medium   { border-color:rgba(247,147,26,.3)!important }
+.adv-urgent-low      { border-color:rgba(0,232,122,.25)!important }
+.adv-decision-icon   { font-size:1.4rem;flex-shrink:0 }
+.adv-stat { display:flex;flex-direction:column;gap:3px;padding:10px 14px;background:rgba(0,0,0,.2);border-radius:8px }
+.adv-stat-lbl { font-family:var(--mono);font-size:.54rem;color:var(--m);letter-spacing:.5px;text-transform:uppercase }
+.adv-stat-val { font-family:var(--mono);font-size:.78rem;font-weight:700;color:var(--t) }
+.adv-step { display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04) }
+.adv-step:last-child { border-bottom:none }
+.adv-step-num { width:20px;height:20px;background:rgba(247,147,26,.15);border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.58rem;color:var(--a);flex-shrink:0;margin-top:1px }
+</style>
+<style>
+@keyframes legalPulse {
+  0%,100% { box-shadow: 0 4px 20px rgba(0,0,0,.5), 0 0 0 0 rgba(247,147,26,.25); }
+  50%      { box-shadow: 0 4px 20px rgba(0,0,0,.5), 0 0 0 6px rgba(247,147,26,.0); }
+}
+#legal-card { transform-origin: bottom right; }
+@media(max-width:600px){
+  #legal-bubble { bottom:100px; right:10px; }
+  #legal-card { width:calc(100vw - 32px); right:0; }
+}
+@media(min-width:1100px){
+  #legal-bubble { right:calc(50% - 530px); }
+}
+/* About секция адаптив */
+#about .grid-2 { grid-template-columns:1fr 1fr; }
+@media(max-width:640px){
+  #about [style*="grid-template-columns:1fr 1fr"] { grid-template-columns:1fr !important; }
+  #about [style*="grid-template-columns:repeat(3"] { grid-template-columns:1fr !important; }
+}
+</style>
 </head>
 <body>
 <div class="w">
@@ -969,9 +1151,9 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
   <div class="nav-right">
     <a href="javascript:void(0)" class="nav-link" onclick="document.getElementById('about').scrollIntoView({behavior:'smooth'});return false;" style="display:inline-flex;align-items:center;gap:5px">
       <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>О нас</a>
-    <a href="javascript:void(0)" class="nav-link" onclick="document.getElementById('status').scrollIntoView({behavior:'smooth'});return false;">Статус</a>
-    <a href="javascript:void(0)" class="nav-link" onclick="document.getElementById('cpfp').scrollIntoView({behavior:'smooth'});return false;">CPFP</a>
-    <a href="javascript:void(0)" class="nav-link" onclick="document.getElementById('rbf').scrollIntoView({behavior:'smooth'});return false;">RBF</a>
+    <a href="javascript:void(0)" class="nav-link" onclick="uswitch('status');openTab('status');return false;">Статус</a>
+    <a href="javascript:void(0)" class="nav-link" onclick="uswitch('cpfp');openTab('cpfp');return false;">CPFP</a>
+    <a href="javascript:void(0)" class="nav-link" onclick="uswitch('rbf');openTab('rbf');return false;">RBF</a>
     <a href="javascript:void(0)" class="nav-link" onclick="document.getElementById('pools').scrollIntoView({behavior:'smooth'});return false;">Пулы</a>
     <a href="https://t.me/TurboTXAcel" target="_blank" class="nav-link" style="display:inline-flex;align-items:center;gap:5px;color:rgba(0,136,204,.8);border:1px solid rgba(0,136,204,.2);border-radius:6px;padding:5px 11px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d='M21.5 2.5L2 10.5l7 1.5 2 6 3-3 4 3 3.5-15.5z'/><line x1='9' y1='12' x2='14.5' y2='7.5'/></svg>Канал</a>
     <div class="live-badge"><div class="live-dot"></div>LIVE</div>
@@ -1054,65 +1236,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
   <a href="javascript:void(0)" class="stat-card" style="text-decoration:none" onclick="document.getElementById('live-feed-wrap').scrollIntoView({behavior:'smooth'});return false;">
     <span class="stat-card-icon" style="display:inline-block;position:relative;width:32px;height:36px;vertical-align:middle">
       <svg id="lightning-svg" width="32" height="36" viewBox="0 0 32 36" fill="none" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
-        <style>
-          #bolt-main {
-            animation: boltStrike 2.8s ease-in-out infinite;
-            transform-origin: 16px 4px;
-            filter: drop-shadow(0 0 4px #f7931a) drop-shadow(0 0 10px #ffe066);
-          }
-          @keyframes boltStrike {
-            0%   { opacity:0; transform: scaleY(0) scaleX(0.7); filter: drop-shadow(0 0 2px #f7931a); }
-            8%   { opacity:1; transform: scaleY(1) scaleX(1);   filter: drop-shadow(0 0 8px #fff) drop-shadow(0 0 18px #ffe066) drop-shadow(0 0 30px #f7931a); }
-            18%  { opacity:1; transform: scaleY(1) scaleX(1);   filter: drop-shadow(0 0 5px #fff) drop-shadow(0 0 12px #ffe066); }
-            38%  { opacity:.85; transform: scaleY(1) scaleX(1); filter: drop-shadow(0 0 3px #f7931a); }
-            55%  { opacity:0; transform: scaleY(1) scaleX(1); }
-            100% { opacity:0; transform: scaleY(0) scaleX(0.7); }
-          }
-          #bolt-flash { animation: flashImpact 2.8s ease-in-out infinite; }
-          @keyframes flashImpact {
-            0%,6%  { opacity:0; r:0; }
-            9%     { opacity:0.9; r:8; }
-            18%    { opacity:0.5; r:11; }
-            32%    { opacity:0; r:14; }
-            100%   { opacity:0; r:0; }
-          }
-          #spark-l { animation: sparkLeft 2.8s ease-in-out infinite; transform-origin: 12px 30px; }
-          @keyframes sparkLeft {
-            0%,7%  { opacity:0; transform: translate(0,0) rotate(0deg); }
-            10%    { opacity:1; transform: translate(-4px,-3px) rotate(-35deg); }
-            22%    { opacity:0; transform: translate(-9px,-1px) rotate(-50deg); }
-            100%   { opacity:0; transform: translate(0,0); }
-          }
-          #spark-r { animation: sparkRight 2.8s ease-in-out infinite; transform-origin: 20px 30px; }
-          @keyframes sparkRight {
-            0%,7%  { opacity:0; transform: translate(0,0) rotate(0deg); }
-            10%    { opacity:1; transform: translate(4px,-4px) rotate(30deg); }
-            22%    { opacity:0; transform: translate(8px,-1px) rotate(48deg); }
-            100%   { opacity:0; transform: translate(0,0); }
-          }
-          #spark-u { animation: sparkUp 2.8s ease-in-out infinite; }
-          @keyframes sparkUp {
-            0%,7%  { opacity:0; transform: translate(0,0); }
-            10%    { opacity:0.9; transform: translate(1px,-7px); }
-            20%    { opacity:0; transform: translate(2px,-12px); }
-            100%   { opacity:0; }
-          }
-          #ground-line { animation: groundGlow 2.8s ease-in-out infinite; }
-          @keyframes groundGlow {
-            0%,6%  { opacity:0; stroke-width:1; }
-            9%     { opacity:1; stroke-width:3; filter: drop-shadow(0 0 4px #f7931a); }
-            25%    { opacity:0.4; stroke-width:1.5; }
-            40%    { opacity:0; }
-            100%   { opacity:0; }
-          }
-          #shockwave { animation: shockwaveAnim 2.8s ease-in-out infinite; transform-origin: 16px 31px; }
-          @keyframes shockwaveAnim {
-            0%,7%  { opacity:0; transform: scale(0); }
-            11%    { opacity:0.7; transform: scale(0.4); }
-            30%    { opacity:0; transform: scale(1.2); }
-            100%   { opacity:0; transform: scale(0); }
-          }
-        </style>
+        
         <line x1="4" y1="31" x2="28" y2="31" stroke="#6b4f1a" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
         <ellipse id="shockwave" cx="16" cy="31" rx="9" ry="3" stroke="#f7931a" stroke-width="1.2" fill="none"/>
         <line id="ground-line" x1="10" y1="31" x2="22" y2="31" stroke="#ffe066" stroke-width="2" stroke-linecap="round"/>
@@ -1143,40 +1267,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
   <a href="javascript:void(0)" class="stat-card" style="text-decoration:none" onclick="document.getElementById('pools').scrollIntoView({behavior:'smooth'});return false;">
     <span class="stat-card-icon" style="display:inline-block;position:relative;width:38px;height:34px;vertical-align:middle">
       <svg id="sakura-svg" width="38" height="34" viewBox="0 0 38 34" fill="none" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
-        <style>
-          .wind-line { stroke:rgba(255,255,255,0.55); stroke-linecap:round; fill:none; }
-          #wind1 { animation: windPass 2.2s ease-in-out infinite; }
-          #wind2 { animation: windPass 2.2s ease-in-out 0.32s infinite; }
-          #wind3 { animation: windPass 2.2s ease-in-out 0.64s infinite; }
-          @keyframes windPass {
-            0%   { stroke-dashoffset: 36; opacity: 0; }
-            12%  { opacity: 0.7; }
-            55%  { opacity: 0.55; stroke-dashoffset: 0; }
-            80%  { opacity: 0; stroke-dashoffset: -10; }
-            100% { stroke-dashoffset: -10; opacity: 0; }
-          }
-          #sakura-petal {
-            animation: sakuraDrift 2.2s ease-in-out infinite;
-            transform-origin: 19px 18px;
-          }
-          @keyframes sakuraDrift {
-            0%   { transform: translate(-6px, 2px) rotate(-18deg); opacity:0.3; }
-            15%  { opacity:1; }
-            40%  { transform: translate(2px, -3px) rotate(8deg);   opacity:1; }
-            65%  { transform: translate(8px, 4px)  rotate(22deg);  opacity:1; }
-            85%  { transform: translate(13px, 9px) rotate(35deg);  opacity:0.5; }
-            100% { transform: translate(16px, 13px) rotate(45deg); opacity:0; }
-          }
-          #sakura-inner {
-            animation: petalWobble 2.2s ease-in-out infinite;
-            transform-origin: 19px 18px;
-          }
-          @keyframes petalWobble {
-            0%,100% { transform: rotate(0deg) scaleX(1); }
-            30%     { transform: rotate(-6deg) scaleX(0.92); }
-            60%     { transform: rotate(5deg)  scaleX(1.06); }
-          }
-        </style>
+        
         <path id="wind1" class="wind-line" stroke-width="1.3" stroke-dasharray="22 8" d="M2 12 Q12 10 24 13 Q30 14 36 12"/>
         <path id="wind2" class="wind-line" stroke-width="1"   stroke-dasharray="18 10" d="M2 18 Q10 16 20 19 Q28 21 36 18"/>
         <path id="wind3" class="wind-line" stroke-width="0.8" stroke-dasharray="14 12" d="M2 23 Q11 22 22 24 Q29 25 36 23"/>
@@ -1211,14 +1302,216 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
   </a>
 </div>
 
-<!-- SMART ADVISOR v12 -->
-<div class="card" id="smart-advisor" style="margin-bottom:20px">
-  <div class="card-title" style="display:flex;align-items:center;gap:10px">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-    Smart Advisor
-    <span style="font-family:var(--mono);font-size:.52rem;color:var(--accent2);background:rgba(124,92,252,.1);padding:2px 8px;border-radius:4px;letter-spacing:1px">NEW v12</span>
+<!-- UNIFIED TOOL WIDGET -->
+
+
+<div class="utab-bar" id="utab-bar">
+  <!-- ⚡ Ускорение -->
+  <div class="utab active" id="utab-acc" onclick="uswitch('acc')">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+    <span class="utab-label">Ускорение</span>
   </div>
-  <p style="font-size:.8rem;color:var(--m);margin-bottom:16px">Вставьте TXID — Advisor мгновенно скажет <strong style="color:var(--t)">что конкретно делать</strong> с вашей транзакцией прямо сейчас</p>
+  <!-- 🔄 RBF -->
+  <div class="utab" id="utab-rbf" onclick="uswitch('rbf')">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+    <span class="utab-label">RBF</span>
+  </div>
+  <!-- 👶 CPFP -->
+  <div class="utab" id="utab-cpfp" onclick="uswitch('cpfp')">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    <span class="utab-label">CPFP</span>
+  </div>
+  <!-- 🔍 Статус -->
+  <div class="utab" id="utab-status" onclick="uswitch('status')">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <span class="utab-label">Статус</span>
+  </div>
+  <!-- 🧠 Advisor -->
+  <div class="utab" id="utab-adv" onclick="uswitch('adv')">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--accent2)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+    <span class="utab-label" style="color:var(--accent2)">Advisor</span>
+  </div>
+</div>
+
+<div class="utab-panels" id="utab-panels">
+
+  <!-- ── ПАНЕЛЬ: УСКОРЕНИЕ ─────────────────────────── -->
+  <div class="upanel active" id="upanel-acc">
+    <div style="display:flex;align-items:center;gap:10px;padding-bottom:14px;margin-bottom:18px;border-bottom:1px solid var(--b2)">
+      <span style="font-size:1.2rem">⚡</span>
+      <span style="font-weight:700;font-size:.92rem">Ускорить транзакцию</span>
+    </div>
+    <div style="font-family:var(--mono);font-size:.7rem;color:var(--m);margin-bottom:18px;margin-top:-10px">Вставьте TXID из кошелька — мы займёмся остальным</div>
+    <div class="fg">
+    <label>Transaction ID (TXID)</label>
+    <div id="single-mode"><input type="text" id="txid" placeholder="a1b2c3d4e5f6... (64 hex символа)" maxlength="64" oninput="onTxidDiag(this.value)"></div>
+    <div class="batch-area" id="batch-mode"><textarea class="batch-input" id="batch-txids" placeholder="Вставьте по одному TXID на строку&#10;a1b2c3...&#10;9f8e7d...&#10;4c5d6e..." oninput="onBatchInput()"></textarea><div class="batch-count" id="batch-count">0 транзакций</div></div>
+    <div class="batch-toggle" id="batch-toggle" onclick="toggleBatch()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> Пакетное ускорение (до 20 TX) <span style="margin-left:6px;font-family:var(--mono);font-size:.56rem;background:rgba(247,147,26,.15);border:1px solid rgba(247,147,26,.35);border-radius:4px;padding:1px 6px;color:var(--a);letter-spacing:.5px">PREMIUM</span></div>
+  </div>
+
+  <div class="fee-calc" id="fee-calc">
+    <div style="font-family:var(--mono);font-size:.6rem;color:var(--m);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">Анализ транзакции</div>
+    <div class="fee-row"><span class="fee-key">Комиссия</span><span class="fee-val" id="fc-fee">—</span></div>
+    <div class="fee-row"><span class="fee-key">Ставка</span><span class="fee-val" id="fc-rate">—</span></div>
+    <div class="fee-row"><span class="fee-key">Позиция в мемпуле</span><span class="fee-val" id="fc-pos">—</span></div>
+    <div class="fee-row"><span class="fee-key">Без ускорения</span><span class="fee-val" id="fc-eta">—</span></div>
+    <div class="fee-row"><span class="fee-key">С Premium</span><span class="fee-val good">10–20 мин ⚡</span></div>
+  </div>
+
+  <div class="fg">
+    <label>Режим ускорения</label>
+    <div class="plan-row">
+      <div class="plan-opt on" id="of" onclick="pick('free')"><div class="po-title" style="display:flex;align-items:center;gap:7px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><rect x="2.5" y="10.5" width="19" height="12" rx="3" fill="rgba(247,147,26,0.12)" stroke="#f7931a" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 10.5V7.5a5 5 0 0 1 9.9-1" stroke="#f7931a" stroke-width="1.6" stroke-linecap="round" fill="none"/><circle cx="12" cy="16" r="2" fill="#f7931a" opacity="0.85"/><rect x="11" y="16.8" width="2" height="3" rx="1" fill="#f7931a" opacity="0.7"/></svg> Бесплатный</div><div class="po-desc">Rebroadcast в 5 пулов</div><div class="po-price">$0 — бесплатно</div></div>
+      <div class="plan-opt" id="op" onclick="pick('premium')"><div class="po-title" style="display:flex;align-items:center;gap:7px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><defs><linearGradient id="cg15" x1="2" y1="5" x2="22" y2="19" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFE566"/><stop offset="45%" stop-color="#F7931A"/><stop offset="100%" stop-color="#FF6B00"/></linearGradient></defs><path d="M3 19h18" stroke="url(#cg15)" stroke-width="2" stroke-linecap="round"/><path d="M3 19L4.5 9.5L9 14L12 6L15 14L19.5 9.5L21 19z" fill="url(#cg15)" stroke="url(#cg15)" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="12" cy="6" r="1.4" fill="#FFE566"/><circle cx="4.5" cy="9.5" r="1.1" fill="#FFE566"/><circle cx="19.5" cy="9.5" r="1.1" fill="#FFE566"/></svg> Premium</div><div class="po-desc">30 каналов · ~88%</div><div class="po-price" style="color:var(--a);font-weight:700">от <span id="plan-opt-price">…</span></div></div>
+    </div>
+  </div>
+
+  <button class="acc-btn" id="abtn" onclick="go()"><span style="display:inline-flex;align-items:center;gap:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>УСКОРИТЬ ТРАНЗАКЦИЮ</span></button>
+
+  <div class="prog-wrap" id="pw"><div class="prog-bar"><div class="prog-fill" id="pf"></div></div><div class="steps-list" id="sl"></div></div>
+  <div class="res-box" id="rb"></div>
+
+  <!-- ИСТОРИЯ УСКОРЕНИЙ -->
+  <div id="history-block" style="display:none;margin-top:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div style="font-family:var(--mono);font-size:.58rem;letter-spacing:2px;color:var(--m);text-transform:uppercase;display:flex;align-items:center;gap:6px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Ваши ускорения</div><button onclick="localStorage.removeItem('tx_history');renderHistory()" style="font-family:var(--mono);font-size:.58rem;color:var(--m);background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:4px" onmouseover="this.style.color='var(--err)'" onmouseout="this.style.color='var(--m)'">очистить</button></div>
+    <div id="history-list" style="display:flex;flex-direction:column;gap:4px"></div>
+  </div>
+
+  <!-- LIVE FEED -->
+  <div class="live-feed" id="live-feed-wrap" style="margin-top:20px">
+    <div class="feed-tabs">
+      <button class="feed-tab active" id="tab-confirmed" onclick="switchFeedTab('confirmed')"><div class="live-feed-dot"></div> Последние ускорения <span class="feed-tab-cnt" id="confirmed-count">0</span></button>
+      <button class="feed-tab" id="tab-pending" onclick="switchFeedTab('pending')"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Ожидают ускорения <span class="feed-tab-cnt" id="queue-count">0</span></button>
+    </div>
+    <div class="feed-panel active" id="panel-confirmed"><div class="feed-items" id="feed-items"></div></div>
+    <div class="feed-panel" id="panel-pending"><div id="queue-list" style="display:flex;flex-direction:column;padding:4px 0"></div></div>
+  </div>
+
+  <div class="push-prompt" id="push-prompt"><span style="color:var(--m2)">Получить уведомление когда транзакция подтвердится?</span><button class="push-btn" onclick="requestPush()">Включить уведомления</button></div>
+
+  </div>
+
+  <!-- ── ПАНЕЛЬ: RBF ───────────────────────────────── -->
+  <div class="upanel" id="upanel-rbf">
+    <div class="card-title"><span style="display:inline-flex;align-items:center;gap:8px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+      RBF Калькулятор
+    </span></div>
+    <div class="card-sub">Replace-By-Fee — замени комиссию застрявшей транзакции прямо в кошельке</div>
+      
+
+  <div class="fg" style="margin-top:20px">
+    <label>TXID транзакции для замены комиссии</label>
+    <input type="text" id="rbf-txid" placeholder="a1b2c3d4... (64 hex символа)" maxlength="64"
+      oninput="rbfOnInput()" style="width:100%;box-sizing:border-box">
+  </div>
+
+  <div id="rbf-status-block" style="display:none;margin:14px 0 0">
+    <div id="rbf-support-badge" style="display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:8px;font-family:var(--mono);font-size:.72rem;font-weight:700;margin-bottom:14px"></div>
+  </div>
+
+  <div id="rbf-target-wrap" style="display:none;margin-top:18px">
+    <label style="font-size:.65rem;letter-spacing:2px;color:var(--m);text-transform:uppercase;font-family:var(--mono);display:block;margin-bottom:10px">Целевая скорость</label>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">
+      <div class="popt on" id="rbf-spd-eco" onclick="rbfPickSpeed(this,'eco')">
+        <div style="font-size:.65rem;color:var(--m);font-family:var(--mono)">Эконом</div>
+        <div style="font-weight:700;color:var(--t)" id="rbf-fee-eco">— sat/vB</div>
+        <div style="font-size:.6rem;color:var(--m)">~1 час</div>
+      </div>
+      <div class="popt" id="rbf-spd-std" onclick="rbfPickSpeed(this,'std')">
+        <div style="font-size:.65rem;color:var(--m);font-family:var(--mono)">Стандарт</div>
+        <div style="font-weight:700;color:var(--t)" id="rbf-fee-std">— sat/vB</div>
+        <div style="font-size:.6rem;color:var(--m)">~30 мин</div>
+      </div>
+      <div class="popt" id="rbf-spd-fast" onclick="rbfPickSpeed(this,'fast')">
+        <div style="font-size:.65rem;color:var(--m);font-family:var(--mono)">Быстро</div>
+        <div style="font-weight:700;color:var(--t)" id="rbf-fee-fast">— sat/vB</div>
+        <div style="font-size:.6rem;color:var(--m)">~10 мин</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="rbf-live-fees" style="display:none;margin-bottom:12px;padding:8px 12px;background:rgba(0,232,122,.04);border:1px solid rgba(0,232,122,.12);border-radius:8px;font-family:var(--mono);font-size:.65rem;color:var(--m2);align-items:center;gap:6px;line-height:1.6"></div>
+
+  <button class="acc-btn" id="rbf-btn" onclick="calcRbf()" style="margin-top:4px" disabled>
+    <span style="display:inline-flex;align-items:center;gap:10px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M3 6l9-3 9 3M3 18l9 3 9-3"/></svg>
+      РАССЧИТАТЬ RBF + АВТО-КОМИССИЯ
+    </span>
+  </button>
+
+  <div id="rbf-result" style="display:none;margin-top:22px">
+    <div id="rbf-result-header" style="margin-bottom:16px"></div>
+    <div id="rbf-metrics" style="margin-bottom:18px"></div>
+    <div id="rbf-wallets" style="margin-top:20px"></div>
+    <div id="rbf-no-support-msg" style="display:none;background:rgba(255,147,0,.06);border:1px solid rgba(255,147,0,.25);border-radius:10px;padding:14px 16px;margin-top:16px">
+      <div style="font-family:var(--mono);font-size:.75rem;font-weight:700;color:#ff9320;margin-bottom:8px">⚠ Транзакция не поддерживает RBF</div>
+      <div style="font-family:var(--mono);font-size:.7rem;color:var(--m);line-height:1.7">
+        Эта транзакция была отправлена без флага RBF (все inputs имеют sequence = 0xFFFFFFFF).<br>
+        <strong style="color:var(--t)">Что можно сделать:</strong><br>
+        → Используйте <a href="javascript:void(0)" onclick="openTab('cpfp')" style="color:var(--a)">CPFP калькулятор</a> — создайте дочернюю TX с высокой комиссией<br>
+        → Используйте <a href="javascript:void(0)" onclick="openTab('acc')" style="color:var(--a)">Rebroadcast ускоритель</a> — отправим в 30 каналов<br>
+        → Подождите — транзакция может подтвердиться при снижении нагрузки на сеть
+      </div>
+    </div>
+  </div>
+
+  <details style="margin-top:22px">
+    <summary style="font-family:var(--mono);font-size:.7rem;color:var(--m);cursor:pointer;user-select:none;padding:8px 0;list-style:none;display:flex;align-items:center;gap:6px">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      Что такое RBF и когда использовать?
+    </summary>
+    <div style="font-family:var(--mono);font-size:.7rem;color:var(--m);line-height:1.8;padding:12px 0 4px;border-top:1px solid var(--b);margin-top:8px">
+      <strong style="color:var(--t)">RBF (Replace-By-Fee)</strong> — стандарт BIP-125, позволяющий заменить неподтверждённую транзакцию на новую с более высокой комиссией. Майнеры предпочтут более выгодную версию.<br><br>
+      <strong style="color:var(--t)">Когда RBF лучше CPFP:</strong> если вы сами отправитель и хотите полностью заменить TX.<br><br>
+      <strong style="color:var(--t)">Когда RBF не работает:</strong> если транзакция отправлена без флага RBF — тогда используйте CPFP или наш rebroadcast ускоритель.<br><br>
+      <strong style="color:var(--t)">Важно:</strong> RBF требует подписи приватным ключом — делается только в вашем кошельке, мы лишь рассчитываем параметры.
+    </div>
+  </details>
+  </div>
+
+  <!-- ── ПАНЕЛЬ: CPFP ──────────────────────────────── -->
+  <div class="upanel" id="upanel-cpfp">
+    <div class="card-title"><span style="display:inline-flex;align-items:center;gap:8px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      CPFP Калькулятор
+    </span></div>
+    <div class="card-sub">Child-Pays-for-Parent — разгони застрявшую транзакцию дочерней TX без Premium</div>
+        <div class="cpfp-row"><span class="cpfp-key">Комиссия родит. TX</span><span class="cpfp-val" id="cpfp-parent-fee">—</span></div>
+    <div class="cpfp-row"><span class="cpfp-key">Ставка родит. TX</span><span class="cpfp-val warn" id="cpfp-parent-rate">—</span></div>
+    <div class="cpfp-row"><span class="cpfp-key">Целевая ставка пакета</span><span class="cpfp-val" id="cpfp-target-rate">—</span></div>
+    <div class="cpfp-row"><span class="cpfp-key">Мин. комиссия дочерней TX</span><span class="cpfp-val" id="cpfp-child-fee">—</span></div>
+    <div class="cpfp-row" style="background:rgba(0,232,122,.04);border-radius:6px;padding:8px 6px;margin-top:4px">
+      <span class="cpfp-key" style="font-weight:700;color:var(--t)">Итого к оплате за дочернюю TX</span>
+      <span class="cpfp-val" style="font-size:.82rem" id="cpfp-final">—</span>
+    </div>
+    <div style="background:rgba(247,147,26,.06);border:1px solid rgba(247,147,26,.18);border-radius:var(--r);padding:12px;margin-top:12px;font-family:var(--mono);font-size:.68rem;color:var(--m2);line-height:1.7" id="cpfp-instruction">
+      Создайте новую транзакцию использующую неподтверждённый UTXO из застрявшей TX.<br>
+      Установите комиссию <strong style="color:var(--a)" id="cpfp-fee-btc">—</strong> сатошей.<br>
+      Майнеры примут обе транзакции как пакет.
+    </div>
+    <button class="cpfp-copy" onclick="copyCpfpInfo()">
+      <span style="display:inline-flex;align-items:center;gap:8px;justify-content:center">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Скопировать параметры CPFP
+      </span>
+    </button>
+  
+  </div>
+
+  <!-- ── ПАНЕЛЬ: СТАТУС ────────────────────────────── -->
+  <div class="upanel" id="upanel-status">
+    <div class="card-title"><span style="display:inline-flex;align-items:center;gap:8px">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      Проверить статус TX
+    </span></div>
+    <div class="card-sub">Проверка подтверждений в реальном времени через mempool.space</div>
+    <div class="fg"><label>TXID</label><input type="text" id="stxid" placeholder="64 hex символа..." maxlength="64"></div><button class="chk-btn" onclick="chk()"><span style="display:inline-flex;align-items:center;gap:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>ПРОВЕРИТЬ СТАТУС</span></button><div class="status-res" id="sr"></div>
+  </div>
+
+  <!-- ── ПАНЕЛЬ: SMART ADVISOR ─────────────────────── -->
+  <div class="upanel" id="upanel-adv">
+      <p style="font-size:.8rem;color:var(--m);margin-bottom:16px">Вставьте TXID — Advisor мгновенно скажет <strong style="color:var(--t)">что конкретно делать</strong> с вашей транзакцией прямо сейчас</p>
   <div style="display:flex;gap:8px;margin-bottom:14px">
     <input type="text" id="adv-txid" placeholder="TXID транзакции (64 символа hex)" maxlength="64"
       style="flex:1;background:var(--b);border:1px solid var(--b2);border-radius:var(--r);padding:11px 14px;color:var(--t);font-family:var(--mono);font-size:.75rem;outline:none;transition:border-color .2s"
@@ -1231,20 +1524,92 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
   <div id="adv-result" style="display:none"></div>
 </div>
 
-<style>
-.adv-card { background:var(--b);border-radius:12px;padding:16px 18px;border:1px solid var(--b2) }
-.adv-urgent-critical { border-color:rgba(255,51,85,.35)!important;background:rgba(255,51,85,.04)!important }
-.adv-urgent-high     { border-color:rgba(255,107,53,.35)!important;background:rgba(255,107,53,.04)!important }
-.adv-urgent-medium   { border-color:rgba(247,147,26,.3)!important }
-.adv-urgent-low      { border-color:rgba(0,232,122,.25)!important }
-.adv-decision-icon   { font-size:1.4rem;flex-shrink:0 }
-.adv-stat { display:flex;flex-direction:column;gap:3px;padding:10px 14px;background:rgba(0,0,0,.2);border-radius:8px }
-.adv-stat-lbl { font-family:var(--mono);font-size:.54rem;color:var(--m);letter-spacing:.5px;text-transform:uppercase }
-.adv-stat-val { font-family:var(--mono);font-size:.78rem;font-weight:700;color:var(--t) }
-.adv-step { display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04) }
-.adv-step:last-child { border-bottom:none }
-.adv-step-num { width:20px;height:20px;background:rgba(247,147,26,.15);border-radius:4px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.58rem;color:var(--a);flex-shrink:0;margin-top:1px }
-</style>
+</div>
+<!-- END UNIFIED TOOL WIDGET -->
+
+<!-- PLANS (вне таба — сохраняем как есть) -->
+<!-- PLANS -->
+<div style="margin-bottom:28px"><div class="sh">Выберите план</div>
+<div class="plans">
+  <div class="plan-card"><div class="ptag tf" style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><rect x="2.5" y="10.5" width="19" height="12" rx="3" fill="rgba(247,147,26,0.12)" stroke="#f7931a" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 10.5V7.5a5 5 0 0 1 9.9-1" stroke="#f7931a" stroke-width="1.6" stroke-linecap="round" fill="none"/><circle cx="12" cy="16" r="2" fill="#f7931a" opacity="0.85"/><rect x="11" y="16.8" width="2" height="3" rx="1" fill="#f7931a" opacity="0.7"/></svg>FREE</div><div class="plan-price">$0 <em>/ бесплатно</em></div><div class="plan-desc">Серверный broadcast через 3 CORS-узла. Реальные ответы от каждого канала. Однократный broadcast.</div><ul class="fl"><li><span class="fi ok">✓</span>mempool.space + blockstream.info + Blockchair (3 узла)</li><li><span class="fi ok">✓</span>ViaBTC + mempoolAccel (2 пул-акселератора)</li><li><span class="fi ok">✓</span>Итого 5 каналов · Серверный broadcast, без CORS</li><li><span class="fi ok">✓</span>Трекер подтверждений · Smart Advisor</li><li><span class="fi ok">✓</span>Однократный broadcast (волны — только Premium)</li><li><span class="fi na">—</span><span style="color:var(--m)">Пул-акселераторы — только Premium</span></li><li><span class="fi na">—</span><span style="color:var(--m)">8 волн повтора (только Premium)</span></li></ul><button class="pbtn pbf" onclick="pick('free');document.getElementById('txid').focus()"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><rect x="2.5" y="10.5" width="19" height="12" rx="3" fill="rgba(247,147,26,0.12)" stroke="#f7931a" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 10.5V7.5a5 5 0 0 1 9.9-1" stroke="#f7931a" stroke-width="1.6" stroke-linecap="round" fill="none"/><circle cx="12" cy="16" r="2" fill="#f7931a" opacity="0.85"/><rect x="11" y="16.8" width="2" height="3" rx="1" fill="#f7931a" opacity="0.7"/></svg>Начать бесплатно</span></button></div>
+  <div class="plan-card prem"><div class="ptag tp" style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><defs><linearGradient id="cgbadge" x1="2" y1="5" x2="22" y2="19" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFE566"/><stop offset="45%" stop-color="#F7931A"/><stop offset="100%" stop-color="#FF6B00"/></linearGradient></defs><path d="M3 19h18" stroke="url(#cgbadge)" stroke-width="2" stroke-linecap="round"/><path d="M3 19L4.5 9.5L9 14L12 6L15 14L19.5 9.5L21 19z" fill="url(#cgbadge)" stroke="url(#cgbadge)" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="12" cy="6" r="1.4" fill="#FFE566"/><circle cx="4.5" cy="9.5" r="1.1" fill="#FFE566"/><circle cx="19.5" cy="9.5" r="1.1" fill="#FFE566"/></svg>PREMIUM</div><div class="plan-price"><span style="color:var(--a)" id="plan-price-usd">$4</span> <em>/ разово</em> <span id="plan-price-tag" style="display:inline-flex;align-items:center;gap:4px;font-size:.57rem;font-family:var(--mono);padding:2px 8px;border-radius:4px;background:rgba(247,147,26,.12);color:var(--a);vertical-align:middle;margin-left:4px"><span class="net-heart calm sm" id="price-tag-dot"><svg width="12" height="12" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g class="h-flame"><path d="M9 19 Q7 15 9.5 11 Q10.5 15 12 11 Q13.5 15 14.5 11 Q17 15 15 19" fill="#ff6b00" opacity=".85"/></g><path class="h-body" d="M12 20.5C12 20.5 2.5 14 2.5 8C2.5 5.2 4.7 3 7.5 3C9.1 3 10.6 3.8 12 5.2C13.4 3.8 14.9 3 16.5 3C19.3 3 21.5 5.2 21.5 8C21.5 14 12 20.5 12 20.5Z"/><g class="h-ice" stroke="#cff0ff" stroke-width="1" stroke-linecap="round" fill="none"><line x1="12" y1="5.5" x2="12" y2="8.5"/><line x1="10.4" y1="6.3" x2="13.6" y2="7.7"/><line x1="10.4" y1="7.7" x2="13.6" y2="6.3"/></g></svg></span><span id="price-tag-text">сеть</span></span></div><div id="plan-conf-time" style="font-family:var(--mono);font-size:.62rem;color:var(--g);margin-top:2px;margin-bottom:4px">Premium ≈ 10–20 мин ⚡</div><div class="plan-desc">30 каналов: 8 hex-узлов + 22 пула (~88% хешрейта). Реальные ответы от Foundry, AntPool, MARA. 8 волн до 4 часов.</div><ul class="fl"><li><span class="fi ok">✓</span><strong>8 hex-broadcast узлов</strong> — mempool.space · blockstream · Blockchair · BlockCypher · btcscan · blockchain.info · bitaps · sochain</li><li><span class="fi ok">✓</span><strong>22 пул-акселератора</strong> — Foundry ⭐ · AntPool · MARA Slipstream ★★ · ViaBTC · SpiderPool · F2Pool · Luxor · CloverPool · BitFuFu · Ocean · EMCDPool · SBI Crypto · 2Miners · Rawpool и ещё 8</li><li><span class="fi ok">✓</span><strong>~88% хешрейта</strong> Bitcoin охвачено · Last-Block-Miner boost</li><li><span class="fi ok">✓</span><strong>8 волн</strong>: адаптивный интервал · Anti-Stuck режим при зависании >48ч</li><li><span class="fi ok">✓</span>Цена $3–18 — дешевле когда сеть спокойна</li><li><span class="fi ok">✓</span>Пакет до 20 TX · Smart Advisor · Возврат за 6 ч если не помогло</li></ul><button class="pbtn pbp" onclick="openM()"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><defs><linearGradient id="cg16" x1="2" y1="5" x2="22" y2="19" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFE566"/><stop offset="45%" stop-color="#F7931A"/><stop offset="100%" stop-color="#FF6B00"/></linearGradient></defs><path d="M3 19h18" stroke="url(#cg16)" stroke-width="2" stroke-linecap="round"/><path d="M3 19L4.5 9.5L9 14L12 6L15 14L19.5 9.5L21 19z" fill="url(#cg16)" stroke="url(#cg16)" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="12" cy="6" r="1.4" fill="#FFE566"/><circle cx="4.5" cy="9.5" r="1.1" fill="#FFE566"/><circle cx="19.5" cy="9.5" r="1.1" fill="#FFE566"/></svg>Купить Premium — <span id="plan-btn-price">$4</span></span></button></div>
+</div></div>
+
+<!-- TRUST & REVIEWS -->
+<!-- NETWORK INTELLIGENCE v13 — новый блок -->
+<div style="margin-bottom:28px">
+  <div class="sh" style="display:flex;align-items:center;gap:10px;justify-content:space-between">
+    <span style="display:flex;align-items:center;gap:8px">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent3)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      Network Intelligence
+    </span>
+    <span style="font-family:var(--mono);font-size:.55rem;color:var(--m);background:rgba(38,208,168,.06);border:1px solid rgba(38,208,168,.15);border-radius:6px;padding:3px 10px;font-weight:400">Live · обновляется каждые 90с</span>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
+
+    <!-- Карточка 1: Текущая цена ускорения -->
+    <div style="background:linear-gradient(145deg,rgba(247,147,26,.08),rgba(13,13,20,.95));border:1px solid rgba(247,147,26,.18);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:radial-gradient(circle,rgba(247,147,26,.12),transparent 70%);pointer-events:none"></div>
+      <div style="font-family:var(--mono);font-size:.55rem;color:var(--m);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Цена сейчас</div>
+      <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px">
+        <span style="font-size:1.8rem;font-weight:800;color:var(--a);font-family:var(--display)" id="ni-price-usd">—</span>
+        <span style="font-family:var(--mono);font-size:.62rem;color:var(--m2)">USD</span>
+      </div>
+      <div style="font-family:var(--mono);font-size:.6rem;color:var(--m2)" id="ni-price-tier">загрузка…</div>
+    </div>
+
+    <!-- Карточка 2: Fee rate -->
+    <div style="background:linear-gradient(145deg,rgba(0,232,122,.06),rgba(13,13,20,.95));border:1px solid rgba(0,232,122,.15);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:radial-gradient(circle,rgba(0,232,122,.1),transparent 70%);pointer-events:none"></div>
+      <div style="font-family:var(--mono);font-size:.55rem;color:var(--m);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Fast fee</div>
+      <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px">
+        <span style="font-size:1.8rem;font-weight:800;color:var(--g);font-family:var(--display)" id="ni-fee-rate">—</span>
+        <span style="font-family:var(--mono);font-size:.62rem;color:var(--m2)">sat/vB</span>
+      </div>
+      <div style="font-family:var(--mono);font-size:.6rem;color:var(--m2)" id="ni-fee-label">загрузка…</div>
+    </div>
+
+    <!-- Карточка 3: Мемпул -->
+    <div style="background:linear-gradient(145deg,rgba(124,92,252,.07),rgba(13,13,20,.95));border:1px solid rgba(124,92,252,.18);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:radial-gradient(circle,rgba(124,92,252,.1),transparent 70%);pointer-events:none"></div>
+      <div style="font-family:var(--mono);font-size:.55rem;color:var(--m);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Мемпул</div>
+      <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px">
+        <span style="font-size:1.8rem;font-weight:800;color:var(--accent2);font-family:var(--display)" id="ni-mempool-mb">—</span>
+        <span style="font-family:var(--mono);font-size:.62rem;color:var(--m2)">МБ</span>
+      </div>
+      <div style="font-family:var(--mono);font-size:.6rem;color:var(--m2)" id="ni-mempool-txs">— транзакций</div>
+    </div>
+
+    <!-- Карточка 4: Рекомендация -->
+    <div style="background:linear-gradient(145deg,rgba(38,208,168,.07),rgba(13,13,20,.95));border:1px solid rgba(38,208,168,.18);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:radial-gradient(circle,rgba(38,208,168,.1),transparent 70%);pointer-events:none"></div>
+      <div style="font-family:var(--mono);font-size:.55rem;color:var(--m);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Smart совет</div>
+      <div style="font-size:.75rem;font-weight:700;color:var(--accent3);font-family:var(--display);margin-bottom:4px;line-height:1.3" id="ni-advice-title">Анализ…</div>
+      <div style="font-family:var(--mono);font-size:.58rem;color:var(--m2);line-height:1.5" id="ni-advice-text">Получаем данные сети</div>
+    </div>
+
+  </div>
+
+  <!-- Нижняя строка: когда лучший момент для ускорения -->
+  <div id="ni-best-time" style="margin-top:10px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+    <span style="font-family:var(--mono);font-size:.6rem;color:var(--m);letter-spacing:.5px">⏱ Оптимальное время:</span>
+    <span style="font-family:var(--mono);font-size:.65rem;color:var(--t)" id="ni-timing">Загрузка…</span>
+    <span style="margin-left:auto;font-family:var(--mono);font-size:.58rem;color:var(--m)" id="ni-updated">обновлено —</span>
+  </div>
+</div>
+
+<div style="margin-bottom:28px"><div class="sh">Почему нам доверяют</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-bottom:16px">
+    <div style="background:linear-gradient(160deg,rgba(13,13,20,.95),rgba(10,10,16,.95));border:1px solid rgba(255,255,255,.07);border-radius:var(--r2);padding:16px 18px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="width:32px;height:32px;background:rgba(0,232,122,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><div style="font-weight:700;font-size:.82rem;color:var(--t)">Без приватных ключей</div></div><div style="font-family:var(--mono);font-size:.65rem;color:var(--m2);line-height:1.7">Мы принимаем только TXID — публичный номер транзакции. Никаких паролей, seed-фраз или доступа к кошельку.</div></div>
+    <div style="background:linear-gradient(160deg,rgba(13,13,20,.95),rgba(10,10,16,.95));border:1px solid rgba(255,255,255,.07);border-radius:var(--r2);padding:16px 18px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="width:32px;height:32px;background:rgba(0,232,122,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div><div style="font-weight:700;font-size:.82rem;color:var(--t)">Возврат за 6 часов</div></div><div style="font-family:var(--mono);font-size:.65rem;color:var(--m2);line-height:1.7">Premium не сработал в течение 6 часов — возвращаем оплату. Рассматриваем в течение 24 часов, без бюрократии.</div></div>
+    <div style="background:linear-gradient(160deg,rgba(13,13,20,.95),rgba(10,10,16,.95));border:1px solid rgba(255,255,255,.07);border-radius:var(--r2);padding:16px 18px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="width:32px;height:32px;background:rgba(0,232,122,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div style="font-weight:700;font-size:.82rem;color:var(--t)">Данные реальные</div></div><div style="font-family:var(--mono);font-size:.65rem;color:var(--m2);line-height:1.7">Счётчик ускорений, статус сети и пулов — всё берётся напрямую из mempool.space и Firebase в реальном времени.</div></div>
+  </div>
+  <a href="https://t.me/TurboTXcoment" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:16px;padding:18px 20px; background:linear-gradient(110deg,rgba(0,136,204,.08),rgba(0,136,204,.03)); border:1px solid rgba(0,136,204,.2);border-radius:var(--r2); text-decoration:none;transition:all .2s" onmouseover="this.style.borderColor='rgba(0,136,204,.5)';this.style.background='linear-gradient(110deg,rgba(0,136,204,.12),rgba(0,136,204,.05))'" onmouseout="this.style.borderColor='rgba(0,136,204,.2)';this.style.background='linear-gradient(110deg,rgba(0,136,204,.08),rgba(0,136,204,.03))'"><div style="width:44px;height:44px;background:rgba(0,136,204,.15);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0088cc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2.5L2 10.5l7 1.5 2 6 3-3 4 3 3.5-15.5z"/><line x1="9" y1="12" x2="14.5" y2="7.5"/></svg></div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.9rem;color:var(--t);margin-bottom:4px">Отзывы пользователей — @TurboTXcoment</div><div style="font-family:var(--mono);font-size:.67rem;color:var(--m2);line-height:1.6">Канал с реальными отзывами тех, кто использовал TurboTX. Только настоящий опыт — хороший и плохой.</div></div><div style="font-family:var(--mono);font-size:.65rem;color:#0088cc;white-space:nowrap;flex-shrink:0">Читать →</div></a>
+</div>
+
+
+
+
 
 <script>
 async function runAdvisor() {
@@ -1384,348 +1749,43 @@ function renderAdvisor(d, out) {
 }
 </script>
 
-<!-- ACCELERATE FORM -->
-<div class="card" id="accelerate">
-  <div class="card-title"><span style="display:inline-flex;align-items:center;gap:8px"><span style="display:inline-block;position:relative;width:22px;height:24px;vertical-align:middle;flex-shrink:0"><svg id="bolt2-svg" width="22" height="24" viewBox="0 0 32 36" fill="none" xmlns="http://www.w3.org/2000/svg" style="overflow:visible">
-        <style>
-          #bolt2-main {
-            animation: bolt2Strike 2.8s ease-in-out infinite;
-            transform-origin: 16px 4px;
-          }
-          @keyframes bolt2Strike {
-            0%   { opacity:0; transform: scaleY(0) scaleX(0.7); filter: drop-shadow(0 0 2px #f7931a); }
-            8%   { opacity:1; transform: scaleY(1) scaleX(1);   filter: drop-shadow(0 0 8px #fff) drop-shadow(0 0 18px #ffe066) drop-shadow(0 0 30px #f7931a); }
-            18%  { opacity:1; transform: scaleY(1) scaleX(1);   filter: drop-shadow(0 0 5px #fff) drop-shadow(0 0 12px #ffe066); }
-            38%  { opacity:.85; transform: scaleY(1) scaleX(1); filter: drop-shadow(0 0 3px #f7931a); }
-            55%  { opacity:0; transform: scaleY(1) scaleX(1); }
-            100% { opacity:0; transform: scaleY(0) scaleX(0.7); }
-          }
-          #bolt2-flash { animation: bolt2Flash 2.8s ease-in-out infinite; }
-          @keyframes bolt2Flash {
-            0%,6%  { opacity:0; r:0; }
-            9%     { opacity:0.9; r:8; }
-            18%    { opacity:0.5; r:11; }
-            32%    { opacity:0; r:14; }
-            100%   { opacity:0; r:0; }
-          }
-          #bolt2-spark-l { animation: bolt2SparkL 2.8s ease-in-out infinite; transform-origin: 12px 30px; }
-          @keyframes bolt2SparkL {
-            0%,7%  { opacity:0; transform: translate(0,0) rotate(0deg); }
-            10%    { opacity:1; transform: translate(-4px,-3px) rotate(-35deg); }
-            22%    { opacity:0; transform: translate(-9px,-1px) rotate(-50deg); }
-            100%   { opacity:0; transform: translate(0,0); }
-          }
-          #bolt2-spark-r { animation: bolt2SparkR 2.8s ease-in-out infinite; transform-origin: 20px 30px; }
-          @keyframes bolt2SparkR {
-            0%,7%  { opacity:0; transform: translate(0,0) rotate(0deg); }
-            10%    { opacity:1; transform: translate(4px,-4px) rotate(30deg); }
-            22%    { opacity:0; transform: translate(8px,-1px) rotate(48deg); }
-            100%   { opacity:0; transform: translate(0,0); }
-          }
-          #bolt2-spark-u { animation: bolt2SparkU 2.8s ease-in-out infinite; }
-          @keyframes bolt2SparkU {
-            0%,7%  { opacity:0; transform: translate(0,0); }
-            10%    { opacity:0.9; transform: translate(1px,-7px); }
-            20%    { opacity:0; transform: translate(2px,-12px); }
-            100%   { opacity:0; }
-          }
-          #bolt2-ground { animation: bolt2Ground 2.8s ease-in-out infinite; }
-          @keyframes bolt2Ground {
-            0%,6%  { opacity:0; stroke-width:1; }
-            9%     { opacity:1; stroke-width:3; filter: drop-shadow(0 0 4px #f7931a); }
-            25%    { opacity:0.4; stroke-width:1.5; }
-            40%    { opacity:0; }
-            100%   { opacity:0; }
-          }
-          #bolt2-shock { animation: bolt2Shock 2.8s ease-in-out infinite; transform-origin: 16px 31px; }
-          @keyframes bolt2Shock {
-            0%,7%  { opacity:0; transform: scale(0); }
-            11%    { opacity:0.7; transform: scale(0.4); }
-            30%    { opacity:0; transform: scale(1.2); }
-            100%   { opacity:0; transform: scale(0); }
-          }
-        </style>
-        <line x1="4" y1="31" x2="28" y2="31" stroke="#6b4f1a" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
-        <ellipse id="bolt2-shock" cx="16" cy="31" rx="9" ry="3" stroke="#f7931a" stroke-width="1.2" fill="none"/>
-        <line id="bolt2-ground" x1="10" y1="31" x2="22" y2="31" stroke="#ffe066" stroke-width="2" stroke-linecap="round"/>
-        <circle id="bolt2-flash" cx="16" cy="31" r="0" fill="#fff9"/>
-        <g id="bolt2-main">
-          <polygon points="19,3 10,18 15.5,18 13,33 22,16 16.5,16" fill="#f7931a"/>
-          <polygon points="19,3 10,18 15.5,18 13,33 22,16 16.5,16" fill="url(#bolt2Grad)" opacity="0.6"/>
-        </g>
-        <line id="bolt2-spark-l" x1="12" y1="30" x2="8"  y2="26" stroke="#ffe066" stroke-width="1.5" stroke-linecap="round"/>
-        <line id="bolt2-spark-r" x1="20" y1="30" x2="24" y2="25" stroke="#ffe066" stroke-width="1.5" stroke-linecap="round"/>
-        <line id="bolt2-spark-u" x1="16" y1="30" x2="17" y2="24" stroke="#fff"    stroke-width="1"   stroke-linecap="round"/>
-        <defs>
-          <linearGradient id="bolt2Grad" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stop-color="#fff" stop-opacity="0.9"/>
-            <stop offset="100%" stop-color="#f7931a" stop-opacity="0"/>
-          </linearGradient>
-        </defs>
-      </svg></span>Ускорить транзакцию</span></div>
-  <div class="card-sub">Вставьте TXID из кошелька — мы займёмся остальным</div>
 
-  <!-- FEE HEALTH METER (только фактические цифры, без оценочных фраз) -->
-  <div id="fee-meter" style="display:flex;align-items:center;gap:10px;padding:10px 14px;margin-bottom:14px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.05);border-radius:var(--r);font-family:var(--mono);font-size:.65rem;color:var(--m2)">
-    <span class="net-heart calm" id="fee-dot"><svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g class="h-flame"><path d="M9 19 Q7 15 9.5 11 Q10.5 15 12 11 Q13.5 15 14.5 11 Q17 15 15 19" fill="#ff6b00" opacity=".85"/><path d="M10.5 20 Q9 17 10.5 14 Q11.5 17 12 14 Q12.5 17 13.5 14 Q15 17 13.5 20" fill="#ffe066" opacity=".7"/></g><path class="h-body" d="M12 20.5C12 20.5 2.5 14 2.5 8C2.5 5.2 4.7 3 7.5 3C9.1 3 10.6 3.8 12 5.2C13.4 3.8 14.9 3 16.5 3C19.3 3 21.5 5.2 21.5 8C21.5 14 12 20.5 12 20.5Z"/><g class="h-ice" stroke="#cff0ff" stroke-width=".9" stroke-linecap="round" fill="none"><line x1="12" y1="5.5" x2="12" y2="8.5"/><line x1="10.4" y1="6.3" x2="13.6" y2="7.7"/><line x1="10.4" y1="7.7" x2="13.6" y2="6.3"/><line x1="7" y1="9.5" x2="7" y2="11.5"/><line x1="6" y1="10.1" x2="8" y2="10.9"/><line x1="17" y1="9.5" x2="17" y2="11.5"/><line x1="16" y1="10.1" x2="18" y2="10.9"/></g></svg></span>
-    <span id="fee-meter-text">Комиссия сети: <strong style="color:var(--a)">—</strong> sat/vB · очередь <strong style="color:var(--a)">—</strong> TX</span>
-  </div>
+<script>
+// ── Unified tab switcher ─────────────────────────────
+function uswitch(tab) {
+  ['acc','rbf','cpfp','status','adv'].forEach(t => {
+    document.getElementById('utab-' + t).classList.toggle('active', t === tab);
+    document.getElementById('upanel-' + t).classList.toggle('active', t === tab);
+  });
+  // sync: если переключились на ускорение — ничего особенного
+  // если переключились на RBF — синхронизируем TXID
+  const mainTxid = (document.getElementById('txid')||{}).value || '';
+  if (tab === 'rbf' && mainTxid && !document.getElementById('rbf-txid').value) {
+    document.getElementById('rbf-txid').value = mainTxid;
+    rbfOnInput();
+  }
+  if (tab === 'status' && mainTxid && !document.getElementById('stxid').value) {
+    document.getElementById('stxid').value = mainTxid;
+  }
+  if (tab === 'adv' && mainTxid && !document.getElementById('adv-txid').value) {
+    document.getElementById('adv-txid').value = mainTxid;
+  }
+  if (tab === 'cpfp' && mainTxid && !document.getElementById('cpfp-txid-input')?.value) {
+    const cpfpIn = document.getElementById('cpfp-txid-input') || document.getElementById('cpfp-stxid');
+    if (cpfpIn) cpfpIn.value = mainTxid;
+  }
+}
 
-  <!-- DUP WARNING -->
-  <div id="dup-warn" style="display:none;align-items:center;gap:8px;padding:10px 14px;margin-bottom:10px; background:rgba(255,209,102,.06);border:1px solid rgba(255,209,102,.2);border-radius:var(--r); font-family:var(--mono);font-size:.68rem;color:#ffd166;line-height:1.6"></div>
-
-  <!-- SMART DIAGNOSIS -->
-  <div id="smart-diag" style="display:none;margin-bottom:16px;padding:14px 16px;background:rgba(247,147,26,.05);border:1px solid rgba(247,147,26,.18);border-radius:var(--r);animation:fadeup .3s ease">
-    <div style="font-family:var(--mono);font-size:.6rem;letter-spacing:1.5px;color:var(--a);text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> Диагностика</div>
-    <div id="diag-content" style="font-family:var(--mono);font-size:.7rem;color:var(--m2);line-height:1.9"></div>
-  </div>
-
-  <div class="free-limit-bar" id="free-limit-bar">
-    <div style="width:100%">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px">
-        <div style="color:var(--a);display:flex;align-items:center"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x='3' y='11' width='18' height='11' rx='2'/><path d='M7 11V7a5 5 0 0 1 10 0v4'/></svg></div>
-        <div><div style="font-size:.78rem;color:var(--m);font-family:var(--mono)">Бесплатных ускорений сегодня осталось</div><div><span class="flb-count" id="free-left-num" style="opacity:.3;animation:skeletonPulse 1.6s ease-in-out infinite">—</span> <span style="font-family:var(--mono);font-size:.72rem;color:var(--m)">/ 100</span></div></div>
-      </div>
-      <div class="flb-bar-wrap"><div class="flb-bar-fill" id="free-bar-fill" style="width:0%"></div></div>
-    </div>
-    <div id="reset-timer-wrap" style="display:none;font-family:var(--mono);font-size:.72rem;color:var(--m);text-align:right;min-width:110px">Обновится через<br><span id="reset-countdown" style="color:var(--t);font-size:.82rem">—</span></div>
-  </div>
-  <div id="limit-reached-msg" style="display:none;background:rgba(255,68,102,.07);border:1px solid rgba(255,68,102,.3);border-radius:10px;padding:12px 16px;margin-bottom:16px;font-family:var(--mono);font-size:.78rem;color:#ff4466;line-height:1.6">× Дневной лимит 100 бесплатных ускорений исчерпан.<br><span style="color:var(--m)">Обновятся завтра. Используйте Premium для немедленного ускорения.</span></div>
-
-  <div class="fg">
-    <label>Transaction ID (TXID)</label>
-    <div id="single-mode"><input type="text" id="txid" placeholder="a1b2c3d4e5f6... (64 hex символа)" maxlength="64" oninput="onTxidDiag(this.value)"></div>
-    <div class="batch-area" id="batch-mode"><textarea class="batch-input" id="batch-txids" placeholder="Вставьте по одному TXID на строку&#10;a1b2c3...&#10;9f8e7d...&#10;4c5d6e..." oninput="onBatchInput()"></textarea><div class="batch-count" id="batch-count">0 транзакций</div></div>
-    <div class="batch-toggle" id="batch-toggle" onclick="toggleBatch()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> Пакетное ускорение (до 20 TX) <span style="margin-left:6px;font-family:var(--mono);font-size:.56rem;background:rgba(247,147,26,.15);border:1px solid rgba(247,147,26,.35);border-radius:4px;padding:1px 6px;color:var(--a);letter-spacing:.5px">PREMIUM</span></div>
-  </div>
-
-  <div class="fee-calc" id="fee-calc">
-    <div style="font-family:var(--mono);font-size:.6rem;color:var(--m);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">Анализ транзакции</div>
-    <div class="fee-row"><span class="fee-key">Комиссия</span><span class="fee-val" id="fc-fee">—</span></div>
-    <div class="fee-row"><span class="fee-key">Ставка</span><span class="fee-val" id="fc-rate">—</span></div>
-    <div class="fee-row"><span class="fee-key">Позиция в мемпуле</span><span class="fee-val" id="fc-pos">—</span></div>
-    <div class="fee-row"><span class="fee-key">Без ускорения</span><span class="fee-val" id="fc-eta">—</span></div>
-    <div class="fee-row"><span class="fee-key">С Premium</span><span class="fee-val good">10–20 мин ⚡</span></div>
-  </div>
-
-  <div class="fg">
-    <label>Режим ускорения</label>
-    <div class="plan-row">
-      <div class="plan-opt on" id="of" onclick="pick('free')"><div class="po-title" style="display:flex;align-items:center;gap:7px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><rect x="2.5" y="10.5" width="19" height="12" rx="3" fill="rgba(247,147,26,0.12)" stroke="#f7931a" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 10.5V7.5a5 5 0 0 1 9.9-1" stroke="#f7931a" stroke-width="1.6" stroke-linecap="round" fill="none"/><circle cx="12" cy="16" r="2" fill="#f7931a" opacity="0.85"/><rect x="11" y="16.8" width="2" height="3" rx="1" fill="#f7931a" opacity="0.7"/></svg> Бесплатный</div><div class="po-desc">Rebroadcast в 5 пулов</div><div class="po-price">$0 — бесплатно</div></div>
-      <div class="plan-opt" id="op" onclick="pick('premium')"><div class="po-title" style="display:flex;align-items:center;gap:7px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><defs><linearGradient id="cg15" x1="2" y1="5" x2="22" y2="19" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFE566"/><stop offset="45%" stop-color="#F7931A"/><stop offset="100%" stop-color="#FF6B00"/></linearGradient></defs><path d="M3 19h18" stroke="url(#cg15)" stroke-width="2" stroke-linecap="round"/><path d="M3 19L4.5 9.5L9 14L12 6L15 14L19.5 9.5L21 19z" fill="url(#cg15)" stroke="url(#cg15)" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="12" cy="6" r="1.4" fill="#FFE566"/><circle cx="4.5" cy="9.5" r="1.1" fill="#FFE566"/><circle cx="19.5" cy="9.5" r="1.1" fill="#FFE566"/></svg> Premium</div><div class="po-desc">22 пула + приоритет</div><div class="po-price" style="color:var(--a);font-weight:700">от <span id="plan-opt-price">…</span></div></div>
-    </div>
-  </div>
-
-  <button class="acc-btn" id="abtn" onclick="go()"><span style="display:inline-flex;align-items:center;gap:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>УСКОРИТЬ ТРАНЗАКЦИЮ</span></button>
-
-  <div class="prog-wrap" id="pw"><div class="prog-bar"><div class="prog-fill" id="pf"></div></div><div class="steps-list" id="sl"></div></div>
-  <div class="res-box" id="rb"></div>
-
-  <!-- ИСТОРИЯ УСКОРЕНИЙ -->
-  <div id="history-block" style="display:none;margin-top:16px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div style="font-family:var(--mono);font-size:.58rem;letter-spacing:2px;color:var(--m);text-transform:uppercase;display:flex;align-items:center;gap:6px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Ваши ускорения</div><button onclick="localStorage.removeItem('tx_history');renderHistory()" style="font-family:var(--mono);font-size:.58rem;color:var(--m);background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:4px" onmouseover="this.style.color='var(--err)'" onmouseout="this.style.color='var(--m)'">очистить</button></div>
-    <div id="history-list" style="display:flex;flex-direction:column;gap:4px"></div>
-  </div>
-
-  <!-- LIVE FEED -->
-  <div class="live-feed" id="live-feed-wrap" style="margin-top:20px">
-    <div class="feed-tabs">
-      <button class="feed-tab active" id="tab-confirmed" onclick="switchFeedTab('confirmed')"><div class="live-feed-dot"></div> Последние ускорения <span class="feed-tab-cnt" id="confirmed-count">0</span></button>
-      <button class="feed-tab" id="tab-pending" onclick="switchFeedTab('pending')"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Ожидают ускорения <span class="feed-tab-cnt" id="queue-count">0</span></button>
-    </div>
-    <div class="feed-panel active" id="panel-confirmed"><div class="feed-items" id="feed-items"></div></div>
-    <div class="feed-panel" id="panel-pending"><div id="queue-list" style="display:flex;flex-direction:column;padding:4px 0"></div></div>
-  </div>
-
-  <div class="push-prompt" id="push-prompt"><span style="color:var(--m2)">Получить уведомление когда транзакция подтвердится?</span><button class="push-btn" onclick="requestPush()">Включить уведомления</button></div>
-</div>
-
-<!-- PLANS -->
-<div style="margin-bottom:28px"><div class="sh">Выберите план</div><div class="plans">
-  <div class="plan-card"><div class="ptag tf" style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><rect x="2.5" y="10.5" width="19" height="12" rx="3" fill="rgba(247,147,26,0.12)" stroke="#f7931a" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 10.5V7.5a5 5 0 0 1 9.9-1" stroke="#f7931a" stroke-width="1.6" stroke-linecap="round" fill="none"/><circle cx="12" cy="16" r="2" fill="#f7931a" opacity="0.85"/><rect x="11" y="16.8" width="2" height="3" rx="1" fill="#f7931a" opacity="0.7"/></svg>FREE</div><div class="plan-price">$0 <em>/ бесплатно</em></div><div class="plan-desc">Серверный broadcast через 3 CORS-узла. Реальные ответы от каждого канала. Однократный broadcast.</div><ul class="fl"><li><span class="fi ok">✓</span>blockstream.info — Esplora (CORS ✓, реальный ответ)</li><li><span class="fi ok">✓</span>Blockchair broadcast (CORS ✓, реальный ответ)</li><li><span class="fi ok">✓</span>BlockCypher broadcast (CORS ✓)</li><li><span class="fi ok">✓</span>Серверный API — без CORS-ограничений</li><li><span class="fi ok">✓</span>Однократный rebroadcast (без волн)</li><li><span class="fi ok">✓</span>Трекер подтверждений онлайн</li><li><span class="fi na">—</span><span style="color:var(--m)">Пул-акселераторы — только Premium</span></li><li><span class="fi na">—</span><span style="color:var(--m)">8 волн повтора (только Premium)</span></li></ul><button class="pbtn pbf" onclick="pick('free');document.getElementById('txid').focus()"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><rect x="2.5" y="10.5" width="19" height="12" rx="3" fill="rgba(247,147,26,0.12)" stroke="#f7931a" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 10.5V7.5a5 5 0 0 1 9.9-1" stroke="#f7931a" stroke-width="1.6" stroke-linecap="round" fill="none"/><circle cx="12" cy="16" r="2" fill="#f7931a" opacity="0.85"/><rect x="11" y="16.8" width="2" height="3" rx="1" fill="#f7931a" opacity="0.7"/></svg>Начать бесплатно</span></button></div>
-  <div class="plan-card prem"><div class="ptag tp" style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><defs><linearGradient id="cgbadge" x1="2" y1="5" x2="22" y2="19" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFE566"/><stop offset="45%" stop-color="#F7931A"/><stop offset="100%" stop-color="#FF6B00"/></linearGradient></defs><path d="M3 19h18" stroke="url(#cgbadge)" stroke-width="2" stroke-linecap="round"/><path d="M3 19L4.5 9.5L9 14L12 6L15 14L19.5 9.5L21 19z" fill="url(#cgbadge)" stroke="url(#cgbadge)" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="12" cy="6" r="1.4" fill="#FFE566"/><circle cx="4.5" cy="9.5" r="1.1" fill="#FFE566"/><circle cx="19.5" cy="9.5" r="1.1" fill="#FFE566"/></svg>PREMIUM</div><div class="plan-price"><span style="color:var(--a)" id="plan-price-usd">$4</span> <em>/ разово</em> <span id="plan-price-tag" style="display:inline-flex;align-items:center;gap:4px;font-size:.57rem;font-family:var(--mono);padding:2px 8px;border-radius:4px;background:rgba(247,147,26,.12);color:var(--a);vertical-align:middle;margin-left:4px"><span class="net-heart calm sm" id="price-tag-dot"><svg width="12" height="12" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g class="h-flame"><path d="M9 19 Q7 15 9.5 11 Q10.5 15 12 11 Q13.5 15 14.5 11 Q17 15 15 19" fill="#ff6b00" opacity=".85"/></g><path class="h-body" d="M12 20.5C12 20.5 2.5 14 2.5 8C2.5 5.2 4.7 3 7.5 3C9.1 3 10.6 3.8 12 5.2C13.4 3.8 14.9 3 16.5 3C19.3 3 21.5 5.2 21.5 8C21.5 14 12 20.5 12 20.5Z"/><g class="h-ice" stroke="#cff0ff" stroke-width="1" stroke-linecap="round" fill="none"><line x1="12" y1="5.5" x2="12" y2="8.5"/><line x1="10.4" y1="6.3" x2="13.6" y2="7.7"/><line x1="10.4" y1="7.7" x2="13.6" y2="6.3"/></g></svg></span><span id="price-tag-text">сеть</span></span></div><div id="plan-conf-time" style="font-family:var(--mono);font-size:.62rem;color:var(--g);margin-top:2px;margin-bottom:4px">Premium ≈ 10–20 мин ⚡</div><div class="plan-desc">30 каналов: 8 hex-узлов + 22 пула (~88% хешрейта). Реальные ответы от Foundry, AntPool, MARA. 8 волн до 4 часов.</div><ul class="fl"><li><span class="fi ok">✓</span><strong>8 hex-broadcast узлов</strong> — blockstream · Blockchair · BlockCypher · btcscan · mempool</li><li><span class="fi ok">✓</span><strong>22 пул-акселератора</strong> — Foundry ⭐ · AntPool · MARA ⭐ · ViaBTC · SpiderPool ★ · Luxor ★ · CloverPool · BitFuFu ★</li><li><span class="fi ok">✓</span><strong>~88% хешрейта</strong> Bitcoin охвачено · Last-Block-Miner boost</li><li><span class="fi ok">✓</span><strong>8 волн</strong>: адаптивный интервал · Anti-Stuck режим при зависании >48ч</li><li><span class="fi ok">✓</span>Цена $3–18 — дешевле когда сеть спокойна</li><li><span class="fi ok">✓</span>Пакет до 20 TX · Smart Advisor · Возврат за 6 ч если не помогло</li></ul><button class="pbtn pbp" onclick="openM()"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><defs><linearGradient id="cg16" x1="2" y1="5" x2="22" y2="19" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFE566"/><stop offset="45%" stop-color="#F7931A"/><stop offset="100%" stop-color="#FF6B00"/></linearGradient></defs><path d="M3 19h18" stroke="url(#cg16)" stroke-width="2" stroke-linecap="round"/><path d="M3 19L4.5 9.5L9 14L12 6L15 14L19.5 9.5L21 19z" fill="url(#cg16)" stroke="url(#cg16)" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="12" cy="6" r="1.4" fill="#FFE566"/><circle cx="4.5" cy="9.5" r="1.1" fill="#FFE566"/><circle cx="19.5" cy="9.5" r="1.1" fill="#FFE566"/></svg>Купить Premium — <span id="plan-btn-price">$4</span></span></button></div>
-</div></div>
-
-<!-- TRUST & REVIEWS -->
-<!-- NETWORK INTELLIGENCE v13 — новый блок -->
-<div style="margin-bottom:28px">
-  <div class="sh" style="display:flex;align-items:center;gap:10px;justify-content:space-between">
-    <span style="display:flex;align-items:center;gap:8px">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent3)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-      Network Intelligence
-    </span>
-    <span style="font-family:var(--mono);font-size:.55rem;color:var(--m);background:rgba(38,208,168,.06);border:1px solid rgba(38,208,168,.15);border-radius:6px;padding:3px 10px;font-weight:400">Live · обновляется каждые 90с</span>
-  </div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px">
-
-    <!-- Карточка 1: Текущая цена ускорения -->
-    <div style="background:linear-gradient(145deg,rgba(247,147,26,.08),rgba(13,13,20,.95));border:1px solid rgba(247,147,26,.18);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden">
-      <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:radial-gradient(circle,rgba(247,147,26,.12),transparent 70%);pointer-events:none"></div>
-      <div style="font-family:var(--mono);font-size:.55rem;color:var(--m);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Цена сейчас</div>
-      <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px">
-        <span style="font-size:1.8rem;font-weight:800;color:var(--a);font-family:var(--display)" id="ni-price-usd">—</span>
-        <span style="font-family:var(--mono);font-size:.62rem;color:var(--m2)">USD</span>
-      </div>
-      <div style="font-family:var(--mono);font-size:.6rem;color:var(--m2)" id="ni-price-tier">загрузка…</div>
-    </div>
-
-    <!-- Карточка 2: Fee rate -->
-    <div style="background:linear-gradient(145deg,rgba(0,232,122,.06),rgba(13,13,20,.95));border:1px solid rgba(0,232,122,.15);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden">
-      <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:radial-gradient(circle,rgba(0,232,122,.1),transparent 70%);pointer-events:none"></div>
-      <div style="font-family:var(--mono);font-size:.55rem;color:var(--m);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Fast fee</div>
-      <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px">
-        <span style="font-size:1.8rem;font-weight:800;color:var(--g);font-family:var(--display)" id="ni-fee-rate">—</span>
-        <span style="font-family:var(--mono);font-size:.62rem;color:var(--m2)">sat/vB</span>
-      </div>
-      <div style="font-family:var(--mono);font-size:.6rem;color:var(--m2)" id="ni-fee-label">загрузка…</div>
-    </div>
-
-    <!-- Карточка 3: Мемпул -->
-    <div style="background:linear-gradient(145deg,rgba(124,92,252,.07),rgba(13,13,20,.95));border:1px solid rgba(124,92,252,.18);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden">
-      <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:radial-gradient(circle,rgba(124,92,252,.1),transparent 70%);pointer-events:none"></div>
-      <div style="font-family:var(--mono);font-size:.55rem;color:var(--m);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Мемпул</div>
-      <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px">
-        <span style="font-size:1.8rem;font-weight:800;color:var(--accent2);font-family:var(--display)" id="ni-mempool-mb">—</span>
-        <span style="font-family:var(--mono);font-size:.62rem;color:var(--m2)">МБ</span>
-      </div>
-      <div style="font-family:var(--mono);font-size:.6rem;color:var(--m2)" id="ni-mempool-txs">— транзакций</div>
-    </div>
-
-    <!-- Карточка 4: Рекомендация -->
-    <div style="background:linear-gradient(145deg,rgba(38,208,168,.07),rgba(13,13,20,.95));border:1px solid rgba(38,208,168,.18);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden">
-      <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:radial-gradient(circle,rgba(38,208,168,.1),transparent 70%);pointer-events:none"></div>
-      <div style="font-family:var(--mono);font-size:.55rem;color:var(--m);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Smart совет</div>
-      <div style="font-size:.75rem;font-weight:700;color:var(--accent3);font-family:var(--display);margin-bottom:4px;line-height:1.3" id="ni-advice-title">Анализ…</div>
-      <div style="font-family:var(--mono);font-size:.58rem;color:var(--m2);line-height:1.5" id="ni-advice-text">Получаем данные сети</div>
-    </div>
-
-  </div>
-
-  <!-- Нижняя строка: когда лучший момент для ускорения -->
-  <div id="ni-best-time" style="margin-top:10px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-    <span style="font-family:var(--mono);font-size:.6rem;color:var(--m);letter-spacing:.5px">⏱ Оптимальное время:</span>
-    <span style="font-family:var(--mono);font-size:.65rem;color:var(--t)" id="ni-timing">Загрузка…</span>
-    <span style="margin-left:auto;font-family:var(--mono);font-size:.58rem;color:var(--m)" id="ni-updated">обновлено —</span>
-  </div>
-</div>
-
-<div style="margin-bottom:28px"><div class="sh">Почему нам доверяют</div>
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-bottom:16px">
-    <div style="background:linear-gradient(160deg,rgba(13,13,20,.95),rgba(10,10,16,.95));border:1px solid rgba(255,255,255,.07);border-radius:var(--r2);padding:16px 18px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="width:32px;height:32px;background:rgba(0,232,122,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><div style="font-weight:700;font-size:.82rem;color:var(--t)">Без приватных ключей</div></div><div style="font-family:var(--mono);font-size:.65rem;color:var(--m2);line-height:1.7">Мы принимаем только TXID — публичный номер транзакции. Никаких паролей, seed-фраз или доступа к кошельку.</div></div>
-    <div style="background:linear-gradient(160deg,rgba(13,13,20,.95),rgba(10,10,16,.95));border:1px solid rgba(255,255,255,.07);border-radius:var(--r2);padding:16px 18px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="width:32px;height:32px;background:rgba(0,232,122,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div><div style="font-weight:700;font-size:.82rem;color:var(--t)">Возврат за 6 часов</div></div><div style="font-family:var(--mono);font-size:.65rem;color:var(--m2);line-height:1.7">Premium не сработал в течение 6 часов — возвращаем оплату. Рассматриваем в течение 24 часов, без бюрократии.</div></div>
-    <div style="background:linear-gradient(160deg,rgba(13,13,20,.95),rgba(10,10,16,.95));border:1px solid rgba(255,255,255,.07);border-radius:var(--r2);padding:16px 18px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="width:32px;height:32px;background:rgba(0,232,122,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div style="font-weight:700;font-size:.82rem;color:var(--t)">Данные реальные</div></div><div style="font-family:var(--mono);font-size:.65rem;color:var(--m2);line-height:1.7">Счётчик ускорений, статус сети и пулов — всё берётся напрямую из mempool.space и Firebase в реальном времени.</div></div>
-  </div>
-  <a href="https://t.me/TurboTXcoment" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:16px;padding:18px 20px; background:linear-gradient(110deg,rgba(0,136,204,.08),rgba(0,136,204,.03)); border:1px solid rgba(0,136,204,.2);border-radius:var(--r2); text-decoration:none;transition:all .2s" onmouseover="this.style.borderColor='rgba(0,136,204,.5)';this.style.background='linear-gradient(110deg,rgba(0,136,204,.12),rgba(0,136,204,.05))'" onmouseout="this.style.borderColor='rgba(0,136,204,.2)';this.style.background='linear-gradient(110deg,rgba(0,136,204,.08),rgba(0,136,204,.03))'"><div style="width:44px;height:44px;background:rgba(0,136,204,.15);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0088cc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2.5L2 10.5l7 1.5 2 6 3-3 4 3 3.5-15.5z"/><line x1="9" y1="12" x2="14.5" y2="7.5"/></svg></div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.9rem;color:var(--t);margin-bottom:4px">Отзывы пользователей — @TurboTXcoment</div><div style="font-family:var(--mono);font-size:.67rem;color:var(--m2);line-height:1.6">Канал с реальными отзывами тех, кто использовал TurboTX. Только настоящий опыт — хороший и плохой.</div></div><div style="font-family:var(--mono);font-size:.65rem;color:#0088cc;white-space:nowrap;flex-shrink:0">Читать →</div></a>
-</div>
-
-<!-- STATUS + TOOLS -->
-<div class="sh" style="margin-top:8px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg> Инструменты</div>
-<div class="card" id="status"><div class="card-title"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>Проверить статус TX</span></div><div class="card-sub">Проверка подтверждений в реальном времени через mempool.space</div><div class="fg"><label>TXID</label><input type="text" id="stxid" placeholder="64 hex символа..." maxlength="64"></div><button class="chk-btn" onclick="chk()"><span style="display:inline-flex;align-items:center;gap:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>ПРОВЕРИТЬ СТАТУС</span></button><div class="status-res" id="sr"></div></div>
-
-<!-- CPFP CALCULATOR -->
-<div class="card" id="cpfp"><div class="card-title"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> CPFP Калькулятор</span></div><div class="card-sub">Child-Pays-for-Parent — разгони застрявшую транзакцию дочерней TX без Premium</div><div class="fg"><label>TXID застрявшей (родительской) транзакции</label><input type="text" id="cpfp-parent" placeholder="64 hex символа..." maxlength="64" oninput="onCpfpInput()"></div><div class="fg" id="cpfp-target-wrap" style="display:none"><label>Целевая скорость подтверждения <span id="cpfp-fee-label" style="color:var(--a)">— sat/vB</span></label><div class="range-wrap"><input type="range" id="cpfp-speed" min="1" max="3" value="2" step="1" oninput="calcCpfp()" style="--pct:50%"><div class="range-labels"><span>Медленно (~1ч)</span><span>Стандарт (~30м)</span><span>Быстро (~15м)</span></div></div></div><button class="chk-btn" id="cpfp-btn" onclick="calcCpfp()" style="margin-top:4px"><span style="display:inline-flex;align-items:center;gap:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> РАССЧИТАТЬ CPFP</span></button><div class="cpfp-result" id="cpfp-result">
-    <div style="font-family:var(--mono);font-size:.6rem;color:var(--m);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px">Результат CPFP расчёта</div>
-    <div class="cpfp-row"><span class="cpfp-key">Размер родит. TX</span><span class="cpfp-val" id="cpfp-parent-size">—</span></div>
-    <div class="cpfp-row"><span class="cpfp-key">Комиссия родит. TX</span><span class="cpfp-val" id="cpfp-parent-fee">—</span></div>
-    <div class="cpfp-row"><span class="cpfp-key">Ставка родит. TX</span><span class="cpfp-val warn" id="cpfp-parent-rate">—</span></div>
-    <div class="cpfp-row"><span class="cpfp-key">Целевая ставка пакета</span><span class="cpfp-val" id="cpfp-target-rate">—</span></div>
-    <div class="cpfp-row"><span class="cpfp-key">Мин. комиссия дочерней TX</span><span class="cpfp-val" id="cpfp-child-fee">—</span></div>
-    <div class="cpfp-row" style="background:rgba(0,232,122,.04);border-radius:6px;padding:8px 6px;margin-top:4px">
-      <span class="cpfp-key" style="font-weight:700;color:var(--t)">Итого к оплате за дочернюю TX</span>
-      <span class="cpfp-val" style="font-size:.82rem" id="cpfp-final">—</span>
-    </div>
-    <div style="background:rgba(247,147,26,.06);border:1px solid rgba(247,147,26,.18);border-radius:var(--r);padding:12px;margin-top:12px;font-family:var(--mono);font-size:.68rem;color:var(--m2);line-height:1.7" id="cpfp-instruction">
-      Создайте новую транзакцию использующую неподтверждённый UTXO из застрявшей TX.<br>
-      Установите комиссию <strong style="color:var(--a)" id="cpfp-fee-btc">—</strong> сатошей.<br>
-      Майнеры примут обе транзакции как пакет.
-    </div>
-    <button class="cpfp-copy" onclick="copyCpfpInfo()">
-      <span style="display:inline-flex;align-items:center;gap:8px;justify-content:center">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        Скопировать параметры CPFP
-      </span>
-    </button>
-  </div>
-
-<!-- RBF CALCULATOR -->
-<section id="rbf" style="margin-bottom:28px">
-<div class="card">
-  <div class="card-title"><span style="display:inline-flex;align-items:center;gap:8px">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><path d="M3 12h18M3 6l9-3 9 3M3 18l9 3 9-3"/></svg>
-    RBF Калькулятор
-  </span></div>
-  <div class="card-sub">Replace-By-Fee — замени комиссию застрявшей транзакции прямо в кошельке</div>
-
-  <div class="fg" style="margin-top:20px">
-    <label>TXID транзакции для замены комиссии</label>
-    <input type="text" id="rbf-txid" placeholder="a1b2c3d4... (64 hex символа)" maxlength="64"
-      oninput="rbfOnInput()" style="width:100%;box-sizing:border-box">
-  </div>
-
-  <div id="rbf-status-block" style="display:none;margin:14px 0 0">
-    <div id="rbf-support-badge" style="display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:8px;font-family:var(--mono);font-size:.72rem;font-weight:700;margin-bottom:14px"></div>
-  </div>
-
-  <div id="rbf-target-wrap" style="display:none;margin-top:18px">
-    <label style="font-size:.65rem;letter-spacing:2px;color:var(--m);text-transform:uppercase;font-family:var(--mono);display:block;margin-bottom:10px">Целевая скорость</label>
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">
-      <div class="popt on" id="rbf-spd-eco" onclick="rbfPickSpeed(this,'eco')">
-        <div style="font-size:.65rem;color:var(--m);font-family:var(--mono)">Эконом</div>
-        <div style="font-weight:700;color:var(--t)" id="rbf-fee-eco">— sat/vB</div>
-        <div style="font-size:.6rem;color:var(--m)">~1 час</div>
-      </div>
-      <div class="popt" id="rbf-spd-std" onclick="rbfPickSpeed(this,'std')">
-        <div style="font-size:.65rem;color:var(--m);font-family:var(--mono)">Стандарт</div>
-        <div style="font-weight:700;color:var(--t)" id="rbf-fee-std">— sat/vB</div>
-        <div style="font-size:.6rem;color:var(--m)">~30 мин</div>
-      </div>
-      <div class="popt" id="rbf-spd-fast" onclick="rbfPickSpeed(this,'fast')">
-        <div style="font-size:.65rem;color:var(--m);font-family:var(--mono)">Быстро</div>
-        <div style="font-weight:700;color:var(--t)" id="rbf-fee-fast">— sat/vB</div>
-        <div style="font-size:.6rem;color:var(--m)">~10 мин</div>
-      </div>
-    </div>
-  </div>
-
-  <div id="rbf-live-fees" style="display:none;margin-bottom:12px;padding:8px 12px;background:rgba(0,232,122,.04);border:1px solid rgba(0,232,122,.12);border-radius:8px;font-family:var(--mono);font-size:.65rem;color:var(--m2);align-items:center;gap:6px;line-height:1.6"></div>
-
-  <button class="acc-btn" id="rbf-btn" onclick="calcRbf()" style="margin-top:4px" disabled>
-    <span style="display:inline-flex;align-items:center;gap:10px">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h18M3 6l9-3 9 3M3 18l9 3 9-3"/></svg>
-      РАССЧИТАТЬ RBF + АВТО-КОМИССИЯ
-    </span>
-  </button>
-
-  <div id="rbf-result" style="display:none;margin-top:22px">
-    <div id="rbf-result-header" style="margin-bottom:16px"></div>
-    <div id="rbf-metrics" style="margin-bottom:18px"></div>
-    <div id="rbf-wallets" style="margin-top:20px"></div>
-    <div id="rbf-no-support-msg" style="display:none;background:rgba(255,147,0,.06);border:1px solid rgba(255,147,0,.25);border-radius:10px;padding:14px 16px;margin-top:16px">
-      <div style="font-family:var(--mono);font-size:.75rem;font-weight:700;color:#ff9320;margin-bottom:8px">⚠ Транзакция не поддерживает RBF</div>
-      <div style="font-family:var(--mono);font-size:.7rem;color:var(--m);line-height:1.7">
-        Эта транзакция была отправлена без флага RBF (все inputs имеют sequence = 0xFFFFFFFF).<br>
-        <strong style="color:var(--t)">Что можно сделать:</strong><br>
-        → Используйте <a href="javascript:void(0)" onclick="document.getElementById('cpfp').scrollIntoView({behavior:'smooth'})" style="color:var(--a)">CPFP калькулятор</a> — создайте дочернюю TX с высокой комиссией<br>
-        → Используйте <a href="javascript:void(0)" onclick="document.getElementById('accelerate').scrollIntoView({behavior:'smooth'})" style="color:var(--a)">Rebroadcast ускоритель</a> — отправим в 30 каналов<br>
-        → Подождите — транзакция может подтвердиться при снижении нагрузки на сеть
-      </div>
-    </div>
-  </div>
-
-  <details style="margin-top:22px">
-    <summary style="font-family:var(--mono);font-size:.7rem;color:var(--m);cursor:pointer;user-select:none;padding:8px 0;list-style:none;display:flex;align-items:center;gap:6px">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      Что такое RBF и когда использовать?
-    </summary>
-    <div style="font-family:var(--mono);font-size:.7rem;color:var(--m);line-height:1.8;padding:12px 0 4px;border-top:1px solid var(--b);margin-top:8px">
-      <strong style="color:var(--t)">RBF (Replace-By-Fee)</strong> — стандарт BIP-125, позволяющий заменить неподтверждённую транзакцию на новую с более высокой комиссией. Майнеры предпочтут более выгодную версию.<br><br>
-      <strong style="color:var(--t)">Когда RBF лучше CPFP:</strong> если вы сами отправитель и хотите полностью заменить TX.<br><br>
-      <strong style="color:var(--t)">Когда RBF не работает:</strong> если транзакция отправлена без флага RBF — тогда используйте CPFP или наш rebroadcast ускоритель.<br><br>
-      <strong style="color:var(--t)">Важно:</strong> RBF требует подписи приватным ключом — делается только в вашем кошельке, мы лишь рассчитываем параметры.
-    </div>
-  </details>
-</div>
-</section>
+// ── Переключение из других мест (например из Smart Advisor "открыть ускорение") ──
+function openTab(tab) {
+  uswitch(tab);
+  const bar = document.getElementById('utab-bar');
+  if (bar) {
+    const y = bar.getBoundingClientRect().top + window.scrollY - 70;
+    window.scrollTo({top: Math.max(0, y), behavior: 'smooth'});
+  }
+}
+</script>
 
 <!-- HOW IT REALLY WORKS -->
 <div style="background:linear-gradient(135deg,rgba(247,147,26,.06) 0%,rgba(124,92,252,.06) 100%);border:1px solid rgba(247,147,26,.2);border-radius:14px;padding:18px 22px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
@@ -1761,7 +1821,7 @@ function renderAdvisor(d, out) {
         Pool accelerator API · 22 пула
       </div>
       <div style="font-family:var(--mono);font-size:.65rem;color:var(--m2);line-height:1.65">
-        ViaBTC, AntPool, MARA, F2Pool, Luxor и другие имеют <strong style="color:var(--t)">отдельную очередь ускорения</strong>. TX оттуда майнится вне зависимости от fee rate — пул добывает её в приоритете. Foundry+AntPool+MARA+ViaBTC+SpiderPool = уже 71% хешрейта. v12 добавил MARA Slipstream, EMCDPool, SBI Crypto, 2Miners — итого <strong style="color:var(--t)">~88% хешрейта</strong>.
+        ViaBTC, AntPool, MARA, F2Pool, Luxor и другие имеют <strong style="color:var(--t)">отдельную очередь ускорения</strong>. TX оттуда майнится вне зависимости от fee rate — пул добывает её в приоритете. Foundry+AntPool+MARA+ViaBTC+SpiderPool = 71% хешрейта. v13 включает MARA Slipstream, EMCDPool, SBI Crypto, 2Miners, Rawpool — итого <strong style="color:var(--t)">~88% хешрейта</strong>.
       </div>
     </div>
     <div style="background:rgba(0,0,0,.25);border:1px solid rgba(247,147,26,.12);border-radius:10px;padding:14px 16px">
@@ -1775,7 +1835,7 @@ function renderAdvisor(d, out) {
     </div>
   </div>
   <div style="margin-top:12px;font-family:var(--mono);font-size:.6rem;color:rgba(247,147,26,.5);border-top:1px solid var(--b);padding-top:10px">
-    ⚡ v12 новинки: MARA Slipstream (приватный мемпул), Last-Block-Miner boost (кто добыл последний блок — идёт первым), Anti-Stuck (TX >72ч — агрессивный режим), Smart Advisor (GET /api/acceleration).
+    ⚡ v13 новинки: MARA Slipstream (приватный мемпул), Last-Block-Miner boost (кто добыл последний блок — идёт первым), Anti-Stuck (TX >72ч — агрессивный режим), Smart Advisor (GET /api/acceleration).
   </div>
 </div>
 
@@ -1820,15 +1880,15 @@ function renderAdvisor(d, out) {
 <section class="faq-section" style="background:var(--s);border:1px solid var(--b);border-radius:20px;padding:36px;margin-bottom:40px">
   <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:20px;display:flex;align-items:center;gap:12px">Часто задаваемые вопросы <span style="flex:1;height:1px;background:var(--b);display:block"></span></h2>
   <div style="display:flex;flex-direction:column;gap:0">
-    <details style="border-bottom:1px solid var(--b);padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Как ускорить застрявшую Bitcoin транзакцию? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">Скопируйте <strong style="color:var(--t)">TXID (Transaction ID)</strong> вашей транзакции из кошелька — это строка из 64 символов. Вставьте его в форму выше и нажмите «Ускорить транзакцию». TurboTX v12 мгновенно отправит транзакцию в 30 каналов (MARA Slipstream, Foundry, AntPool, ViaBTC, SpiderPool и другие — ~88% хешрейта Bitcoin), которые включат её в следующий блок. Бесплатное ускорение занимает <strong style="color:var(--t)">1–3 часа</strong>, Premium — <strong style="color:var(--t)">10–20 минут</strong> с авто-повтором каждые 15 мин.</p></details>
+    <details style="border-bottom:1px solid var(--b);padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Как ускорить застрявшую Bitcoin транзакцию? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">Скопируйте <strong style="color:var(--t)">TXID (Transaction ID)</strong> вашей транзакции из кошелька — это строка из 64 символов. Вставьте его в форму выше и нажмите «Ускорить транзакцию». TurboTX v13 мгновенно отправит транзакцию в 30 каналов (MARA Slipstream, Foundry, AntPool, ViaBTC, SpiderPool и другие — ~88% хешрейта Bitcoin), которые включат её в следующий блок. Бесплатное ускорение занимает <strong style="color:var(--t)">1–3 часа</strong>, Premium — <strong style="color:var(--t)">10–20 минут</strong> с авто-повтором каждые 15 мин.</p></details>
     <details style="border-bottom:1px solid var(--b);padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Почему Bitcoin транзакция не подтверждается? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">Транзакция зависает в <strong style="color:var(--t)">mempool</strong> (очередь транзакций), когда сеть перегружена или комиссия (fee) была установлена слишком низкой. В 2026 году дополнительную нагрузку создают <strong style="color:var(--t)">Ordinals, BRC-20 токены и Runes</strong> — они конкурируют с обычными переводами за место в блоке. Майнеры выбирают транзакции с наибольшей комиссией в первую очередь — транзакции с низкой fee могут ждать часами и даже сутками. Акселератор TurboTX решает эту проблему без замены транзакции (RBF). Также доступен CPFP калькулятор для продвинутых пользователей.</p></details>
     <details style="border-bottom:1px solid var(--b);padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Что такое BTC transaction accelerator и как он работает? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><div style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">
 <p style="margin-bottom:10px">TurboTX работает на <strong style="color:var(--t)">трёх уровнях</strong>, каждый из которых реально ускоряет транзакцию — это не просто «бесполезный broadcast»:</p>
 <p style="margin-bottom:8px"><strong style="color:var(--a)">① Hex-broadcast в узлы сети (8 штук)</strong><br>
 Мы берём RAW HEX вашей транзакции и отправляем его через API в mempool.space, blockstream.info, blockchair, blockcypher и ещё 4 узла. Каждый из них ретранслирует TX своим пирам в P2P-сети Bitcoin. Это гарантирует, что TX не «потеряется» — её увидят все майнеры, включая тех, кто не подключён к стандартным узлам. <span style="color:rgba(247,147,26,.7)">Важно: TX, которая только у 1–2 пиров, рискует быть дропнута при высокой нагрузке.</span></p>
-<p style="margin-bottom:8px"><strong style="color:var(--a)">② Прямая отправка в акселераторы майнинг-пулов (17 пулов)</strong><br>
-ViaBTC, AntPool, MARA, SpiderPool, F2Pool, Luxor и другие пулы имеют <strong style="color:var(--t)">отдельную очередь ускорения</strong> — это не обычный mempool. Транзакции из этой очереди пул майнит в приоритетном порядке, <strong style="color:var(--t)">вне зависимости от fee rate</strong>. Мы отправляем TXID напрямую в эти API. Foundry (27% хешрейта) + AntPool (16%) + MARA (11%) = уже 54% сети — кто-то из них добудет следующий блок с вашей TX.</p>
-<p style="margin-bottom:0"><strong style="color:var(--a)">③ Волновой повтор (Premium: 6 волн за 4 часа)</strong><br>
+<p style="margin-bottom:8px"><strong style="color:var(--a)">② Прямая отправка в акселераторы майнинг-пулов (22 пула)</strong><br>
+ViaBTC, AntPool, MARA, SpiderPool, F2Pool, Luxor и другие пулы имеют <strong style="color:var(--t)">отдельную очередь ускорения</strong> — это не обычный mempool. Транзакции из этой очереди пул майнит в приоритетном порядке, <strong style="color:var(--t)">вне зависимости от fee rate</strong>. Мы отправляем TXID напрямую в эти API. Foundry (27%) + AntPool (16%) + MARA Slipstream (11%) + ViaBTC (9%) + SpiderPool (8%) = уже 71% сети. Вместе с EMCDPool, SBI Crypto, Luxor и другими — ~88% хешрейта получает TX.</p>
+<p style="margin-bottom:0"><strong style="color:var(--a)">③ Волновой повтор (Premium: 8 волн за 10.5 часов)</strong><br>
 Акселераторы пулов очищают свои очереди периодически — TX подаётся заново каждые 15–30 минут, чтобы оставаться в «горячем» списке. Это <strong style="color:var(--t)">принципиально отличается</strong> от разовой отправки в mempool: мы не просто «говорим пулу один раз», а напоминаем регулярно до подтверждения.</p>
 </div></details>
     <details style="border-bottom:1px solid var(--b);padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Сколько времени займёт ускорение транзакции? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7"><strong style="color:var(--t)">Бесплатный режим:</strong> 1–3 часа в зависимости от загрузки сети.<br><strong style="color:var(--t)">Premium режим:</strong> 10–20 минут — MARA Slipstream + Foundry + AntPool + ViaBTC + SpiderPool + 17 других пулов (8 волн) до подтверждения. Средний блок Bitcoin появляется каждые 10 минут.</p></details>
@@ -1998,26 +2058,7 @@ ViaBTC, AntPool, MARA, SpiderPool, F2Pool, Luxor и другие пулы име
 
 </div>
 
-<style>
-@keyframes legalPulse {
-  0%,100% { box-shadow: 0 4px 20px rgba(0,0,0,.5), 0 0 0 0 rgba(247,147,26,.25); }
-  50%      { box-shadow: 0 4px 20px rgba(0,0,0,.5), 0 0 0 6px rgba(247,147,26,.0); }
-}
-#legal-card { transform-origin: bottom right; }
-@media(max-width:600px){
-  #legal-bubble { bottom:100px; right:10px; }
-  #legal-card { width:calc(100vw - 32px); right:0; }
-}
-@media(min-width:1100px){
-  #legal-bubble { right:calc(50% - 530px); }
-}
-/* About секция адаптив */
-#about .grid-2 { grid-template-columns:1fr 1fr; }
-@media(max-width:640px){
-  #about [style*="grid-template-columns:1fr 1fr"] { grid-template-columns:1fr !important; }
-  #about [style*="grid-template-columns:repeat(3"] { grid-template-columns:1fr !important; }
-}
-</style>
+
 
 </div><!-- /.w -->
 <footer>
@@ -2343,7 +2384,7 @@ const POOLS_DIRECT = [
   {n:'Foundry USA',      p:'пул #1 · 27% хешрейта ★',    c:'g', api:true, new26:true},
   {n:'AntPool',          p:'Bitmain · 16% хешрейта',      c:'g', api:true},
   {n:'MARA Slipstream',  p:'приватный мемпул ★★ NEW',    c:'g', api:true, new26:true},
-  {n:'MARA Pool',        p:'Marathon · 11%',               c:'g', api:true, new26:true},
+  {n:'MARA Pool',        p:'Marathon Digital · ~11%',               c:'g', api:true, new26:true},
   {n:'ViaBTC',           p:'pool accelerator · 9%',        c:'g', api:true},
   {n:'SpiderPool',       p:'топ-5 · 8% ★',                c:'g', api:true, new26:true},
   {n:'F2Pool',           p:'7% хешрейта',                  c:'g', api:true},
@@ -2352,10 +2393,10 @@ const POOLS_DIRECT = [
   {n:'BitFuFu',          p:'Bitmain Cloud · 4% ★',        c:'g', api:true, new26:true},
   {n:'BTC.com',          p:'pool accelerator · 3%',        c:'g', api:true},
   {n:'Ocean.xyz',        p:'децентр. пул · 2%',            c:'g', api:true},
-  {n:'EMCDPool',         p:'2% · NEW v12',                 c:'g', api:true, new26:true},
-  {n:'SBI Crypto',       p:'Япония · 2% · NEW v12',        c:'g', api:true, new26:true},
-  {n:'2Miners',          p:'NEW v12',                       c:'g', api:true, new26:true},
-  {n:'Rawpool',          p:'Европа · NEW v12',              c:'g', api:true, new26:true},
+  {n:'EMCDPool',         p:'EMCD Pool · ~2%',                 c:'g', api:true, new26:true},
+  {n:'SBI Crypto',       p:'Япония · ~2% хешрейта',        c:'g', api:true, new26:true},
+  {n:'2Miners',          p:'~1% хешрейта',                       c:'g', api:true, new26:true},
+  {n:'Rawpool',          p:'Европа · ~1%',              c:'g', api:true, new26:true},
   {n:'TxBoost',          p:'accelerator',                   c:'g', api:true},
   {n:'mempoolAccel',     p:'mempool.space Accel API',      c:'g', api:true},
   {n:'BitAccelerate',    p:'accelerator',                   c:'g', api:true},
@@ -2384,7 +2425,7 @@ POOLS.forEach(p => {
   const badge = isSlip
     ? ' <span style="font-size:.42rem;background:linear-gradient(90deg,#f7931a,#ff6b35);color:#000;font-weight:800;letter-spacing:.5px;padding:1px 5px;border-radius:3px;vertical-align:middle">SLIPSTREAM</span>'
     : isV12
-      ? ' <span style="font-size:.42rem;color:var(--g);font-weight:700;letter-spacing:.5px">v12</span>'
+      ? ' <span style="font-size:.42rem;color:var(--g);font-weight:700;letter-spacing:.5px">NEW</span>'
       : isNew
         ? ' <span style="font-size:.42rem;color:var(--accent2);font-weight:700;letter-spacing:.5px">\u20262026</span>'
         : '';
@@ -3045,7 +3086,7 @@ function pick(p) {
 }
 
 const FREE_S = ['Валидация TXID...','Подключение к серверному API...','blockstream.info (CORS ✓)...','Blockchair broadcast (CORS ✓)...','BlockCypher broadcast...','btcscan.org relay...','Финализация + авто-повтор 20 мин...'];
-const PREM_S = ['Валидация TXID...','Серверный API — загрузка hex...','blockstream.info (CORS ✓)...','Blockchair (CORS ✓)...','BlockCypher...','btcscan.org + blockchain.info...','ViaBTC Accelerator — топ-1 2026...','AntPool (Bitmain)...','CloverPool (ex BTC.com)...','SpiderPool — топ-5 хешрейт 2026...','BitFuFu — облачный майнинг 2026...','BitAccelerate — 88% хешрейта...','360BTC + fujn.com...','mempoolAccel + BitAccelerate...','Планирование 6 волн повтора ⚡...'];
+const PREM_S = ['Валидация TXID...','Серверный API — загрузка hex...','blockstream.info (CORS ✓)...','Blockchair (CORS ✓)...','BlockCypher...','btcscan.org + blockchain.info...','ViaBTC Accelerator — топ-1 2026...','AntPool (Bitmain)...','CloverPool (ex BTC.com)...','SpiderPool — топ-5 хешрейт 2026...','BitFuFu — облачный майнинг 2026...','BitAccelerate + BitAccelerate...','360BTC + txfaster + btcspeed...','mempoolAccel + BitAccelerate...','Планирование 8 волн повтора ⚡...'];
 
 // ── BROADCAST ENGINE ───────────────────────────────────────────
 async function _getHex(txid) {
@@ -3522,21 +3563,21 @@ async function go() {
     <div class="rr"><span class="rk">Комиссия</span><span class="rv">${txData.fee} sat · ${feeRate} sat/vB${lowFee ? ' ⚠' : ''}</span></div>
     <div class="rr"><span class="rk">Ожидаемое время</span><span class="rv a">${eta}</span></div>
     <div class="rr"><span class="rk">Время запроса</span><span class="rv">${new Date().toLocaleTimeString('ru')}</span></div>
-    ${plan === 'premium' ? `<div class="rr"><span class="rk">Авто-повтор</span><span class="rv" style="color:var(--a)">6 волн: 15·30·60·120·240 мин ⚡</span></div>
+    ${plan === 'premium' ? `<div class="rr"><span class="rk">Авто-повтор</span><span class="rv" style="color:var(--a)">8 волн: 15·15·30·60·120·120·120·120 мин ⚡</span></div>
     <div id="${_apiStatusId}" style="margin-top:12px;padding:10px 12px;background:rgba(247,147,26,.04);border:1px solid rgba(247,147,26,.12);border-radius:8px;font-family:var(--mono);font-size:.65rem;line-height:1.9">
-      <div style="color:var(--m);letter-spacing:1px;text-transform:uppercase;font-size:.58rem;margin-bottom:6px">Статус 30 каналов — 2026</div>
+      <div style="color:var(--m);letter-spacing:1px;text-transform:uppercase;font-size:.58rem;margin-bottom:6px">Статус 30 каналов · v13</div>
       <div id="${_apiStatusId}-rows" style="display:flex;flex-direction:column;gap:2px">
         <div style="color:var(--m)">⏳ hex-узлы: blockstream · Blockchair · BlockCypher…</div>
-        <div style="color:var(--m)">⏳ Foundry USA (~28%) · AntPool (~18%) · MARA (~12%)…</div>
+        <div style="color:var(--m)">⏳ Foundry USA (~27%) · AntPool (~16%) · MARA Slipstream ★ (~11%)…</div>
         <div style="color:var(--m)">⏳ ViaBTC · SpiderPool · Luxor · CloverPool…</div>
         <div style="color:var(--m)">⏳ BitFuFu · BTC.com · TxBoost · mempoolAccel…</div>
-        <div style="color:var(--m)">⏳ BitAccelerate · 360BTC · fujn.com…</div>
+        <div style="color:var(--m)">⏳ BitAccelerate · 360BTC · txfaster · btcspeed…</div>
         <div style="color:var(--m)">⏳ Авто-повтор: волны 15→30→60→120→240 мин ⚡</div>
       </div>
     </div>
     <div id="wave-panel-${_apiStatusId}" class="wave-panel-instance"></div>` : `
     <div id="${_apiStatusId}" style="margin-top:12px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;font-family:var(--mono);font-size:.65rem;line-height:1.9">
-      <div style="color:var(--m);letter-spacing:1px;text-transform:uppercase;font-size:.58rem;margin-bottom:6px">Broadcast статус (7 hex-узлов)</div>
+      <div style="color:var(--m);letter-spacing:1px;text-transform:uppercase;font-size:.58rem;margin-bottom:6px">Broadcast статус (8 hex-узлов)</div>
       <div id="${_apiStatusId}-rows" style="display:flex;flex-direction:column;gap:2px">
         <div style="color:var(--m)">⏳ mempool.space · blockstream.info…</div>
         <div style="color:var(--m)">⏳ Blockchair · BlockCypher · btcscan…</div>
@@ -3614,20 +3655,28 @@ async function go() {
             fmt(byName['btcscan.org']?.ok,       'btcscan.org · relay',                byName['btcscan.org']?.ms) +
             fmt(byName['blockchain.info']?.ok,   'blockchain.info · broadcast',        byName['blockchain.info']?.ms) +
             fmt(byName['bitaps.com']?.ok,        'Bitaps broadcast',                   byName['bitaps.com']?.ms) +
-            fmt(byName['Foundry']?.ok,           'Foundry USA ⭐ #1 · ~28% хешрейта', byName['Foundry']?.ms) +
-            fmt(byName['AntPool']?.ok,           'AntPool (Bitmain) ⭐ · ~18%',        byName['AntPool']?.ms) +
-            fmt(byName['MARA']?.ok,              'MARA Pool (Marathon) ⭐ · ~12%',     byName['MARA']?.ms) +
-            fmt(byName['ViaBTC']?.ok,            'ViaBTC ⭐ · ~10%',                   byName['ViaBTC']?.ms) +
-            fmt(byName['SpiderPool']?.ok,        'SpiderPool ★ · ~8% 2026',            byName['SpiderPool']?.ms) +
-            fmt(byName['Luxor']?.ok,             'Luxor ★ · ~6% US-пул 2026',          byName['Luxor']?.ms) +
-            fmt(byName['CloverPool']?.ok,        'CloverPool (ex BTC.com) · ~5%',     byName['CloverPool']?.ms) +
+            fmt(byName['Foundry']?.ok,           'Foundry USA ⭐ #1 · ~27% хешрейта', byName['Foundry']?.ms) +
+            fmt(byName['AntPool']?.ok,           'AntPool (Bitmain) ⭐ · ~16%',        byName['AntPool']?.ms) +
+            fmt(byName['MARA']?.ok,              'MARA Pool (Marathon) ⭐ · ~11%',     byName['MARA']?.ms) +
+            fmt(byName['ViaBTC']?.ok,            'ViaBTC ⭐ · ~9%',                    byName['ViaBTC']?.ms) +
+            fmt(byName['SpiderPool']?.ok,        'SpiderPool ★ · ~8%',            byName['SpiderPool']?.ms) +
+            fmt(byName['Luxor']?.ok,             'Luxor ★ · ~5% US-пул',          byName['Luxor']?.ms) +
+            fmt(byName['CloverPool']?.ok,        'CloverPool · ~4%',     byName['CloverPool']?.ms) +
             fmt(byName['BitFuFu']?.ok,           'BitFuFu ★ Bitmain Cloud · ~4%',     byName['BitFuFu']?.ms) +
             fmt(byName['BTC.com']?.ok,           'BTC.com · ~4%',                     byName['BTC.com']?.ms) +
-            fmt(byName['TxBoost']?.ok,           'TxBoost (Poolin) · ~3%',            byName['TxBoost']?.ms) +
+            fmt(byName['TxBoost']?.ok,           'TxBoost Accelerator',            byName['TxBoost']?.ms) +
             fmt(byName['mempoolAccel']?.ok,      'mempool.space Accelerator API',     byName['mempoolAccel']?.ms) +
-            fmt(byName['BitAccelerate']?.ok,     'BitAccelerate · 88% хешрейта',      byName['BitAccelerate']?.ms) +
+            fmt(byName['BitAccelerate']?.ok,     'BitAccelerate · accelerator API',    byName['BitAccelerate']?.ms) +
             fmt(byName['360btc']?.ok,            '360BTC Accelerator',                byName['360btc']?.ms) +
-            fmt(byName['fujn.com']?.ok,          'Fujn Accelerator',                  byName['fujn.com']?.ms);
+            fmt(byName['MaraSlipstream']?.ok,    'MARA Slipstream ★★ (приватный мемпул)', byName['MaraSlipstream']?.ms) +
+            fmt(byName['F2Pool']?.ok,            'F2Pool · ~7%',                      byName['F2Pool']?.ms) +
+            fmt(byName['Ocean']?.ok,             'Ocean.xyz · децентр. пул',          byName['Ocean']?.ms) +
+            fmt(byName['EMCDPool']?.ok,          'EMCDPool · ~2%',                    byName['EMCDPool']?.ms) +
+            fmt(byName['SBICrypto']?.ok,         'SBI Crypto (Япония) · ~2%',         byName['SBICrypto']?.ms) +
+            fmt(byName['2Miners']?.ok,           '2Miners · ~1%',                     byName['2Miners']?.ms) +
+            fmt(byName['Rawpool']?.ok,           'Rawpool (Европа) · ~1%',            byName['Rawpool']?.ms) +
+            fmt(byName['txfaster']?.ok,          'txfaster Accelerator',               byName['txfaster']?.ms) +
+            fmt(byName['btcspeed']?.ok,          'btcspeed Accelerator',               byName['btcspeed']?.ms);
         } else {
           rowsEl.innerHTML =
             fmt(byName['blockstream.info']?.ok, 'blockstream.info (CORS ✓)', byName['blockstream.info']?.ms) +
@@ -3742,7 +3791,7 @@ async function go() {
           ? fmtFB(res.blockstream, 'blockstream.info') +
             fmtFB(res.blockchair,  'Blockchair') +
             fmtFB(res.hex,         'Пулы (клиент no-cors)') +
-            fmtFB(true,            '6 волн авто-повтора ⚡')
+            fmtFB(true,            '8 волн авто-повтора ⚡')
           : fmtFB(res.blockstream, 'blockstream.info') +
             fmtFB(res.blockchair,  'Blockchair') +
             fmtFB(true,            'Авто-повтор через 20 мин');
@@ -3832,7 +3881,7 @@ function _tickWave() {
     clearInterval(_waveTimerInt);
     _waveTimerInt = null;
     const wp = document.getElementById('wave-panel');
-    if (wp) wp.innerHTML += '<div style="color:var(--g);margin-top:6px;font-size:.62rem">✓ Все 6 волн завершены · Гарантия 6 часов активна</div>';
+    if (wp) wp.innerHTML += '<div style="color:var(--g);margin-top:6px;font-size:.62rem">✓ Все 8 волн завершены · Гарантия 6 часов активна</div>';
     return;
   }
   const elapsedMin = elapsedMs / 60000;
@@ -5475,7 +5524,7 @@ function _gtSetLang(langCode) {
 }
 </script>
 
-</div><!-- /.w -->
+
 
 <script>
 
