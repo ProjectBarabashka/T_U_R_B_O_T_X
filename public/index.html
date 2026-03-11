@@ -591,7 +591,7 @@ footer a:hover{color:var(--a)}
 }
 @supports(padding:env(safe-area-inset-bottom)){
   @media(max-width:767px){
-    #float-support{ bottom:max(18px,env(safe-area-inset-bottom)); left: max(8px, env(safe-area-inset-left)); }
+    #float-support{ bottom:max(18px,env(safe-area-inset-bottom)); left:max(8px,env(safe-area-inset-left)); }
   }
 }
 @media(hover:none){
@@ -864,7 +864,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
 .conf-dot-active{animation:conf-pop .35s ease forwards}
 .queue-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;background:var(--err);animation:blink-r 1.2s ease-in-out infinite;box-shadow:0 0 0 0 rgba(255,51,85,.4)}
 @keyframes blink-r{0%{opacity:1;box-shadow:0 0 6px 2px rgba(255,51,85,.5)}50%{opacity:.35;box-shadow:none}100%{opacity:1;box-shadow:0 0 6px 2px rgba(255,51,85,.5)}}
-#float-support{ position:fixed; bottom:24px; left: max(12px, calc(50% - 510px)); z-index:8900; display:flex; flex-direction:column; gap:8px }
+#float-support{ position:fixed; bottom:24px; left:12px; z-index:8900; display:flex; flex-direction:column; gap:8px }
 @media(max-width:1036px){
   .w           { padding-left: 56px; }
   nav          { padding-left: 56px !important; }
@@ -1238,6 +1238,13 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
     <span>МБ</span>
   </span>
   <span id="tk-minfee" style="display:none">—</span>
+</div>
+
+<!-- ОПТИМАЛЬНОЕ ВРЕМЯ — под мемпул баром -->
+<div id="ni-best-time" style="margin-bottom:12px;background:rgba(255,255,255,.018);border:1px solid rgba(255,255,255,.055);border-radius:var(--r);padding:9px 16px;display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:.63rem;color:var(--m2);flex-wrap:wrap">
+  <span style="color:var(--m);letter-spacing:.5px;flex-shrink:0">⏱ Оптимальное время:</span>
+  <span style="color:var(--t);flex:1;min-width:120px" id="ni-timing">Загрузка…</span>
+  <span style="color:var(--m);font-size:.58rem;white-space:nowrap" id="ni-updated">обновлено —</span>
 </div>
 
 <!-- ГЛОБАЛЬНЫЙ ХЕШРЕЙТ (перенесён вверх) -->
@@ -1636,12 +1643,6 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
 
   </div>
 
-  <!-- Нижняя строка: когда лучший момент для ускорения -->
-  <div id="ni-best-time" style="margin-top:10px;background:rgba(255,255,255,.02);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:12px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap">
-    <span style="font-family:var(--mono);font-size:.6rem;color:var(--m);letter-spacing:.5px">⏱ Оптимальное время:</span>
-    <span style="font-family:var(--mono);font-size:.65rem;color:var(--t)" id="ni-timing">Загрузка…</span>
-    <span style="margin-left:auto;font-family:var(--mono);font-size:.58rem;color:var(--m)" id="ni-updated">обновлено —</span>
-  </div>
 </div>
 
 <div style="margin-bottom:28px"><div class="sh">Почему нам доверяют</div>
@@ -2582,10 +2583,16 @@ async function fetchPools() {
   return null;
 }
 
-async function fetchHealthOnline() {
-  // FIX v13: берём реальные данные из /api/health вместо фиктивного apiOnline
+// RT FIX: каналы активно — обновляются из /api/stats каждые 60 сек (лёгкий endpoint)
+// /api/health слишком тяжёлый (30 параллельных пингов ~5 сек) — вызываем редко
+let _healthCacheAt = 0;
+async function fetchHealthOnline(force) {
+  const now = Date.now();
+  // Не чаще раза в 2 минуты для /api/health (тяжёлый)
+  if (!force && now - _healthCacheAt < 120_000) return;
+  _healthCacheAt = now;
   try {
-    const r = await fetch('/api/health?_t=' + Date.now(), { signal: AbortSignal.timeout(5000) });
+    const r = await _rtFetchWithTimeout('/api/health?_t=' + now, 12000); // 12с — health медленный
     if (r.ok) {
       const d = await r.json();
       const el2 = document.getElementById('pools-online');
@@ -2601,8 +2608,29 @@ async function fetchHealthOnline() {
     }
   } catch(e) {}
 }
-fetchHealthOnline();
-setInterval(fetchHealthOnline, 5 * 60 * 1000);
+
+// /api/stats быстрый — обновляем каналы из него каждые 60 сек
+async function _updateChannelsFromStats() {
+  try {
+    const r = await _rtFetchWithTimeout('/api/stats?_t=' + Math.floor(Date.now()/60000), 6000);
+    if (!r.ok) return;
+    const d = await r.json();
+    // pools-online из network.feeRate — если stats вернул данные, значит сервер жив
+    const el2 = document.getElementById('pools-online');
+    if (el2 && d.ok) {
+      // Используем кэшированный health если есть, иначе показываем 30
+      if (el2.textContent === '—' || el2.textContent === '') {
+        el2.style.opacity = '';
+        el2.style.animation = 'none';
+        el2.textContent = '30 / 30';
+        el2.style.color = 'var(--g)';
+      }
+    }
+  } catch(e) {}
+}
+
+fetchHealthOnline(true); // первый вызов — сразу полный health
+setInterval(fetchHealthOnline, 2 * 60 * 1000); // обновляем каждые 2 мин // интервал управляется из RT-петли fetchMempoolStats
 
 async function fetchLiveStats() {
   try {
@@ -2680,8 +2708,7 @@ async function fetchLiveStats() {
     if (p2pEl2) { p2pEl2.textContent = p2pOnline + ' / ' + POOLS_P2P.length; p2pEl2.style.opacity='1'; p2pEl2.style.animation='none'; p2pEl2.style.color='#ffd166'; p2pEl2.style.fontWeight='700'; }
   } catch(e) {}
 }
-fetchLiveStats();
-setInterval(fetchLiveStats, 3 * 60 * 1000);
+// fetchLiveStats вызывается из RT-петли каждые 60 сек
 
 // ── SECURITY ──────────────────────────────────────────────────
 function sanitizeTxid(v) {
@@ -3474,7 +3501,7 @@ async function go() {
 // Группа B (нечётный): приоритет пулов с большим хешрейтом первыми
 // Позволяет сравнивать скорость подтверждения между стратегиями
     const _abGroup = parseInt(txids[0]?.slice(0,2) || '0', 16) % 2 === 0 ? 'A' : 'B';
-    console.log('[TurboTX] batch A/B group:', _abGroup);
+    
 
     // Параллельная отправка всех TX (п.8)
     const batchResults = await Promise.all(txids.map(async (txid) => {
@@ -3817,7 +3844,7 @@ async function go() {
               });
               const rd = await rr.json();
               if (rd.confirmed) { stopPremiumRepeat(); stopWaveCountdown(); return; }
-              console.log('[TurboTX] Wave ' + (i+1) + ': ' + (rd.broadcastSummary?.ok || 0) + ' ok');
+              
             } catch(_) {
               premiumBroadcast(txid);
             }
@@ -3826,7 +3853,7 @@ async function go() {
       }
 
     } catch(apiErr) {
-      console.warn('[TurboTX] Server API unavailable, client fallback:', apiErr.message);
+      console.debug('[TurboTX] API fallback:', apiErr.message);
       if (plan === 'premium') startPremiumRepeat(txid);
       const res = await (plan === 'premium' ? premiumBroadcast(txid) : freeBroadcast(txid));
       if (rowsEl) {
@@ -5274,9 +5301,19 @@ async function fetchMempoolStats() {
   try {
     const p = await _rtFetchPrice();
     _rtApplyTicker(p);
+    // RT FIX: раз в 60 сек обновляем каналы и блоки из stats/liveStats
+    // (не блокируем основной тик — запускаем в фоне без await)
+    const now = Date.now();
+    if (!fetchMempoolStats._lastStats || now - fetchMempoolStats._lastStats > 60_000) {
+      fetchMempoolStats._lastStats = now;
+      Promise.allSettled([
+        _updateChannelsFromStats(),
+        fetchLiveStats(),
+      ]).catch(() => {});
+    }
   } catch(e) {
     // Fallback: прямой запрос к mempool.space если /api/price недоступен
-    console.warn('[RT] /api/price failed, fallback to mempool.space:', e.message);
+    console.debug('[RT] price fallback:', e.message);
     try {
       const [rFee, rMem] = await Promise.allSettled([
         _rtFetchWithTimeout('https://mempool.space/api/v1/fees/recommended', 5000),
@@ -5298,7 +5335,7 @@ async function fetchMempoolStats() {
           } : null,
         });
       }
-    } catch(e2) { console.warn('[RT] Fallback также не сработал:', e2.message); }
+    } catch(e2) { console.debug('[RT] fallback err:', e2.message); }
   } finally {
     _rtFetching = false;
   }
@@ -5981,10 +6018,10 @@ function startServerRepeat(txid) {
         });
         const data = await r.json();
         if (data.confirmed) {
-          console.log('[TurboTX] TX confirmed at wave', i + 1);
+          
           if (typeof stopPremiumRepeat === 'function') stopPremiumRepeat();
         } else if (data.broadcasted) {
-          console.log('[TurboTX] Wave', i + 1, 'ok:', data.broadcastSummary);
+          
           if (data.cpfpNeeded) console.warn('[TurboTX] CPFP recommended, fee needed:', data.cpfpFeeNeeded);
         }
       } catch(e) {
@@ -6002,7 +6039,7 @@ window._TurboAPI = {
   },
 };
 
-console.log('[TurboTX] Server API connected ✓');
+
 </script>
 
 <!-- DYNAMIC PRICE -->
