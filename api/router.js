@@ -346,7 +346,11 @@ async function handleStats(req, res) {
     if(!tip&&ok(tip2R)) tip=parseInt(await ok(tip2R).text(),10)||0;
     const fastest=fees.fastestFee||0,halfHour=fees.halfHourFee||0,hour=fees.hourFee||0;
     const economy=fees.economyFee||fees.minimumFee||0,btcPrice=price.USD||null;
-    const congestion=fastest>200?'critical':fastest>100?'extreme':fastest>50?'high':fastest>20?'medium':'low';
+    // BUG FIX v14: учитываем mp.count при определении congestion (аналогично handlePrice)
+    const mpCountStats = mp.count || 0;
+    let congestion = fastest>200?'critical':fastest>100?'extreme':fastest>50?'high':fastest>20?'medium':'low';
+    if ((mpCountStats > 80000 || (mp.vsize||0) > 80_000_000) && (congestion==='low'||congestion==='medium')) congestion='high';
+    else if ((mpCountStats > 30000 || (mp.vsize||0) > 30_000_000) && congestion==='low') congestion='medium';
     const CTEXT={critical:'Критическая перегрузка',extreme:'Сильная перегрузка',high:'Высокая нагрузка',medium:'Умеренная нагрузка',low:'Сеть свободна'};
     const CEMOJI={critical:'🔴',extreme:'🔴',high:'🟠',medium:'🟡',low:'🟢'};
     const uptimeSec=Math.round((Date.now()-_sess.startedAt)/1000);
@@ -415,7 +419,34 @@ async function handlePrice(req, res) {
   const {rate:feeRate,all:allFees}=feeRes.status==='fulfilled'?feeRes.value:{rate:20,all:{}};
   const btcPrice=priceRes.status==='fulfilled'?priceRes.value:null;
   const mempoolStats=mempoolRes.status==='fulfilled'?mempoolRes.value:null;
-  const tier=PRICE_TIERS.find(t=>feeRate<=t.maxFee)??PRICE_TIERS.at(-1);
+  // BUG FIX: выбираем тир по feeRate
+  let tier = PRICE_TIERS.find(t => feeRate <= t.maxFee) ?? PRICE_TIERS.at(-1);
+
+  // BUG FIX v14: апгрейд тира по mp.count если feeRate занижен (спам/dust в мемпуле).
+  // Ситуация: мемпул 40k+ TX, но fastestFee = 5–9 sat/vB → tier='low' → UI показывает "Сеть свободна" (синяя анимация).
+  // Реальность: мемпул забит, нужно предупредить пользователя.
+  const mpCount = mempoolStats?.count || 0;
+  const mpVsizeBytes = mempoolStats?.vsize || 0;
+  // Мемпул считается загруженным если > 30k TX ИЛИ > 30 МБ (>3 блоков в очереди)
+  const mpHeavy   = mpCount > 30000 || mpVsizeBytes > 30_000_000;
+  const mpCritical = mpCount > 80000 || mpVsizeBytes > 80_000_000;
+
+  if (mpCritical && tier.label === 'low') {
+    tier = PRICE_TIERS[2]; // low → high
+  } else if (mpCritical && tier.label === 'medium') {
+    tier = PRICE_TIERS[2]; // medium → high
+  } else if (mpHeavy && tier.label === 'low') {
+    tier = PRICE_TIERS[1]; // low → medium
+  }
+
+  // Отдельный индикатор нагрузки мемпула (не зависит от feeRate)
+  const mempoolCongestion =
+    mpCount > 80000  ? { level:'critical', emoji:'🔴', text:'Мемпул критически перегружен',  textEn:'Mempool critically overloaded', txCount:mpCount } :
+    mpCount > 50000  ? { level:'high',     emoji:'🟠', text:'Мемпул сильно загружен',         textEn:'Mempool heavily loaded',        txCount:mpCount } :
+    mpCount > 30000  ? { level:'medium',   emoji:'🟡', text:'Мемпул умеренно загружен',       textEn:'Mempool moderately loaded',     txCount:mpCount } :
+    mpCount > 10000  ? { level:'low',      emoji:'🟢', text:'Мемпул в норме',                 textEn:'Mempool normal',                txCount:mpCount } :
+                       { level:'clear',    emoji:'🟢', text:'Мемпул свободен',                textEn:'Mempool clear',                 txCount:mpCount };
+
   const usd=tier.usd;
   const btc=btcPrice?parseFloat((usd/btcPrice).toFixed(6)):null;
   const sats=btcPrice?Math.ceil((usd/btcPrice)*1e8):null;
@@ -437,7 +468,10 @@ async function handlePrice(req, res) {
   return res.status(200).json({
     ok:true,usd,btc,sats,btcPrice,feeRate,
     fees:{fastest:allFees.fastestFee||feeRate,halfHour:allFees.halfHourFee||feeRate,hour:allFees.hourFee||feeRate,economy:allFees.economyFee||allFees.minimumFee||1},
+    // fee-рынок (feeRate + коррекция по mp.count)
     congestion:tier.label,emoji:tier.emoji,text:tier.text,textEn:tier.textEn,
+    // отдельный индикатор мемпула — показывает РЕАЛЬНОЕ кол-во TX
+    mempoolCongestion,
     confLabel,
     bestTime:tip,mempool:mempoolStats,
     tiers:PRICE_TIERS.map(t=>({usd:t.usd,label:t.label,emoji:t.emoji,text:t.text,textEn:t.textEn,confLabel:t.confLabel,maxFee:t.maxFee===Infinity?null:t.maxFee})),

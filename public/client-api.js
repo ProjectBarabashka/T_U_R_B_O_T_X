@@ -146,7 +146,7 @@ async function fetchDynamicPrice(forceRefresh = false) {
 
 function applyDynamicPrice(p) {
   if (!p) return;
-  const { usd, btc, sats, emoji, text, congestion } = p;
+  const { usd, btc, sats, emoji, text, congestion, mempoolCongestion, feeRate } = p;
 
   // Ценовые элементы
   document.querySelectorAll('[data-price-usd]').forEach(el => {
@@ -159,13 +159,36 @@ function applyDynamicPrice(p) {
     if (sats) el.textContent = `${sats.toLocaleString()} sats`;
   });
 
-  // Индикатор сети
+  // ── Индикатор fee-рынка (sat/vB) ──────────────────────────────
+  // BUG FIX v14: congestion теперь корректируется сервером по mp.count,
+  // поэтому цвет/текст будут адекватны даже при низком feeRate + большом мемпуле.
   const netEl = document.getElementById('network-congestion');
   if (netEl) {
-    netEl.textContent = `${emoji} ${text} · ${p.feeRate} sat/vB`;
+    netEl.textContent = `${emoji} ${text} · ${feeRate} sat/vB`;
     netEl.style.color = congestion === 'low'    ? 'var(--g)' :
                         congestion === 'medium' ? 'var(--a)' : '#ff5555';
   }
+
+  // ── Отдельный индикатор нагрузки мемпула (кол-во TX) ─────────
+  // BUG FIX v14: раньше этого индикатора не было → пользователь не видел
+  // что мемпул забит 41k TX, хотя fee-рынок был "свободен".
+  const mpEl = document.getElementById('mempool-congestion');
+  if (mpEl && mempoolCongestion) {
+    const mc = mempoolCongestion;
+    const txStr = mc.txCount != null ? ` · ${mc.txCount.toLocaleString()} TX` : '';
+    mpEl.textContent = `${mc.emoji} ${mc.text}${txStr}`;
+    mpEl.style.color = mc.level === 'clear' || mc.level === 'low' ? 'var(--g)' :
+                       mc.level === 'medium' ? 'var(--a)' : '#ff5555';
+  }
+
+  // ── data-атрибуты для мемпула (удобно для кастомного UI) ──────
+  document.querySelectorAll('[data-mempool-count]').forEach(el => {
+    if (mempoolCongestion?.txCount != null)
+      el.textContent = mempoolCongestion.txCount.toLocaleString();
+  });
+  document.querySelectorAll('[data-mempool-level]').forEach(el => {
+    if (mempoolCongestion?.level) el.dataset.level = mempoolCongestion.level;
+  });
 
   // Глобальный selBtc для платёжной формы
   if (btc && typeof selBtc !== 'undefined') {
