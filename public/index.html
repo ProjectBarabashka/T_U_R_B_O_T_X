@@ -2123,7 +2123,7 @@ ViaBTC, AntPool, MARA, SpiderPool, F2Pool, Luxor и другие пулы име
 </footer>
 
 <!-- ВСЕ СКРИПТЫ (идентичны исходному файлу, включая RBF, очередь, Firebase, историю, язык и т.д.) -->
-<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+<!-- email-decode: handled by Cloudflare CDN --><script>
 // ═══════════════════════════════════════════════════════════════
 // RBF CALCULATOR — Replace-By-Fee
 // ═══════════════════════════════════════════════════════════════
@@ -3087,7 +3087,12 @@ function updateFreeUI_local() {
   el.style.animation = 'skeletonPulse 1.6s ease-in-out infinite';
   el.textContent = '—';
 }
-initGlobalSync();
+// FIX: defer initGlobalSync until all functions are defined (startConfTracker, renderHistory)
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initGlobalSync);
+} else {
+  setTimeout(initGlobalSync, 0);
+}
 
 setInterval(async () => {
   const v = await getGlobalUsed();
@@ -5271,12 +5276,22 @@ function _rtApplyTicker(p) {
                         mc.level === 'medium' ? 'var(--a)' : '#ff5555';
   }
 
-  // ── Все сердечки страницы — по congestion с сервера ─────────
-  // congestion уже учитывает ОБА сигнала: feeRate + очередь мемпула
+  // ── Все сердечки страницы — по congestion с учётом TX-count И размера мемпула ──
+  // BUG FIX: сердце синее ТОЛЬКО если mpCount < 30000 И vsize < 100 МБ И fee низкая
   const congestion = p.congestion || 'low';
-  const heartLevel =
-    congestion === 'critical' || congestion === 'extreme' ? 'busy' :
-    congestion === 'high'     || congestion === 'medium'  ? 'mid'  : 'calm';
+  // Переопределяем heartLevel локально с учётом mpCount и vsize
+  const _mpCount = p.mempool?.count ?? mpCount ?? 0;
+  const _mpVsizeMb = p.mempool?.vsize ? p.mempool.vsize / 1_000_000 : (mpVsize ? mpVsize / 1_000_000 : 0);
+  const _feeRate = p.fees?.fastest ?? p.feeRate ?? 0;
+  // Комбинируем: если хотя бы один сигнал говорит о нагрузке — повышаем уровень
+  let heartLevel;
+  if (congestion === 'critical' || congestion === 'extreme' || _mpCount > 80000 || _mpVsizeMb > 300 || _feeRate > 100) {
+    heartLevel = 'busy';
+  } else if (congestion === 'high' || congestion === 'medium' || _mpCount > 30000 || _mpVsizeMb > 100 || _feeRate > 20) {
+    heartLevel = 'mid';
+  } else {
+    heartLevel = 'calm'; // синее только если мемпул свободен: < 30000 TX, < 100 МБ, fee < 20
+  }
 
   ['net-pulse-dot','fee-dot','price-tag-dot','modal-heart-dot'].forEach(function(id) {
     const el = document.getElementById(id);
@@ -5340,12 +5355,22 @@ async function fetchMempoolStats() {
           fees: fees ? { fastest: fees.fastestFee, halfHour: fees.halfHourFee, hour: fees.hourFee } : null,
           mempool: mem ? { count: mem.count, vsize: mem.vsize } : null,
           congestion: 'low', emoji: '🟢', text: 'Данные из fallback',
-          mempoolCongestion: mem ? {
-            level: mem.count > 50000 ? 'high' : mem.count > 30000 ? 'medium' : 'low',
-            emoji: mem.count > 50000 ? '🟠' : mem.count > 30000 ? '🟡' : '🟢',
-            text: mem.count > 50000 ? 'Мемпул сильно загружен' : mem.count > 30000 ? 'Мемпул умеренно загружен' : 'Мемпул в норме',
-            txCount: mem.count,
-          } : null,
+          mempoolCongestion: mem ? (function() {
+            const _mb = (mem.vsize || 0) / 1_000_000;
+            const _lvl = mem.count > 80000 || _mb > 300 ? 'critical' :
+                         mem.count > 50000 || _mb > 200 ? 'high' :
+                         mem.count > 30000 || _mb > 100 ? 'medium' :
+                         mem.count > 10000 || _mb > 50  ? 'low' : 'clear';
+            return {
+              level: _lvl,
+              emoji: _lvl === 'critical' ? '🔴' : _lvl === 'high' ? '🟠' : _lvl === 'medium' ? '🟡' : '🟢',
+              text:  _lvl === 'critical' ? 'Мемпул критически перегружен' :
+                     _lvl === 'high'     ? 'Мемпул сильно загружен' :
+                     _lvl === 'medium'   ? 'Мемпул умеренно загружен' :
+                     _lvl === 'low'      ? 'Мемпул в норме' : 'Мемпул свободен',
+              txCount: mem.count, vsizeMb: +_mb.toFixed(1),
+            };
+          })() : null,
         });
       }
     } catch(e2) { console.debug('[RT] fallback err:', e2.message); }
@@ -5384,14 +5409,21 @@ async function _preloadMempoolDirect() {
 
     const congestion = CONGESTIONS[tierIdx];
 
+    // BUG FIX: уровень учитывает TX-count И размер мемпула (vsize МБ)
+    const _preMpMb = mpVsize / 1_000_000;
+    const _preMpLevel = mpCount > 80000 || _preMpMb > 300 ? 'critical' :
+                        mpCount > 50000 || _preMpMb > 200 ? 'high' :
+                        mpCount > 30000 || _preMpMb > 100 ? 'medium' :
+                        mpCount > 10000 || _preMpMb > 50  ? 'low' : 'clear';
     const mempoolCongestion = {
-      level:   congestion,
+      level:   _preMpLevel,
       emoji:   EMOJIS[tierIdx],
-      text:    mpCount > 80000 ? 'Мемпул критически перегружен' :
-               mpCount > 50000 ? 'Мемпул сильно загружен'       :
-               mpCount > 30000 ? 'Мемпул умеренно загружен'      :
-               mpCount > 10000 ? 'Мемпул в норме'                : 'Мемпул свободен',
+      text:    mpCount > 80000 || _preMpMb > 300 ? 'Мемпул критически перегружен' :
+               mpCount > 50000 || _preMpMb > 200 ? 'Мемпул сильно загружен'       :
+               mpCount > 30000 || _preMpMb > 100 ? 'Мемпул умеренно загружен'     :
+               mpCount > 10000 || _preMpMb > 50  ? 'Мемпул в норме'               : 'Мемпул свободен',
       txCount: mpCount,
+      vsizeMb: +_preMpMb.toFixed(1),
     };
 
     _rtApplyTicker({
@@ -6191,16 +6223,22 @@ window._TurboAPI = {
         const mpTierIdx2  = mpCount2 > 100000 ? 4 : mpCount2 > 60000 ? 3 : mpCount2 > 30000 ? 2 : mpCount2 > 10000 ? 1 : 0;
         const feeTierIdx2 = PRICE_TIERS.indexOf(tier);
         const combinedTier2 = PRICE_TIERS[Math.max(feeTierIdx2, mpTierIdx2)];
+        const _mpVsizeMb2 = (mempool?.vsize || 0) / 1_000_000;
+        // BUG FIX: уровень по TX-count ИЛИ размеру (vsize МБ) — берём максимум
+        const _mpLevel2 = mpCount2 > 80000 || _mpVsizeMb2 > 300 ? 'critical' :
+                          mpCount2 > 50000 || _mpVsizeMb2 > 200 ? 'high' :
+                          mpCount2 > 30000 || _mpVsizeMb2 > 100 ? 'medium' :
+                          mpCount2 > 10000 || _mpVsizeMb2 > 50  ? 'low' : 'clear';
         const mempoolCongestion2 =
-          mpCount2 > 80000  ? { level:'critical', emoji:'🔴', text:'Мемпул критически перегружен', txCount:mpCount2 } :
-          mpCount2 > 50000  ? { level:'high',     emoji:'🟠', text:'Мемпул сильно загружен',        txCount:mpCount2 } :
-          mpCount2 > 30000  ? { level:'medium',   emoji:'🟡', text:'Мемпул умеренно загружен',      txCount:mpCount2 } :
-          mpCount2 > 10000  ? { level:'low',      emoji:'🟢', text:'Мемпул в норме',                txCount:mpCount2 } :
-                              { level:'clear',    emoji:'🟢', text:'Мемпул свободен',               txCount:mpCount2 };
+          _mpLevel2 === 'critical' ? { level:'critical', emoji:'🔴', text:'Мемпул критически перегружен', txCount:mpCount2 } :
+          _mpLevel2 === 'high'     ? { level:'high',     emoji:'🟠', text:'Мемпул сильно загружен',        txCount:mpCount2 } :
+          _mpLevel2 === 'medium'   ? { level:'medium',   emoji:'🟡', text:'Мемпул умеренно загружен',      txCount:mpCount2 } :
+          _mpLevel2 === 'low'      ? { level:'low',      emoji:'🟢', text:'Мемпул в норме',                txCount:mpCount2 } :
+                                    { level:'clear',    emoji:'🟢', text:'Мемпул свободен',               txCount:mpCount2 };
         _cached = {
           usd: combinedTier2.usd, feeRate, emoji: combinedTier2.emoji, text: combinedTier2.text,
           confLabel: combinedTier2.confLabel, btc: null, ok: true,
-          congestion: combinedTier2.label,
+          congestion: ['low','medium','high','extreme','critical'][Math.max(feeTierIdx2, PRICE_TIERS.indexOf(tier))],
           mempoolCongestion: mempoolCongestion2,
           fees: { fastest: j.fastestFee, halfHour: j.halfHourFee, hour: j.hourFee, economy: j.minimumFee || j.economyFee },
           mempool,
@@ -6245,7 +6283,18 @@ window._TurboAPI = {
     const usd = p.usd;
 
     // Берём congestion с сервера (он уже учёл и feeRate и мемпул)
-    const congKey   = p.congestion || 'low';
+    // BUG FIX: congestion с сервера может быть 'low' даже при большом мемпуле
+    // Вычисляем локально с учётом mpCount, vsize и feeRate
+    const _apMpCount  = p.mempool?.count  || p.mempoolCongestion?.txCount || 0;
+    const _apMpMb     = p.mempool?.vsize  ? p.mempool.vsize / 1_000_000 : 0;
+    const _apFeeRate  = p.feeRate || p.fees?.fastest || 0;
+    let congKey = p.congestion || 'low';
+    // Повышаем уровень если мемпул сигнализирует о нагрузке
+    if (_apMpCount > 80000 || _apMpMb > 300 || _apFeeRate > 100) {
+      if (['low','medium','high'].includes(congKey)) congKey = 'extreme';
+    } else if (_apMpCount > 30000 || _apMpMb > 100 || _apFeeRate > 20) {
+      if (congKey === 'low') congKey = 'medium';
+    }
     const state     = CONGESTION_STATE[congKey] || CONGESTION_STATE.low;
     const { level, color: accentColor, bg: bgColor, netText } = state;
 
