@@ -463,8 +463,8 @@ async function handlePrice(req, res) {
   const confLabel = CONF_LABELS[tier.label] || '10–20 мин ⚡';
   // BUG FIX: CDN кэш уменьшен до 60с (был 180с) — цена обновляется чаще
   // _t query param от клиента меняется каждую минуту → cache miss каждую минуту
-  res.setHeader('Cache-Control','s-maxage=60, stale-while-revalidate=90');
-  res.setHeader('Vary','Accept-Encoding');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.setHeader('Pragma', 'no-cache');
   return res.status(200).json({
     ok:true,usd,btc,sats,btcPrice,feeRate,
     fees:{fastest:allFees.fastestFee||feeRate,halfHour:allFees.halfHourFee||feeRate,hour:allFees.hourFee||feeRate,economy:allFees.economyFee||allFees.minimumFee||1},

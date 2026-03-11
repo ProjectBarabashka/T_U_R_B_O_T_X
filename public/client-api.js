@@ -125,10 +125,12 @@ async function fetchDynamicPrice(forceRefresh = false) {
   try {
     // BUG FIX: cache-bust param — обходим Vercel CDN кэш
     const cacheBust = '?_t=' + Math.floor(Date.now() / 60000);
+    const ac = new AbortController();
+    const _t = setTimeout(() => ac.abort(), 6000);
     const r = await fetch(`${_API}/api/price` + cacheBust, {
       cache: 'no-store',
-      signal: AbortSignal.timeout(6000),
-    });
+      signal: ac.signal,
+    }).finally(() => clearTimeout(_t));
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     _priceCache     = await r.json();
     _priceFetchedAt = Date.now();
@@ -245,9 +247,11 @@ function waitForLightningPayment(paymentHash, onStatus) {
 }
 
 // ─── ИНИЦИАЛИЗАЦИЯ ────────────────────────────────────────────
+// RT FIX v14: интервал обновления убран отсюда — за реальное время отвечает
+// единая петля fetchMempoolStats в index.html (каждые 20 сек).
+// Здесь только однократная загрузка для Lightning sats и selBtc.
 document.addEventListener('DOMContentLoaded', () => {
   fetchDynamicPrice();
-  setInterval(fetchDynamicPrice, 3 * 60_000);
 });
 
 // ─── ГЛОБАЛЬНЫЙ API ───────────────────────────────────────────
