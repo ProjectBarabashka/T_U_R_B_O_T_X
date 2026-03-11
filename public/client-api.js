@@ -119,14 +119,24 @@ let _priceCache     = null;
 let _priceFetchedAt = 0;
 
 async function fetchDynamicPrice(forceRefresh = false) {
-  if (!forceRefresh && _priceCache && Date.now() - _priceFetchedAt < 180_000)
+  const CLIENT_CACHE_MS = 90_000; // 90 сек
+  if (!forceRefresh && _priceCache && Date.now() - _priceFetchedAt < CLIENT_CACHE_MS)
     return _priceCache;
   try {
-    const r = await fetch(`${_API}/api/price`);
+    // BUG FIX: cache-bust param — обходим Vercel CDN кэш
+    const cacheBust = '?_t=' + Math.floor(Date.now() / 60000);
+    const r = await fetch(`${_API}/api/price` + cacheBust, {
+      cache: 'no-store',
+      signal: AbortSignal.timeout(6000),
+    });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     _priceCache     = await r.json();
     _priceFetchedAt = Date.now();
     applyDynamicPrice(_priceCache);
+    // Синхронизируем с _TurboPrice если он инициализирован
+    if (window._TurboPrice?.apply && _priceCache?.usd > 0) {
+      window._TurboPrice.apply(_priceCache);
+    }
     return _priceCache;
   } catch(e) {
     console.warn('[TurboTX] Price fetch failed:', e.message);

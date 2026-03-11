@@ -4625,56 +4625,100 @@ function activatePremium(paidStr, method, txShort) {
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
 // ── MEMPOOL TICKER ────────────────────────────────────────────
+// BUG FIX: единая функция вместо двух (fetchMempoolStats + updateFeeMeter)
+// Убираем race condition и дублирование запросов к mempool.space
+let _mempoolFetching = false;
 async function fetchMempoolStats() {
-  // ── FEES (mempool.space → blockstream fallback) ────────────
-  let fees = null;
+  if (_mempoolFetching) return; // защита от concurrent calls
+  _mempoolFetching = true;
   try {
-    const r = await fetch('https://mempool.space/api/v1/fees/recommended');
-    if (r.ok) fees = await r.json();
-  } catch(e) {}
-  if (!fees) {
-    try {
-      const r = await fetch('https://blockstream.info/api/fee-estimates');
-      if (r.ok) {
-        const d = await r.json();
-        fees = { fastestFee: Math.round(d['1']||d['2']||20), halfHourFee: Math.round(d['3']||10), hourFee: Math.round(d['6']||5), minimumFee: Math.round(d['144']||1) };
-      }
-    } catch(e) {}
-  }
-  if (fees) {
-    const next = fees.fastestFee || fees.halfHourFee || 1;
-    const tkNext = document.getElementById('tk-nextfee');
-    if (tkNext) {
-      tkNext.textContent = next;
-      tkNext.className = 'ticker-val ' + (next > 50 ? 'hot' : next > 20 ? 'warm' : 'ok');
-    }
-    // Синхронизация fee-meter-text
-    const fmtEl = document.getElementById('fee-meter-text');
-    if (fmtEl) fmtEl.innerHTML = 'Комиссия сети: <strong style="color:var(--a)">' + next + '</strong> sat/vB · очередь <strong style="color:var(--a)" id="mempool-tx-count">—</strong> TX';
-  }
+    // Параллельно: fees + mempool + hashrate
+    const [rFee, rMem, rHr] = await Promise.allSettled([
+      fetch('https://mempool.space/api/v1/fees/recommended', { signal: AbortSignal.timeout(6000) }),
+      fetch('https://mempool.space/api/mempool', { signal: AbortSignal.timeout(6000) }),
+      fetch('https://mempool.space/api/v1/mining/hashrate/3d', { signal: AbortSignal.timeout(8000) }),
+    ]);
 
-  // ── MEMPOOL SIZE (count + vsize) ───────────────────────────
-  let mem = null;
-  try {
-    const r = await fetch('https://mempool.space/api/mempool');
-    if (r.ok) mem = await r.json();
-  } catch(e) {}
-  if (mem) {
-    const stuck  = mem.count || 0;
-    const sizeMB = ((mem.vsize || 0) / 1_000_000).toFixed(1);
-    const tkStuck = document.getElementById('tk-stuck');
-    const tkSize  = document.getElementById('tk-size');
-    const mpCount = document.getElementById('mempool-tx-count');
-    if (tkStuck) {
-      tkStuck.textContent = stuck.toLocaleString('ru');
-      tkStuck.className = 'ticker-val ' + (stuck > 50000 ? 'hot' : stuck > 20000 ? 'warm' : 'ok');
+    // ── FEES ─────────────────────────────────────────────────
+    let fees = null;
+    if (rFee.status === 'fulfilled' && rFee.value?.ok) {
+      fees = await rFee.value.json();
+    } else {
+      // Fallback: blockstream fee-estimates
+      try {
+        const r2 = await fetch('https://blockstream.info/api/fee-estimates', { signal: AbortSignal.timeout(5000) });
+        if (r2.ok) {
+          const d = await r2.json();
+          fees = { fastestFee: Math.round(d['1']||d['2']||20), halfHourFee: Math.round(d['3']||10), hourFee: Math.round(d['6']||5), minimumFee: Math.round(d['144']||1) };
+        }
+      } catch(e) {}
     }
-    if (tkSize) {
-      const mb = parseFloat(sizeMB);
-      tkSize.textContent = sizeMB;
-      tkSize.className = 'ticker-val ' + (mb > 200 ? 'hot' : mb > 100 ? 'warm' : 'ok');
+
+    if (fees) {
+      const next = fees.fastestFee || fees.halfHourFee || 1;
+      const tkNext = document.getElementById('tk-nextfee');
+      if (tkNext) {
+        tkNext.textContent = next;
+        tkNext.className = 'ticker-val ' + (next > 50 ? 'hot' : next > 20 ? 'warm' : 'ok');
+      }
     }
-    if (mpCount) mpCount.textContent = stuck.toLocaleString('ru');
+
+    // ── MEMPOOL SIZE ──────────────────────────────────────────
+    let mem = null;
+    if (rMem.status === 'fulfilled' && rMem.value?.ok) {
+      mem = await rMem.value.json();
+    }
+
+    if (mem) {
+      const stuck  = mem.count || 0;
+      const sizeMB = ((mem.vsize || 0) / 1_000_000).toFixed(1);
+      const tkStuck = document.getElementById('tk-stuck');
+      const tkSize  = document.getElementById('tk-size');
+      const mpCount = document.getElementById('mempool-tx-count');
+      if (tkStuck) {
+        tkStuck.textContent = stuck.toLocaleString('ru');
+        tkStuck.className = 'ticker-val ' + (stuck > 50000 ? 'hot' : stuck > 20000 ? 'warm' : 'ok');
+      }
+      if (tkSize) {
+        const mb = parseFloat(sizeMB);
+        tkSize.textContent = sizeMB;
+        tkSize.className = 'ticker-val ' + (mb > 200 ? 'hot' : mb > 100 ? 'warm' : 'ok');
+      }
+      if (mpCount) mpCount.textContent = stuck.toLocaleString('ru');
+
+      // BUG FIX: fee-meter-text обновляется здесь однократно — нет дублирования
+      if (fees) {
+        const fast  = fees.fastestFee || fees.halfHourFee || 0;
+        const txt   = document.getElementById('fee-meter-text');
+        if (txt) txt.innerHTML = 'Комиссия сети: <strong style="color:var(--a)">' + fast + '</strong> sat/vB · очередь <strong style="color:var(--a)">' + stuck.toLocaleString('ru') + '</strong> TX';
+      }
+    }
+
+    // ── HASHRATE (из того же запроса) ─────────────────────────
+    if (rHr.status === 'fulfilled' && rHr.value?.ok) {
+      try {
+        const d = await rHr.value.json();
+        const hr = d?.currentHashrate;
+        if (hr && hr > 0) {
+          // BUG FIX: currentHashrate в H/s; делим на 1e18 → EH/s
+          // Для масштаба: 700 EH/s = 70% bar (max ~1000 EH/s в 2026)
+          const ehNum = Math.round(hr / 1e18);
+          const hrDisp = document.getElementById('hr-display');
+          if (hrDisp) hrDisp.textContent = ehNum;
+          const hrFill = document.getElementById('hr-fill');
+          if (hrFill) hrFill.style.width = Math.min(100, (ehNum / 1000) * 100) + '%';
+          const hrLabel = document.getElementById('hr-label');
+          if (hrLabel) {
+            if (ehNum > 800)      hrLabel.innerHTML = '<span style="color:var(--g)">Рекордный хешрейт ★</span>';
+            else if (ehNum > 600) hrLabel.innerHTML = '<span style="color:var(--a)">Высокий хешрейт</span>';
+            else if (ehNum > 400) hrLabel.innerHTML = '<span style="color:var(--m)">Нормальный</span>';
+            else                  hrLabel.innerHTML = '<span style="color:#aaa">Низкий хешрейт</span>';
+          }
+        }
+      } catch(e) {}
+    }
+  } finally {
+    _mempoolFetching = false;
   }
 }
 
@@ -4686,51 +4730,7 @@ if (document.readyState === 'loading') {
   setInterval(fetchMempoolStats, 30000);
 }
 
-// ── HASHRATE TICKER ──────────────────────────
-async function fetchHashrate() {
-  try {
-    const r = await fetchWithTimeout('https://mempool.space/api/v1/mining/hashrate/3d', 5000);
-    if (!r.ok) return;
-    const d = await r.json();
-    const hr = d?.currentHashrate;
-    if (hr && hr > 0) {
-      const ehS = (hr / 1e18).toFixed(0);
-      const ehNum = parseInt(ehS);
-      const hrDisp = document.getElementById('hr-display');
-      if (hrDisp) hrDisp.textContent = ehS;
-      const hrFill = document.getElementById('hr-fill');
-      if (hrFill) hrFill.style.width = Math.min(100, ehNum / 10) + '%';
-      const hrLabel = document.getElementById('hr-label');
-      if (hrLabel) {
-        if (ehNum > 800) hrLabel.innerHTML = '<span style="color:var(--g)">Рекордный хешрейт ★</span>';
-        else if (ehNum > 600) hrLabel.innerHTML = '<span style="color:var(--a)">Высокий хешрейт</span>';
-        else hrLabel.innerHTML = '<span style="color:var(--m)">Нормальный</span>';
-      }
-    }
-  } catch(e) {}
-}
-fetchHashrate();
-setInterval(fetchHashrate, 5 * 60 * 1000);
-
-// ── FEE HEALTH METER (без оценочных фраз) ──
-async function updateFeeMeter() {
-  try {
-    const [rFee, rMem] = await Promise.all([
-      fetch('https://mempool.space/api/v1/fees/recommended'),
-      fetch('https://mempool.space/api/mempool')
-    ]);
-    if (!rFee.ok || !rMem.ok) return;
-    const fees = await rFee.json();
-    const mem  = await rMem.json();
-    const txt  = document.getElementById('fee-meter-text');
-    if (!txt) return;
-    const fast   = fees.fastestFee || fees.halfHourFee || 0;
-    const stuck  = mem.count || 0;
-    txt.innerHTML = `Комиссия сети: <strong style="color:var(--a)">${fast}</strong> sat/vB · очередь <strong style="color:var(--a)">${stuck.toLocaleString('ru')}</strong> TX`;
-  } catch(e) {}
-}
-updateFeeMeter();
-setInterval(updateFeeMeter, 30000);
+// updateFeeMeter УДАЛЁН — логика перенесена в fetchMempoolStats выше
 
 // ── FEE CALCULATOR ───────────────────────────
 let _feeCalcTimer = null;
@@ -5424,41 +5424,75 @@ console.log('[TurboTX] Server API connected ✓');
   'use strict';
 
   const PRICE_TIERS = [
-    { maxFee: 10,  usd: 3,  emoji: '🟢', text: 'Сеть свободна',     color: 'var(--g)' },
-    { maxFee: 30,  usd: 4,  emoji: '🟡', text: 'Обычная нагрузка',  color: 'var(--a)' },
-    { maxFee: 60,  usd: 7,  emoji: '🟠', text: 'Высокая нагрузка',  color: 'var(--a)' },
-    { maxFee: 150, usd: 12, emoji: '🔴', text: 'Перегрузка',        color: '#ff5555'  },
-    { maxFee: Infinity, usd: 18, emoji: '🔴', text: 'Критично',     color: '#ff3333'  },
+    { maxFee: 10,  usd: 3,  emoji: '🟢', text: 'Сеть свободна',    confLabel: '5–10 мин ⚡',    color: 'var(--g)' },
+    { maxFee: 30,  usd: 4,  emoji: '🟡', text: 'Умеренная нагрузка', confLabel: '10–15 мин ⚡',  color: 'var(--a)' },
+    { maxFee: 60,  usd: 7,  emoji: '🟠', text: 'Высокая нагрузка',  confLabel: '10–20 мин ⚡',   color: 'var(--a)' },
+    { maxFee: 150, usd: 12, emoji: '🔴', text: 'Перегрузка сети',   confLabel: '15–30 мин',      color: '#ff5555'  },
+    { maxFee: Infinity, usd: 18, emoji: '🔴', text: 'Критично',     confLabel: '20–40 мин',      color: '#ff3333'  },
   ];
 
+  // BUG FIX: клиентский кэш 90 сек — не мешает CDN, но не частит запросами
   let _cached = null, _cachedAt = 0;
+  const CLIENT_CACHE_MS = 90_000; // 90 сек
 
-  async function loadPrice() {
-    if (_cached && Date.now() - _cachedAt < 180000) return _cached;
+  async function loadPrice(forceRefresh) {
+    if (!forceRefresh && _cached && Date.now() - _cachedAt < CLIENT_CACHE_MS) {
+      applyPrice(_cached);
+      return _cached;
+    }
 
+    // BUG FIX: cache-busting параметр → обходим CDN кэш Vercel при повторных загрузках
+    const cacheBust = '?_t=' + Math.floor(Date.now() / 60000); // меняется каждую минуту
     try {
-      const r = await fetch('/api/price', { signal: AbortSignal.timeout(5000) });
+      const r = await fetch('/api/price' + cacheBust, {
+        signal: AbortSignal.timeout(6000),
+        cache: 'no-store', // принудительно свежий запрос
+      });
       if (r.ok) {
-        _cached = await r.json();
-        _cachedAt = Date.now();
-        applyPrice(_cached);
-        return _cached;
+        const data = await r.json();
+        if (data && data.usd > 0) {
+          // Добавляем confLabel если сервер не вернул
+          if (!data.confLabel) {
+            const tier = PRICE_TIERS.find(t => data.feeRate <= t.maxFee) || PRICE_TIERS.at(-1);
+            data.confLabel = tier.confLabel;
+          }
+          _cached = data;
+          _cachedAt = Date.now();
+          applyPrice(_cached);
+          return _cached;
+        }
       }
     } catch(_) {}
 
+    // Fallback: прямой запрос к mempool.space
     try {
-      const r = await fetch('https://mempool.space/api/v1/fees/recommended', { signal: AbortSignal.timeout(4000) });
-      if (r.ok) {
-        const j = await r.json();
+      const [rFee, rMem] = await Promise.allSettled([
+        fetch('https://mempool.space/api/v1/fees/recommended', { signal: AbortSignal.timeout(5000) }),
+        fetch('https://mempool.space/api/mempool', { signal: AbortSignal.timeout(5000) }),
+      ]);
+      const feeOk = rFee.status === 'fulfilled' && rFee.value?.ok;
+      if (feeOk) {
+        const j = await rFee.value.json();
         const feeRate = j.fastestFee || j.halfHourFee || 20;
         const tier = PRICE_TIERS.find(t => feeRate <= t.maxFee) || PRICE_TIERS.at(-1);
-        _cached = { usd: tier.usd, feeRate, emoji: tier.emoji, text: tier.text, btc: null, ok: true };
+        let mempool = null;
+        if (rMem.status === 'fulfilled' && rMem.value?.ok) {
+          const m = await rMem.value.json();
+          mempool = { count: m.count, vsize: m.vsize };
+        }
+        _cached = {
+          usd: tier.usd, feeRate, emoji: tier.emoji, text: tier.text,
+          confLabel: tier.confLabel, btc: null, ok: true,
+          fees: { fastest: j.fastestFee, halfHour: j.halfHourFee, hour: j.hourFee, economy: j.minimumFee || j.economyFee },
+          mempool,
+        };
         _cachedAt = Date.now();
         applyPrice(_cached);
         return _cached;
       }
     } catch(_) {}
-    return null;
+
+    return _cached; // вернём последний известный кэш если ничего не получилось
   }
 
   function _setNetState(level, text, color, bg) {
@@ -5479,18 +5513,29 @@ console.log('[TurboTX] Server API connected ✓');
   }
 
   function applyPrice(p) {
-    if (!p) return;
+    if (!p || !p.usd) return;
     const usd = p.usd;
-    const tier = PRICE_TIERS.find(t => usd <= t.usd) || PRICE_TIERS.at(-1);
-    const emoji = p.emoji || tier?.emoji || '🟡';
-    const text  = p.text  || tier?.text  || '';
+
+    // BUG FIX: ищем тир по feeRate (как в сервере), а не по usd
+    const feeRate = p.feeRate || 0;
+    const tier = feeRate > 0
+      ? (PRICE_TIERS.find(t => feeRate <= t.maxFee) || PRICE_TIERS.at(-1))
+      : (PRICE_TIERS.find(t => usd <= t.usd) || PRICE_TIERS.at(-1));
+
+    const emoji = p.emoji || tier.emoji;
+    const text  = p.text  || tier.text;
+    const confLabel = p.confLabel || tier.confLabel || '10–20 мин ⚡';
+
     const isLow = usd <= 4, isMid = usd <= 7;
     const accentColor = isLow ? 'var(--g)' : isMid ? 'var(--a)' : '#ff5555';
     const bgColor     = isLow ? 'rgba(0,232,122,.13)' : isMid ? 'rgba(247,147,26,.13)' : 'rgba(255,50,50,.13)';
 
     selectedUsd = usd;
 
-    const btcVal = (_btcUsd > 0) ? (usd / _btcUsd) : (p.btc || null);
+    // BUG FIX: если btcPrice пришёл с сервера — обновляем _btcUsd ДО расчёта btcVal
+    if (p.btcPrice && p.btcPrice > 1000) _btcUsd = p.btcPrice;
+
+    const btcVal = (_btcUsd > 0) ? parseFloat((usd / _btcUsd).toFixed(6)) : (p.btc || null);
     if (btcVal) { selBtc = btcVal; window._selBtc = btcVal; }
 
     const priceEl = document.getElementById('plan-price-usd');
@@ -5500,12 +5545,11 @@ console.log('[TurboTX] Server API connected ✓');
     const netText = text || (isLow ? 'спокойно' : isMid ? 'умеренно' : 'перегруз');
     _setNetState(level, netText, accentColor, bgColor);
 
+    // BUG FIX: confLabel всегда берётся из tier — больше не остаётся пустым
     const confEl = document.getElementById('plan-conf-time');
-    if (confEl && p.confLabel) {
-      confEl.textContent = 'Premium ≈ ' + p.confLabel;
+    if (confEl) {
+      confEl.textContent = 'Premium ≈ ' + confLabel;
       confEl.style.display = '';
-    } else if (confEl) {
-      confEl.textContent = 'Premium ≈ 10–20 мин ⚡';
     }
 
     const btnEl  = document.getElementById('plan-btn-price');  if (btnEl)  btnEl.textContent  = '$' + usd;
@@ -5522,29 +5566,59 @@ console.log('[TurboTX] Server API connected ✓');
     if (modalBtc)  modalBtc.textContent  = btcVal ? '≈ ' + btcVal.toFixed(6) + ' BTC' : '≈ … BTC';
     if (modalUsdt) modalUsdt.textContent = '≈ ' + usd + ' USDT';
 
-    const amtEl  = document.getElementById('direct-amount'); if (amtEl && btcVal)  amtEl.textContent  = btcVal.toFixed(6) + ' BTC';
+    const amtEl  = document.getElementById('direct-amount'); if (amtEl && btcVal) amtEl.textContent = btcVal.toFixed(6) + ' BTC';
     const usdtEl = document.getElementById('usdt-amount');   if (usdtEl) usdtEl.textContent = usd + ' USDT';
 
-    if (p.btcPrice) _btcUsd = p.btcPrice;
+    // Обновляем fee ticker из данных price API (чтобы не делать лишний запрос)
+    if (p.fees?.fastest) {
+      const fast = p.fees.fastest;
+      const tkNext = document.getElementById('tk-nextfee');
+      if (tkNext) {
+        tkNext.textContent = fast;
+        tkNext.className = 'ticker-val ' + (fast > 50 ? 'hot' : fast > 20 ? 'warm' : 'ok');
+      }
+    }
 
     if (p.mempool?.count != null) {
       const mpEl = document.getElementById('mempool-tx-count');
       if (mpEl) mpEl.textContent = p.mempool.count.toLocaleString('ru');
+      const tkStuck = document.getElementById('tk-stuck');
+      if (tkStuck) {
+        tkStuck.textContent = p.mempool.count.toLocaleString('ru');
+        tkStuck.className = 'ticker-val ' + (p.mempool.count > 50000 ? 'hot' : p.mempool.count > 20000 ? 'warm' : 'ok');
+      }
+      if (p.mempool.vsize) {
+        const mb = (p.mempool.vsize / 1_000_000).toFixed(1);
+        const tkSize = document.getElementById('tk-size');
+        if (tkSize) {
+          tkSize.textContent = mb;
+          tkSize.className = 'ticker-val ' + (parseFloat(mb) > 200 ? 'hot' : parseFloat(mb) > 100 ? 'warm' : 'ok');
+        }
+        // BUG FIX: обновляем fee-meter-text из данных price если он ещё не обновился
+        const fmtEl = document.getElementById('fee-meter-text');
+        if (fmtEl && p.fees?.fastest) {
+          fmtEl.innerHTML = 'Комиссия сети: <strong style="color:var(--a)">' + p.fees.fastest + '</strong> sat/vB · очередь <strong style="color:var(--a)">' + p.mempool.count.toLocaleString('ru') + '</strong> TX';
+        }
+      }
     }
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', function() {
-      loadPrice();
-      setInterval(loadPrice, 180000);
-    });
-  } else {
+  function initPrice() {
     loadPrice();
-    setInterval(loadPrice, 180000);
+    // Обновляем каждые 3 минуты с cache-bust
+    setInterval(function() { loadPrice(true); }, 180000);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initPrice);
+  } else {
+    initPrice();
   }
 
   window._TurboPrice = {
     load: loadPrice,
+    apply: applyPrice,
+    tiers: PRICE_TIERS,
   };
 })();
 </script>

@@ -288,11 +288,11 @@ async function handleStats(req, res) {
 //  PRICE  —  GET /api/price
 // ══════════════════════════════════════════════════════════════
 const PRICE_TIERS = [
-  { maxFee:10,  usd:3,  label:'low',      emoji:'🟢', text:'Сеть свободна',        textEn:'Network is clear'     },
-  { maxFee:30,  usd:4,  label:'medium',   emoji:'🟡', text:'Умеренная нагрузка',   textEn:'Moderate load'        },
-  { maxFee:60,  usd:7,  label:'high',     emoji:'🟠', text:'Высокая нагрузка',     textEn:'High load'            },
-  { maxFee:150, usd:12, label:'extreme',  emoji:'🔴', text:'Перегрузка сети',      textEn:'Network congested'    },
-  { maxFee:Infinity, usd:18, label:'critical', emoji:'🔴', text:'Критическая перегрузка', textEn:'Critical congestion' },
+  { maxFee:10,  usd:3,  label:'low',      emoji:'🟢', text:'Сеть свободна',        textEn:'Network is clear',    confLabel:'5–10 мин ⚡'  },
+  { maxFee:30,  usd:4,  label:'medium',   emoji:'🟡', text:'Умеренная нагрузка',   textEn:'Moderate load',       confLabel:'10–15 мин ⚡' },
+  { maxFee:60,  usd:7,  label:'high',     emoji:'🟠', text:'Высокая нагрузка',     textEn:'High load',           confLabel:'10–20 мин ⚡' },
+  { maxFee:150, usd:12, label:'extreme',  emoji:'🔴', text:'Перегрузка сети',      textEn:'Network congested',   confLabel:'15–30 мин'    },
+  { maxFee:Infinity, usd:18, label:'critical', emoji:'🔴', text:'Критическая перегрузка', textEn:'Critical congestion', confLabel:'20–40 мин' },
 ];
 
 async function getFeeRate() {
@@ -341,13 +341,20 @@ async function handlePrice(req, res) {
     return{tip:'🔴 Критическая перегрузка. Транзакции застревают. TurboTX поможет ускорить.',quality:'critical'};
   };
   const tip=bestTimeFn(feeRate,allFees);
-  res.setHeader('Cache-Control','s-maxage=180, stale-while-revalidate=300');
+  // BUG FIX: confLabel по tier — клиент показывает реальное время подтверждения
+  const CONF_LABELS = { low:'5–10 мин ⚡', medium:'10–15 мин ⚡', high:'10–20 мин ⚡', extreme:'15–30 мин', critical:'20–40 мин' };
+  const confLabel = CONF_LABELS[tier.label] || '10–20 мин ⚡';
+  // BUG FIX: CDN кэш уменьшен до 60с (был 180с) — цена обновляется чаще
+  // _t query param от клиента меняется каждую минуту → cache miss каждую минуту
+  res.setHeader('Cache-Control','s-maxage=60, stale-while-revalidate=90');
+  res.setHeader('Vary','Accept-Encoding');
   return res.status(200).json({
     ok:true,usd,btc,sats,btcPrice,feeRate,
     fees:{fastest:allFees.fastestFee||feeRate,halfHour:allFees.halfHourFee||feeRate,hour:allFees.hourFee||feeRate,economy:allFees.economyFee||allFees.minimumFee||1},
     congestion:tier.label,emoji:tier.emoji,text:tier.text,textEn:tier.textEn,
+    confLabel,
     bestTime:tip,mempool:mempoolStats,
-    tiers:PRICE_TIERS.map(t=>({usd:t.usd,label:t.label,emoji:t.emoji,text:t.text,textEn:t.textEn,maxFee:t.maxFee===Infinity?null:t.maxFee})),
+    tiers:PRICE_TIERS.map(t=>({usd:t.usd,label:t.label,emoji:t.emoji,text:t.text,textEn:t.textEn,confLabel:t.confLabel,maxFee:t.maxFee===Infinity?null:t.maxFee})),
     timestamp:Date.now(),
   });
 }
