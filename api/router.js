@@ -517,8 +517,12 @@ async function handleCpfp(req, res) {
     ]);
     const getR=s=>s.status==='fulfilled'?s.value:null;
     const txRsp=getR(txR),feesRsp=getR(feesR),mpRsp=getR(mpR),priceVal=priceP.status==='fulfilled'?priceP.value:null;
-    if (!txRsp?.ok){ const fb=await ft(`https://blockstream.info/api/tx/${txid}`,{},6000); if(!fb.ok) return res.status(404).json({ok:false,error:'TX not found'}); }
-    const tx=await sj(txRsp?.ok?txRsp:{json:()=>({})}),fees=feesRsp?.ok?await sj(feesRsp):{},mp=mpRsp?.ok?await sj(mpRsp):{};
+    let txFinal = txRsp?.ok ? txRsp : null;
+    if (!txFinal?.ok) {
+      try { const fb=await ft(`https://blockstream.info/api/tx/${txid}`,{},6000); if(fb.ok) txFinal=fb; } catch {}
+    }
+    if (!txFinal?.ok) return res.status(404).json({ok:false,error:'TX not found'});
+    const tx=await sj(txFinal),fees=feesRsp?.ok?await sj(feesRsp):{},mp=mpRsp?.ok?await sj(mpRsp):{};
     if(tx.status?.confirmed) return res.status(200).json({ok:true,needed:false,reason:'already_confirmed'});
     const vsize=tx.weight?Math.ceil(tx.weight/4):(tx.size||250),feePaid=tx.fee||0,feeRate=feePaid&&vsize?Math.round(feePaid/vsize):0;
     const targets={eco:fees.hourFee||fees.halfHourFee||20,std:fees.halfHourFee||fees.fastestFee||30,fast:fees.fastestFee||50};

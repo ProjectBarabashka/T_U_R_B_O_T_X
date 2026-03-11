@@ -1477,25 +1477,50 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
       CPFP Калькулятор
     </span></div>
     <div class="card-sub">Child-Pays-for-Parent — разгони застрявшую транзакцию дочерней TX без Premium</div>
-        <div class="cpfp-row"><span class="cpfp-key">Комиссия родит. TX</span><span class="cpfp-val" id="cpfp-parent-fee">—</span></div>
-    <div class="cpfp-row"><span class="cpfp-key">Ставка родит. TX</span><span class="cpfp-val warn" id="cpfp-parent-rate">—</span></div>
-    <div class="cpfp-row"><span class="cpfp-key">Целевая ставка пакета</span><span class="cpfp-val" id="cpfp-target-rate">—</span></div>
-    <div class="cpfp-row"><span class="cpfp-key">Мин. комиссия дочерней TX</span><span class="cpfp-val" id="cpfp-child-fee">—</span></div>
-    <div class="cpfp-row" style="background:rgba(0,232,122,.04);border-radius:6px;padding:8px 6px;margin-top:4px">
-      <span class="cpfp-key" style="font-weight:700;color:var(--t)">Итого к оплате за дочернюю TX</span>
-      <span class="cpfp-val" style="font-size:.82rem" id="cpfp-final">—</span>
+
+    <div class="fg" style="margin-top:12px">
+      <label>TXID родительской транзакции</label>
+      <input type="text" id="cpfp-parent" placeholder="64 hex символа..." maxlength="64" oninput="onCpfpInput()" style="font-family:var(--mono);font-size:.72rem">
     </div>
-    <div style="background:rgba(247,147,26,.06);border:1px solid rgba(247,147,26,.18);border-radius:var(--r);padding:12px;margin-top:12px;font-family:var(--mono);font-size:.68rem;color:var(--m2);line-height:1.7" id="cpfp-instruction">
-      Создайте новую транзакцию использующую неподтверждённый UTXO из застрявшей TX.<br>
-      Установите комиссию <strong style="color:var(--a)" id="cpfp-fee-btc">—</strong> сатошей.<br>
-      Майнеры примут обе транзакции как пакет.
+
+    <div style="margin:12px 0 4px;display:none" id="cpfp-target-wrap">
+      <label style="font-size:.65rem;color:var(--m);letter-spacing:.5px;text-transform:uppercase">Скорость подтверждения</label>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+        <span style="font-size:.62rem;color:var(--m)">Эконом</span>
+        <input type="range" id="cpfp-speed" min="1" max="3" value="3" style="flex:1;accent-color:var(--g)">
+        <span style="font-size:.62rem;color:var(--m)">Быстро</span>
+      </div>
     </div>
-    <button class="cpfp-copy" onclick="copyCpfpInfo()">
-      <span style="display:inline-flex;align-items:center;gap:8px;justify-content:center">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-        Скопировать параметры CPFP
+
+    <button class="chk-btn" id="cpfp-btn" onclick="calcCpfp()" style="margin-top:12px">
+      <span style="display:inline-flex;align-items:center;gap:10px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        РАССЧИТАТЬ CPFP
       </span>
     </button>
+
+    <div class="cpfp-result" id="cpfp-result">
+      <div class="cpfp-row"><span class="cpfp-key">Размер родит. TX</span><span class="cpfp-val" id="cpfp-parent-size">—</span></div>
+      <div class="cpfp-row"><span class="cpfp-key">Комиссия родит. TX</span><span class="cpfp-val" id="cpfp-parent-fee">—</span></div>
+      <div class="cpfp-row"><span class="cpfp-key">Ставка родит. TX</span><span class="cpfp-val warn" id="cpfp-parent-rate">—</span></div>
+      <div class="cpfp-row"><span class="cpfp-key">Целевая ставка пакета</span><span class="cpfp-val" id="cpfp-target-rate">—</span></div>
+      <div class="cpfp-row"><span class="cpfp-key">Мин. комиссия дочерней TX</span><span class="cpfp-val" id="cpfp-child-fee">—</span></div>
+      <div class="cpfp-row" style="background:rgba(0,232,122,.04);border-radius:6px;padding:8px 6px;margin-top:4px">
+        <span class="cpfp-key" style="font-weight:700;color:var(--t)">Итого к оплате за дочернюю TX</span>
+        <span class="cpfp-val" style="font-size:.82rem" id="cpfp-final">—</span>
+      </div>
+      <div style="background:rgba(247,147,26,.06);border:1px solid rgba(247,147,26,.18);border-radius:var(--r);padding:12px;margin-top:12px;font-family:var(--mono);font-size:.68rem;color:var(--m2);line-height:1.7" id="cpfp-instruction">
+        Создайте новую транзакцию использующую неподтверждённый UTXO из застрявшей TX.<br>
+        Установите комиссию <strong style="color:var(--a)" id="cpfp-fee-btc">—</strong> сатошей · <span id="cpfp-fee-label">—</span>.<br>
+        Майнеры примут обе транзакции как пакет.
+      </div>
+      <button class="cpfp-copy" onclick="copyCpfpInfo()">
+        <span style="display:inline-flex;align-items:center;gap:8px;justify-content:center">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+          Скопировать параметры CPFP
+        </span>
+      </button>
+    </div>
   
   </div>
 
@@ -4755,18 +4780,26 @@ async function calcCpfp() {
     if (!d.ok) throw new Error(d.error || 'Unknown error');
 
     // Уже подтверждена
-    if (!d.needed && d.reason === 'TX already confirmed') {
+    if (!d.needed && (d.reason === 'already_confirmed' || d.reason === 'TX already confirmed')) {
       res.classList.add('show');
-      res.innerHTML = `<div style="color:var(--g);font-family:var(--mono);font-size:.78rem">✓ TX подтверждена в блоке #${d.blockHeight}. CPFP не нужен.</div>`;
+      let msgEl = document.getElementById('cpfp-msg');
+      if (!msgEl) { msgEl = document.createElement('div'); msgEl.id = 'cpfp-msg'; res.prepend(msgEl); }
+      msgEl.innerHTML = `<div style="color:var(--g);font-family:var(--mono);font-size:.78rem;padding:8px 0">✓ TX подтверждена. CPFP не нужен.</div>`;
       return;
     }
 
     // Не нужен CPFP (fee уже достаточная)
     if (!d.needed) {
       res.classList.add('show');
-      res.innerHTML = `<div style="color:var(--g);font-family:var(--mono);font-size:.75rem">✅ Ставка ${d.parent?.feeRate} sat/vB достаточна. CPFP не требуется.</div>`;
+      let msgEl = document.getElementById('cpfp-msg');
+      if (!msgEl) { msgEl = document.createElement('div'); msgEl.id = 'cpfp-msg'; res.prepend(msgEl); }
+      msgEl.innerHTML = `<div style="color:var(--g);font-family:var(--mono);font-size:.75rem;padding:8px 0">✅ Ставка ${d.parent?.feeRate} sat/vB достаточна. CPFP не требуется.</div>`;
       return;
     }
+
+    // Clear any previous message
+    const oldMsg = document.getElementById('cpfp-msg');
+    if (oldMsg) oldMsg.remove();
 
     const p    = d.parent;
     const c    = d.child;
@@ -4817,11 +4850,11 @@ async function calcCpfp() {
     document.getElementById('cpfp-parent-size').textContent  = p.vsize + ' vBytes';
     document.getElementById('cpfp-parent-fee').textContent   = p.feePaid.toLocaleString('ru') + ' sat';
     document.getElementById('cpfp-parent-rate').textContent  = p.feeRate + ' sat/vB';
-    document.getElementById('cpfp-target-rate').textContent  = tgt.current + ' sat/vB';
+    document.getElementById('cpfp-target-rate').textContent  = (tgt.selected || tgt.current || tgt.fast) + ' sat/vB';
     document.getElementById('cpfp-child-fee').textContent    = c.feeNeeded.toLocaleString('ru') + ' sat (' + c.feeRate + ' sat/vB)';
     document.getElementById('cpfp-final').textContent        = c.feeNeeded.toLocaleString('ru') + ' sat' + (c.feeUsd ? ' (~$' + c.feeUsd + ')' : '');
     document.getElementById('cpfp-fee-btc').textContent      = c.feeNeeded.toLocaleString('ru');
-    document.getElementById('cpfp-fee-label').textContent    = tgt.current + ' sat/vB';
+    document.getElementById('cpfp-fee-label').textContent    = (tgt.selected || tgt.current || tgt.fast) + ' sat/vB';
     document.getElementById('cpfp-parent-rate').className    = 'cpfp-val ' + (p.feeRate < 2 ? 'danger' : p.feeRate < 5 ? 'warn' : '');
 
     // Доп. блоки: тип адреса + предупреждение если не хватит value
@@ -4829,7 +4862,7 @@ async function calcCpfp() {
       <div class="cpfp-row"><span class="cpfp-key">Тип адреса (child TX)</span><span class="cpfp-val">${typeName} · ${c.vsize} vB</span></div>
       <div class="cpfp-row"><span class="cpfp-key">Value выхода</span><span class="cpfp-val ${out && !out.canAfford ? 'danger' : ''}">${out ? out.value.toLocaleString('ru') + ' sat' + (out.canAfford ? ' ✓' : ' ⚠ мало') : '—'}</span></div>
       ${out && out.remainingUsd ? `<div class="cpfp-row"><span class="cpfp-key">Остаток после CPFP</span><span class="cpfp-val">${out.remainingSat.toLocaleString('ru')} sat (~$${out.remainingUsd})</span></div>` : ''}
-      ${d.mempoolPosition ? `<div class="cpfp-row"><span class="cpfp-key">Позиция в мемпуле</span><span class="cpfp-val warn" style="font-size:.6rem">${d.mempoolPosition}</span></div>` : ''}
+      ${d.mempoolPosition?.before != null ? `<div class="cpfp-row"><span class="cpfp-key">Позиция в мемпуле</span><span class="cpfp-val warn" style="font-size:.6rem">${d.mempoolPosition.before?.toLocaleString('ru')} TX впереди</span></div>` : ''}
       ${outputsHtml}
       <div style="margin-top:14px;padding:12px;background:rgba(247,147,26,.05);border:1px solid rgba(247,147,26,.15);border-radius:8px">
         <div style="font-size:.58rem;color:var(--m);letter-spacing:1px;margin-bottom:8px">ИНСТРУКЦИЯ ДЛЯ КОШЕЛЬКА</div>
@@ -4852,7 +4885,9 @@ async function calcCpfp() {
 
   } catch(e) {
     res.classList.add('show');
-    res.innerHTML = `<div style="color:var(--err);font-family:var(--mono);font-size:.75rem">× ${e.message === 'TX not found in mempool' ? 'TX не найдена в мемпуле. Возможно уже подтверждена.' : 'Ошибка: ' + e.message}</div>`;
+    let msgEl = document.getElementById('cpfp-msg');
+    if (!msgEl) { msgEl = document.createElement('div'); msgEl.id = 'cpfp-msg'; res.prepend(msgEl); }
+    msgEl.innerHTML = `<div style="color:var(--err);font-family:var(--mono);font-size:.75rem;padding:8px 0">× ${e.message === 'TX not found in mempool' ? 'TX не найдена в мемпуле. Возможно уже подтверждена.' : 'Ошибка: ' + e.message}</div>`;
   } finally {
     btn.disabled = false;
     btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>РАССЧИТАТЬ CPFP</span>';
@@ -4881,11 +4916,23 @@ function showCpfpWallet(w) {
 
 function selectCpfpOutput(idx) {
   if (!_cpfpApiData?.allOutputs?.[idx]) return;
-  // Перезапускаем с новым outputIndex
   const txid = document.getElementById('cpfp-parent').value.trim();
-  const tier  = ['eco','std','fast'][parseInt(document.getElementById('cpfp-speed')?.value||3)-1];
+  const speed = parseInt(document.getElementById('cpfp-speed')?.value || '3');
+  const tier  = speed === 1 ? 'eco' : speed === 2 ? 'std' : 'fast';
   const btn   = document.getElementById('cpfp-btn');
-  btn.click(); // просто пересчитаем (API сам выберет лучший)
+  const res   = document.getElementById('cpfp-result');
+  if (!btn || !res) return;
+  const spinSvg = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="animation:spin .8s linear infinite;transform-origin:center"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>';
+  btn.disabled = true;
+  btn.innerHTML = `<span style="display:inline-flex;align-items:center;gap:10px">${spinSvg} Анализируем TX...</span>`;
+  fetch(`/api/cpfp?txid=${txid}&target=${tier}&outputIndex=${idx}`)
+    .then(r => r.json())
+    .then(d => { _cpfpApiData = d; calcCpfp(); })
+    .catch(() => { btn.disabled = false; })
+    .finally(() => {
+      btn.disabled = false;
+      btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>РАССЧИТАТЬ CPFP</span>';
+    });
 }
 
 function copyCpfpInfo() {
