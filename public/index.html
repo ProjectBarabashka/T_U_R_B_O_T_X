@@ -1443,6 +1443,46 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
 </div>
 </section>
 
+<!-- HOW IT REALLY WORKS -->
+<div style="background:var(--s);border:1px solid var(--b);border-radius:16px;padding:24px 26px;margin-bottom:28px">
+  <div style="font-family:var(--mono);font-size:.58rem;letter-spacing:2px;color:var(--m);text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--a)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    Как это реально работает — 3 уровня ускорения
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px">
+    <div style="background:rgba(0,0,0,.25);border:1px solid rgba(247,147,26,.12);border-radius:10px;padding:14px 16px">
+      <div style="font-size:.7rem;font-weight:700;color:var(--a);margin-bottom:6px;display:flex;align-items:center;gap:6px">
+        <span style="width:20px;height:20px;background:rgba(247,147,26,.15);border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--a);flex-shrink:0">①</span>
+        Hex-broadcast · 8 узлов
+      </div>
+      <div style="font-family:var(--mono);font-size:.65rem;color:var(--m2);line-height:1.65">
+        RAW HEX транзакции отправляется в API mempool.space, blockstream.info, blockchair и ещё 5 узлов. Они ретранслируют TX <strong style="color:var(--t)">всем своим P2P-пирам</strong> — TX попадает в мемпулы всех крупных майнеров и не дропается при перегрузке.
+      </div>
+    </div>
+    <div style="background:rgba(0,0,0,.25);border:1px solid rgba(247,147,26,.12);border-radius:10px;padding:14px 16px">
+      <div style="font-size:.7rem;font-weight:700;color:var(--a);margin-bottom:6px;display:flex;align-items:center;gap:6px">
+        <span style="width:20px;height:20px;background:rgba(247,147,26,.15);border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--a);flex-shrink:0">②</span>
+        Pool accelerator API · 17 пулов
+      </div>
+      <div style="font-family:var(--mono);font-size:.65rem;color:var(--m2);line-height:1.65">
+        ViaBTC, AntPool, MARA, F2Pool, Luxor и другие имеют <strong style="color:var(--t)">отдельную очередь ускорения</strong>. TX оттуда майнится вне зависимости от fee rate — пул добывает её в приоритете. Foundry+AntPool+MARA = уже 54% хешрейта.
+      </div>
+    </div>
+    <div style="background:rgba(0,0,0,.25);border:1px solid rgba(247,147,26,.12);border-radius:10px;padding:14px 16px">
+      <div style="font-size:.7rem;font-weight:700;color:var(--a);margin-bottom:6px;display:flex;align-items:center;gap:6px">
+        <span style="width:20px;height:20px;background:rgba(247,147,26,.15);border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--a);flex-shrink:0">③</span>
+        Волновой повтор · до 8 волн
+      </div>
+      <div style="font-family:var(--mono);font-size:.65rem;color:var(--m2);line-height:1.65">
+        Очереди акселераторов периодически сбрасываются. Premium повторяет отправку <strong style="color:var(--t)">каждые 15–30 мин</strong> — TX остаётся в «горячем» списке пула до подтверждения. Это не разовый broadcast, а активная работа до результата.
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:12px;font-family:var(--mono);font-size:.6rem;color:rgba(247,147,26,.5);border-top:1px solid var(--b);padding-top:10px">
+    ⚡ Итог: TX, попавшая в очередь ускорения хотя бы одного крупного пула, будет добыта при следующем добытом им блоке — независимо от fee rate и загрузки сети.
+  </div>
+</div>
+
 <!-- COMPETITOR COMPARISON -->
 <div class="comp-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch">
   <div class="sh">TurboTX vs конкуренты</div>
@@ -1485,7 +1525,15 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
   <div style="display:flex;flex-direction:column;gap:0">
     <details style="border-bottom:1px solid var(--b);padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Как ускорить застрявшую Bitcoin транзакцию? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">Скопируйте <strong style="color:var(--t)">TXID (Transaction ID)</strong> вашей транзакции из кошелька — это строка из 64 символов. Вставьте его в форму выше и нажмите «Ускорить транзакцию». TurboTX v5.3 мгновенно отправит транзакцию в 22 канала (ViaBTC, AntPool, SpiderPool, CloverPool, BitFuFu и другие), которые включат её в следующий блок. Бесплатное ускорение занимает <strong style="color:var(--t)">1–3 часа</strong>, Premium — <strong style="color:var(--t)">10–20 минут</strong> с авто-повтором каждые 15 мин.</p></details>
     <details style="border-bottom:1px solid var(--b);padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Почему Bitcoin транзакция не подтверждается? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">Транзакция зависает в <strong style="color:var(--t)">mempool</strong> (очередь транзакций), когда сеть перегружена или комиссия (fee) была установлена слишком низкой. В 2026 году дополнительную нагрузку создают <strong style="color:var(--t)">Ordinals, BRC-20 токены и Runes</strong> — они конкурируют с обычными переводами за место в блоке. Майнеры выбирают транзакции с наибольшей комиссией в первую очередь — транзакции с низкой fee могут ждать часами и даже сутками. Акселератор TurboTX решает эту проблему без замены транзакции (RBF). Также доступен CPFP калькулятор для продвинутых пользователей.</p></details>
-    <details style="border-bottom:1px solid var(--b);padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Что такое BTC transaction accelerator и как он работает? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">Bitcoin transaction accelerator — это сервис <strong style="color:var(--t)">rebroadcast</strong>: он повторно отправляет вашу транзакцию напрямую в майнинг-пулы через их API. Пулы получают транзакцию вне обычной очереди и включают её в ближайший блок. Это полностью легальный метод, не изменяющий транзакцию.</p></details>
+    <details style="border-bottom:1px solid var(--b);padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Что такое BTC transaction accelerator и как он работает? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><div style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">
+<p style="margin-bottom:10px">TurboTX работает на <strong style="color:var(--t)">трёх уровнях</strong>, каждый из которых реально ускоряет транзакцию — это не просто «бесполезный broadcast»:</p>
+<p style="margin-bottom:8px"><strong style="color:var(--a)">① Hex-broadcast в узлы сети (8 штук)</strong><br>
+Мы берём RAW HEX вашей транзакции и отправляем его через API в mempool.space, blockstream.info, blockchair, blockcypher и ещё 4 узла. Каждый из них ретранслирует TX своим пирам в P2P-сети Bitcoin. Это гарантирует, что TX не «потеряется» — её увидят все майнеры, включая тех, кто не подключён к стандартным узлам. <span style="color:rgba(247,147,26,.7)">Важно: TX, которая только у 1–2 пиров, рискует быть дропнута при высокой нагрузке.</span></p>
+<p style="margin-bottom:8px"><strong style="color:var(--a)">② Прямая отправка в акселераторы майнинг-пулов (17 пулов)</strong><br>
+ViaBTC, AntPool, MARA, SpiderPool, F2Pool, Luxor и другие пулы имеют <strong style="color:var(--t)">отдельную очередь ускорения</strong> — это не обычный mempool. Транзакции из этой очереди пул майнит в приоритетном порядке, <strong style="color:var(--t)">вне зависимости от fee rate</strong>. Мы отправляем TXID напрямую в эти API. Foundry (27% хешрейта) + AntPool (16%) + MARA (11%) = уже 54% сети — кто-то из них добудет следующий блок с вашей TX.</p>
+<p style="margin-bottom:0"><strong style="color:var(--a)">③ Волновой повтор (Premium: 6 волн за 4 часа)</strong><br>
+Акселераторы пулов очищают свои очереди периодически — TX подаётся заново каждые 15–30 минут, чтобы оставаться в «горячем» списке. Это <strong style="color:var(--t)">принципиально отличается</strong> от разовой отправки в mempool: мы не просто «говорим пулу один раз», а напоминаем регулярно до подтверждения.</p>
+</div></details>
     <details style="border-bottom:1px solid var(--b);padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Сколько времени займёт ускорение транзакции? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7"><strong style="color:var(--t)">Бесплатный режим:</strong> 1–3 часа в зависимости от загрузки сети.<br><strong style="color:var(--t)">Premium режим:</strong> 10–20 минут — ViaBTC + AntPool + SpiderPool + CloverPool + 6 других пулов с повтором каждые 15 минут до подтверждения. Средний блок Bitcoin появляется каждые 10 минут.</p></details>
     <details style="padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Безопасно ли использовать акселератор транзакций? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">Да, абсолютно безопасно. TurboTX использует только <strong style="color:var(--t)">TXID транзакции</strong> — публичную информацию из блокчейна. Мы не запрашиваем приватные ключи, seed-фразы или данные кошелька. Rebroadcast транзакций — стандартная практика в экосистеме Bitcoin. Сервис работает аналогично ViaBTC Accelerator и BTC.com Accelerator.</p></details>
   </div>
