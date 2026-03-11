@@ -2616,8 +2616,6 @@ async function _updateChannelsFromStats() {
     const r = await _rtFetchWithTimeout('/api/stats?_t=' + Math.floor(Date.now()/60000), 6000);
     if (!r.ok) return;
     const d = await r.json();
-
-    // pools-online
     const el2 = document.getElementById('pools-online');
     if (el2 && d.ok) {
       if (el2.textContent === '—' || el2.textContent === '') {
@@ -2627,8 +2625,7 @@ async function _updateChannelsFromStats() {
         el2.style.color = 'var(--g)';
       }
     }
-
-    // FIX: глобальный хешрейт — раньше данные читались но НИКОГДА не писались в DOM
+    // FIX: хешрейт — данные приходили с сервера но НИКОГДА не писались в DOM
     const ehs = d?.network?.hashrateEHs;
     if (ehs && ehs > 0) {
       const hrDisplay = document.getElementById('hr-display');
@@ -6129,13 +6126,29 @@ window._TurboAPI = {
         const feeRate = j.fastestFee || j.halfHourFee || 20;
         const tier = PRICE_TIERS.find(t => feeRate <= t.maxFee) || PRICE_TIERS.at(-1);
         let mempool = null;
+        let mpCount = 0;
         if (rMem.status === 'fulfilled' && rMem.value?.ok) {
           const m = await rMem.value.json();
           mempool = { count: m.count, vsize: m.vsize };
+          mpCount = m.count || 0;
         }
+        // FIX: вычисляем congestion из обоих сигналов — как на сервере
+        // Без этого p.congestion = undefined → 'low' → calm → СИНЕЕ СЕРДЦЕ навсегда
+        const mpTierIdx2 = mpCount > 100000 ? 4 : mpCount > 60000 ? 3 : mpCount > 30000 ? 2 : mpCount > 10000 ? 1 : 0;
+        const feeTierIdx2 = PRICE_TIERS.indexOf(tier);
+        const combinedTier2 = PRICE_TIERS[Math.max(feeTierIdx2, mpTierIdx2)];
+        const congestion2 = combinedTier2.label;
+        const mempoolCongestion2 =
+          mpCount > 80000  ? { level:'critical', emoji:'🔴', text:'Мемпул критически перегружен', txCount:mpCount } :
+          mpCount > 50000  ? { level:'high',     emoji:'🟠', text:'Мемпул сильно загружен',        txCount:mpCount } :
+          mpCount > 30000  ? { level:'medium',   emoji:'🟡', text:'Мемпул умеренно загружен',      txCount:mpCount } :
+          mpCount > 10000  ? { level:'low',      emoji:'🟢', text:'Мемпул в норме',                txCount:mpCount } :
+                             { level:'clear',    emoji:'🟢', text:'Мемпул свободен',               txCount:mpCount };
         _cached = {
           usd: tier.usd, feeRate, emoji: tier.emoji, text: tier.text,
           confLabel: tier.confLabel, btc: null, ok: true,
+          congestion: congestion2,            // ← был undefined → теперь правильный
+          mempoolCongestion: mempoolCongestion2,
           fees: { fastest: j.fastestFee, halfHour: j.halfHourFee, hour: j.hourFee, economy: j.minimumFee || j.economyFee },
           mempool,
         };
