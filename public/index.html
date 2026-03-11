@@ -4539,11 +4539,16 @@ function updateNetworkIntelligence(priceData, mempoolData) {
     if (el) el.textContent = '$' + usd;
     const tierEl = document.getElementById('ni-price-tier');
     if (tierEl) {
-      tierEl.textContent = effectiveLevel === 0 ? '🟢 Сеть спокойна — лучший момент' :
-                           effectiveLevel === 1 ? '🟡 Умеренная нагрузка' :
-                           effectiveLevel === 2 ? '🟠 Повышенная нагрузка' :
-                           effectiveLevel === 3 ? '🔴 Высокая нагрузка' :
-                                                  '🔥 Критическая загрузка';
+      const tierLevel = effectiveLevel === 0 ? 'calm' :
+                        effectiveLevel === 1 ? 'mid'  :
+                        effectiveLevel === 2 ? 'mid'  :
+                        effectiveLevel === 3 ? 'busy' : 'busy';
+      const tierText  = effectiveLevel === 0 ? 'Сеть спокойна — лучший момент' :
+                        effectiveLevel === 1 ? 'Умеренная нагрузка' :
+                        effectiveLevel === 2 ? 'Повышенная нагрузка' :
+                        effectiveLevel === 3 ? 'Высокая нагрузка' :
+                                               'Критическая загрузка';
+      tierEl.innerHTML = `<span class="net-heart ${tierLevel} no-transition sm" style="vertical-align:middle;margin-right:4px"><svg width="11" height="11" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g class="h-flame"><path d="M9 19 Q7 15 9.5 11 Q10.5 15 12 11 Q13.5 15 14.5 11 Q17 15 15 19" fill="#ff6b00" opacity=".85"/></g><path class="h-body" d="M12 20.5C12 20.5 2.5 14 2.5 8C2.5 5.2 4.7 3 7.5 3C9.1 3 10.6 3.8 12 5.2C13.4 3.8 14.9 3 16.5 3C19.3 3 21.5 5.2 21.5 8C21.5 14 12 20.5 12 20.5Z"/><g class="h-ice" stroke="#cff0ff" stroke-width="1" stroke-linecap="round" fill="none"><line x1="12" y1="5.5" x2="12" y2="8.5"/><line x1="10.4" y1="6.3" x2="13.6" y2="7.7"/><line x1="10.4" y1="7.7" x2="13.6" y2="6.3"/></g></svg></span>${tierText}`;
     }
   }
 
