@@ -760,10 +760,7 @@ textarea.batch-input::placeholder{color:rgba(255,255,255,.22)}
 .lang-flag-btn.active { opacity:1; border-color:rgba(247,147,26,.7); background:rgba(247,147,26,.1); box-shadow:0 0 0 2px rgba(247,147,26,.15); }
 .lang-flag-btn::after { content: attr(data-tip); position: absolute; left: 44px; top: 50%; transform: translateY(-50%); background: rgba(7,7,10,.95); color: rgba(238,238,246,.9); font-family: var(--mono); font-size: .56rem; white-space: nowrap; padding: 3px 9px; border-radius: 5px; border: 1px solid rgba(255,255,255,.08); pointer-events: none; opacity: 0; transition: opacity .12s; z-index: 10000; }
 .lang-flag-btn:hover::after { opacity: 1; }
-.goog-te-banner-frame, .goog-te-banner-frame.skiptranslate, .skiptranslate, #goog-gt-tt, .goog-tooltip, .goog-tooltip:hover { display: none !important; visibility: hidden !important; }
 body { top: 0px !important; }
-.goog-te-gadget { font-size: 0 !important; height: 0 !important; overflow: hidden !important; }
-iframe.goog-te-banner-frame { display: none !important; }
 .tool-header { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
 .tool-icon { width: 34px; height: 34px; border-radius: 9px; background: rgba(247,147,26,.1); border: 1px solid rgba(247,147,26,.18); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .section-wrap { margin-bottom: 28px; }
@@ -1167,7 +1164,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
     <div class="logo-icon">₿</div>
     <div style="position:relative">
       <span class="logo-turbo">TURBO</span><span class="logo-tx">TX</span>
-      <span class="logo-tag">BTC Accelerator v14 ✦</span>
+      <span class="logo-tag">BTC Accelerator v13 ✦</span>
     </div>
   </a>
   <div class="nav-right">
@@ -1184,9 +1181,9 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
 
 <!-- HERO -->
 <section class="hero">
-  <div class="hero-label" style="gap:10px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polygon points='13 2 3 14 12 14 11 22 21 10 12 10 13 2'/></svg> Bitcoin Accelerator v14 · 30 каналов · ~88% хешрейта</div>
+  <div class="hero-label" style="gap:10px"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polygon points='13 2 3 14 12 14 11 22 21 10 12 10 13 2'/></svg> Bitcoin Accelerator v13 · 30 каналов · ~88% хешрейта</div>
   <h1>Застрявшая BTC<br><span>транзакция?</span></h1>
-  <p>Серверный broadcast в 30 каналов: 8 hex-узлов + 22 пул-акселератора.<br>Бесплатно · Premium в среднем <strong style="color:var(--a)">10–20 мин</strong> · Динамическая цена $3–18</p>
+  <p id="hero-desc" id="hero-desc">Серверный broadcast в 30 каналов: 8 hex-узлов + 22 пул-акселератора.<br>Бесплатно · Premium в среднем <strong style="color:var(--a)">10–20 мин</strong> · Динамическая цена $3–18</p>
   <div style="display:flex;align-items:center;justify-content:center;gap:20px;flex-wrap:wrap;margin-bottom:36px;margin-top:-12px">
     <div style="display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.6rem;color:var(--m2)"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg> Гарантия возврата 6ч</div>
     <div style="width:3px;height:3px;border-radius:50%;background:var(--b2)"></div>
@@ -1200,18 +1197,18 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
     <span style="font-family:var(--mono);font-size:.58rem;color:rgba(38,208,168,.85);background:rgba(38,208,168,.08);border:1px solid rgba(38,208,168,.2);border-radius:20px;padding:4px 12px">🧠 Smart Advisor AI</span>
     <span style="font-family:var(--mono);font-size:.58rem;color:rgba(247,147,26,.85);background:rgba(247,147,26,.08);border:1px solid rgba(247,147,26,.2);border-radius:20px;padding:4px 12px">🎯 Last-Block-Miner Boost</span>
     <span style="font-family:var(--mono);font-size:.58rem;color:rgba(124,92,252,.85);background:rgba(124,92,252,.08);border:1px solid rgba(124,92,252,.2);border-radius:20px;padding:4px 12px">🔐 MARA Slipstream</span>
-    <span style="font-family:var(--mono);font-size:.58rem;color:var(--m2);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:4px 12px">⚡ 10 волн · 14ч</span>
+    <span style="font-family:var(--mono);font-size:.58rem;color:var(--m2);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:4px 12px">⚡ 8 волн · 4ч</span>
     <span style="font-family:var(--mono);font-size:.58rem;color:var(--m2);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:4px 12px">🛡 Anti-Stuck 72h</span>
     <span style="font-family:var(--mono);font-size:.58rem;color:var(--m2);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:4px 12px">📦 Batch ×20</span>
   </div>
-  <div class="hero-cta" onclick="document.querySelector('.card').scrollIntoView({behavior:'smooth'})">Ускорить сейчас <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  <div class="hero-cta" onclick="document.querySelector('.card').scrollIntoView({behavior:'smooth'})" id="hero-cta-text">Ускорить сейчас <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
 </section>
 
 <!-- MEMPOOL ALERT BAR с анимированными иконками -->
 <div id="mempool-bar" style="display:flex;align-items:center;justify-content:center;gap:14px;padding:9px 16px;margin-bottom:20px;background:rgba(255,255,255,.018);border:1px solid rgba(255,255,255,.055);border-radius:var(--r);font-family:var(--mono);font-size:.66rem;color:var(--m2);flex-wrap:wrap">
   <span style="display:flex;align-items:center;gap:5px">
     <span class="net-heart calm no-transition" id="net-pulse-dot"><svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g class="h-flame"><path d="M9 19 Q7 15 9.5 11 Q10.5 15 12 11 Q13.5 15 14.5 11 Q17 15 15 19" fill="#ff6b00" opacity=".85"/><path d="M10.5 20 Q9 17 10.5 14 Q11.5 17 12 14 Q12.5 17 13.5 14 Q15 17 13.5 20" fill="#ffe066" opacity=".7"/></g><path class="h-body" d="M12 20.5C12 20.5 2.5 14 2.5 8C2.5 5.2 4.7 3 7.5 3C9.1 3 10.6 3.8 12 5.2C13.4 3.8 14.9 3 16.5 3C19.3 3 21.5 5.2 21.5 8C21.5 14 12 20.5 12 20.5Z"/><g class="h-ice" stroke="#cff0ff" stroke-width=".9" stroke-linecap="round" fill="none"><line x1="12" y1="5.5" x2="12" y2="8.5"/><line x1="10.4" y1="6.3" x2="13.6" y2="7.7"/><line x1="10.4" y1="7.7" x2="13.6" y2="6.3"/><line x1="7" y1="9.5" x2="7" y2="11.5"/><line x1="6" y1="10.1" x2="8" y2="10.9"/><line x1="17" y1="9.5" x2="17" y2="11.5"/><line x1="16" y1="10.1" x2="18" y2="10.9"/></g></svg></span>
-    <span style="color:var(--m)">мемпул</span>
+    <span style="color:var(--m)" id="mp-lbl-mempool">мемпул</span>
     <strong id="tk-stuck" style="color:var(--t)">—</strong>
   </span>
   <span style="color:rgba(255,255,255,.1)">|</span>
@@ -1234,7 +1231,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
       <span></span>
       <span></span>
     </span>
-    <span style="color:var(--m)">размер</span>
+    <span style="color:var(--m)" id="mp-lbl-size">размер</span>
     <strong id="tk-size" class="ticker-val ok" style="color:var(--t)">—</strong>
     <span>МБ</span>
   </span>
@@ -1288,10 +1285,10 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
     <span class="stat-num" id="sc">—</span>
     <div class="stat-lbl">Ускорено TX</div>
   </a>
-  <a href="javascript:void(0)" class="stat-card" style="text-decoration:none" onclick="document.getElementById('status').scrollIntoView({behavior:'smooth'});return false;">
+  <a href="javascript:void(0)" class="stat-card" style="text-decoration:none" onclick="document.getElementById('network-intelligence').scrollIntoView({behavior:'smooth'});return false;">
     <span class="stat-card-icon" id="block-icon" style="transition:filter .5s,transform .3s;display:inline-block">🔥</span>
     <span class="stat-num" id="avg-time" style="opacity:.3;animation:skeletonPulse 1.6s ease-in-out infinite">—</span>
-    <div class="stat-lbl">Среднее время блока</div>
+    <div class="stat-lbl" id="stat-lbl-blocktime">Среднее время блока</div>
   </a>
   <a href="javascript:void(0)" class="stat-card" style="text-decoration:none" onclick="document.getElementById('pools').scrollIntoView({behavior:'smooth'});return false;">
     <span class="stat-card-icon" style="display:inline-block;position:relative;width:38px;height:34px;vertical-align:middle">
@@ -1374,7 +1371,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
     <div class="fg">
     <label>Transaction ID (TXID)</label>
     <div id="single-mode"><input type="text" id="txid" placeholder="a1b2c3d4e5f6... (64 hex символа)" maxlength="64" oninput="onTxidDiag(this.value)"></div>
-    <div class="batch-area" id="batch-mode"><textarea class="batch-input" id="batch-txids" placeholder="Вставьте по одному TXID на строку&#10;a1b2c3...&#10;9f8e7d...&#10;4c5d6e..." oninput="onBatchInput()"></textarea><div class="batch-count" id="batch-count">0 транзакций</div></div>
+    <div class="batch-area" id="batch-mode"><textarea class="batch-input" id="batch-txids" data-i18n-ph="ph.batch" placeholder="Вставьте по одному TXID на строку&#10;a1b2c3...&#10;9f8e7d...&#10;4c5d6e..." oninput="onBatchInput()"></textarea><div class="batch-count" id="batch-count">0 транзакций</div></div>
     <div class="batch-toggle" id="batch-toggle" onclick="toggleBatch()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> Пакетное ускорение (до 20 TX) <span style="margin-left:6px;font-family:var(--mono);font-size:.56rem;background:rgba(247,147,26,.15);border:1px solid rgba(247,147,26,.35);border-radius:4px;padding:1px 6px;color:var(--a);letter-spacing:.5px">PREMIUM</span></div>
   </div>
 
@@ -1416,7 +1413,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
     <div class="feed-panel" id="panel-pending"><div id="queue-list" style="display:flex;flex-direction:column;padding:4px 0"></div></div>
   </div>
 
-  <div class="push-prompt" id="push-prompt"><span style="color:var(--m2)">Получить уведомление когда транзакция подтвердится?</span><button class="push-btn" onclick="requestPush()">Включить уведомления</button></div>
+  <div class="push-prompt" id="push-prompt"><span style="color:var(--m2)" data-i18n="notif.prompt">Получить уведомление когда транзакция подтвердится?</span><button class="push-btn" onclick="requestPush()">Включить уведомления</button></div>
 
   </div>
 
@@ -1509,7 +1506,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
 
     <div class="fg" style="margin-top:12px">
       <label>TXID родительской транзакции</label>
-      <input type="text" id="cpfp-parent" placeholder="64 hex символа..." maxlength="64" oninput="onCpfpInput()" style="font-family:var(--mono);font-size:.72rem">
+      <input type="text" id="cpfp-parent" placeholder="a1b2c3d4... (64 hex символа)" maxlength="64" oninput="onCpfpInput()" style="font-family:var(--mono);font-size:.72rem">
     </div>
 
     <div style="margin:12px 0 4px;display:none" id="cpfp-target-wrap">
@@ -1560,7 +1557,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
       Проверить статус TX
     </span></div>
     <div class="card-sub">Проверка подтверждений в реальном времени через mempool.space</div>
-    <div class="fg"><label>TXID</label><input type="text" id="stxid" placeholder="64 hex символа..." maxlength="64"></div><button class="chk-btn" onclick="chk()"><span style="display:inline-flex;align-items:center;gap:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>ПРОВЕРИТЬ СТАТУС</span></button><div class="status-res" id="sr"></div>
+    <div class="fg"><label>TXID</label><input type="text" id="stxid" placeholder="a1b2c3d4... (64 hex символа)" maxlength="64"></div><button class="chk-btn" onclick="chk()"><span style="display:inline-flex;align-items:center;gap:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>ПРОВЕРИТЬ СТАТУС</span></button><div class="status-res" id="sr"></div>
   </div>
 
   <!-- ── ПАНЕЛЬ: SMART ADVISOR ─────────────────────── -->
@@ -1585,13 +1582,13 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
 <!-- PLANS -->
 <div style="margin-bottom:28px"><div class="sh">Выберите план</div>
 <div class="plans">
-  <div class="plan-card"><div class="ptag tf" style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><rect x="2.5" y="10.5" width="19" height="12" rx="3" fill="rgba(247,147,26,0.12)" stroke="#f7931a" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 10.5V7.5a5 5 0 0 1 9.9-1" stroke="#f7931a" stroke-width="1.6" stroke-linecap="round" fill="none"/><circle cx="12" cy="16" r="2" fill="#f7931a" opacity="0.85"/><rect x="11" y="16.8" width="2" height="3" rx="1" fill="#f7931a" opacity="0.7"/></svg>FREE</div><div class="plan-price">$0 <em>/ бесплатно</em></div><div class="plan-desc">Серверный broadcast через 3 CORS-узла. Реальные ответы от каждого канала. Однократный broadcast.</div><ul class="fl"><li><span class="fi ok">✓</span>mempool.space + blockstream.info + Blockchair (3 узла)</li><li><span class="fi ok">✓</span>ViaBTC + mempoolAccel (2 пул-акселератора)</li><li><span class="fi ok">✓</span>Итого 5 каналов · Серверный broadcast, без CORS</li><li><span class="fi ok">✓</span>Трекер подтверждений · Smart Advisor</li><li><span class="fi ok">✓</span>Однократный broadcast (волны — только Premium)</li><li><span class="fi na">—</span><span style="color:var(--m)">Пул-акселераторы — только Premium</span></li><li><span class="fi na">—</span><span style="color:var(--m)">10 волн повтора (только Premium)</span></li></ul><button class="pbtn pbf" onclick="pick('free');document.getElementById('txid').focus()"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><rect x="2.5" y="10.5" width="19" height="12" rx="3" fill="rgba(247,147,26,0.12)" stroke="#f7931a" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 10.5V7.5a5 5 0 0 1 9.9-1" stroke="#f7931a" stroke-width="1.6" stroke-linecap="round" fill="none"/><circle cx="12" cy="16" r="2" fill="#f7931a" opacity="0.85"/><rect x="11" y="16.8" width="2" height="3" rx="1" fill="#f7931a" opacity="0.7"/></svg>Начать бесплатно</span></button></div>
-  <div class="plan-card prem"><div class="ptag tp" style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><defs><linearGradient id="cgbadge" x1="2" y1="5" x2="22" y2="19" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFE566"/><stop offset="45%" stop-color="#F7931A"/><stop offset="100%" stop-color="#FF6B00"/></linearGradient></defs><path d="M3 19h18" stroke="url(#cgbadge)" stroke-width="2" stroke-linecap="round"/><path d="M3 19L4.5 9.5L9 14L12 6L15 14L19.5 9.5L21 19z" fill="url(#cgbadge)" stroke="url(#cgbadge)" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="12" cy="6" r="1.4" fill="#FFE566"/><circle cx="4.5" cy="9.5" r="1.1" fill="#FFE566"/><circle cx="19.5" cy="9.5" r="1.1" fill="#FFE566"/></svg>PREMIUM</div><div class="plan-price"><span style="color:var(--a)" id="plan-price-usd">$…</span> <em>/ разово</em> <span id="plan-price-tag" style="display:inline-flex;align-items:center;gap:4px;font-size:.57rem;font-family:var(--mono);padding:2px 8px;border-radius:4px;background:rgba(247,147,26,.12);color:var(--a);vertical-align:middle;margin-left:4px"><span class="net-heart calm no-transition sm" id="price-tag-dot"><svg width="12" height="12" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g class="h-flame"><path d="M9 19 Q7 15 9.5 11 Q10.5 15 12 11 Q13.5 15 14.5 11 Q17 15 15 19" fill="#ff6b00" opacity=".85"/></g><path class="h-body" d="M12 20.5C12 20.5 2.5 14 2.5 8C2.5 5.2 4.7 3 7.5 3C9.1 3 10.6 3.8 12 5.2C13.4 3.8 14.9 3 16.5 3C19.3 3 21.5 5.2 21.5 8C21.5 14 12 20.5 12 20.5Z"/><g class="h-ice" stroke="#cff0ff" stroke-width="1" stroke-linecap="round" fill="none"><line x1="12" y1="5.5" x2="12" y2="8.5"/><line x1="10.4" y1="6.3" x2="13.6" y2="7.7"/><line x1="10.4" y1="7.7" x2="13.6" y2="6.3"/></g></svg></span><span id="price-tag-text">сеть</span></span></div><div id="plan-conf-time" style="font-family:var(--mono);font-size:.62rem;color:var(--g);margin-top:2px;margin-bottom:4px">Premium ≈ 10–20 мин ⚡</div><div class="plan-desc">30 каналов: 8 hex-узлов + 22 пула (~88% хешрейта). Реальные ответы от Foundry, AntPool, MARA. 10 волн до 14 часов.</div><ul class="fl"><li><span class="fi ok">✓</span><strong>8 hex-broadcast узлов</strong> — mempool.space · blockstream · Blockchair · BlockCypher · btcscan · blockchain.info · bitaps · sochain</li><li><span class="fi ok">✓</span><strong>22 пул-акселератора</strong> — Foundry ⭐ · AntPool · MARA Slipstream ★★ · ViaBTC · SpiderPool · F2Pool · Luxor · CloverPool · BitFuFu · Ocean · EMCDPool · SBI Crypto · 2Miners · Rawpool и ещё 8</li><li><span class="fi ok">✓</span><strong>~88% хешрейта</strong> Bitcoin охвачено · Last-Block-Miner boost</li><li><span class="fi ok">✓</span><strong>10 волн</strong>: адаптивный интервал · Anti-Stuck режим при зависании >48ч</li><li><span class="fi ok">✓</span>Цена $3–18 — дешевле когда сеть спокойна</li><li><span class="fi ok">✓</span>Пакет до 20 TX · Smart Advisor · Возврат за 6 ч если не помогло</li></ul><button class="pbtn pbp" onclick="openM()"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><defs><linearGradient id="cg16" x1="2" y1="5" x2="22" y2="19" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFE566"/><stop offset="45%" stop-color="#F7931A"/><stop offset="100%" stop-color="#FF6B00"/></linearGradient></defs><path d="M3 19h18" stroke="url(#cg16)" stroke-width="2" stroke-linecap="round"/><path d="M3 19L4.5 9.5L9 14L12 6L15 14L19.5 9.5L21 19z" fill="url(#cg16)" stroke="url(#cg16)" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="12" cy="6" r="1.4" fill="#FFE566"/><circle cx="4.5" cy="9.5" r="1.1" fill="#FFE566"/><circle cx="19.5" cy="9.5" r="1.1" fill="#FFE566"/></svg>Купить Premium — <span id="plan-btn-price">$…</span></span></button></div>
+  <div class="plan-card"><div class="ptag tf" style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><rect x="2.5" y="10.5" width="19" height="12" rx="3" fill="rgba(247,147,26,0.12)" stroke="#f7931a" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 10.5V7.5a5 5 0 0 1 9.9-1" stroke="#f7931a" stroke-width="1.6" stroke-linecap="round" fill="none"/><circle cx="12" cy="16" r="2" fill="#f7931a" opacity="0.85"/><rect x="11" y="16.8" width="2" height="3" rx="1" fill="#f7931a" opacity="0.7"/></svg>FREE</div><div class="plan-price">$0 <em>/ бесплатно</em></div><div class="plan-desc" id="plan-free-desc">Серверный broadcast через 3 CORS-узла. Реальные ответы от каждого канала. Однократный broadcast.</div><ul class="fl"><li><span class="fi ok">✓</span><span id="plan-f-li1">mempool.space + blockstream.info + Blockchair (3 узла)</span></li><li><span class="fi ok">✓</span><span id="plan-f-li2">ViaBTC + mempoolAccel (2 пул-акселератора)</span></li><li><span class="fi ok">✓</span><span id="plan-f-li3">Итого 5 каналов · Серверный broadcast, без CORS</span></li><li><span class="fi ok">✓</span><span id="plan-f-li4">Трекер подтверждений · Smart Advisor</span></li><li><span class="fi ok">✓</span><span id="plan-f-li5">Однократный broadcast (волны — только Premium)</span></li><li><span class="fi na">—</span><span style="color:var(--m)" id="plan-f-li6">Пул-акселераторы — только Premium</span></li><li><span class="fi na">—</span><span style="color:var(--m)" id="plan-f-li7">10 волн повтора (только Premium)</span></li></ul><button class="pbtn pbf" onclick="pick('free');document.getElementById('txid').focus()"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><rect x="2.5" y="10.5" width="19" height="12" rx="3" fill="rgba(247,147,26,0.12)" stroke="#f7931a" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 10.5V7.5a5 5 0 0 1 9.9-1" stroke="#f7931a" stroke-width="1.6" stroke-linecap="round" fill="none"/><circle cx="12" cy="16" r="2" fill="#f7931a" opacity="0.85"/><rect x="11" y="16.8" width="2" height="3" rx="1" fill="#f7931a" opacity="0.7"/></svg id="plan-free-btn">Начать бесплатно</span></button></div>
+  <div class="plan-card prem"><div class="ptag tp" style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><defs><linearGradient id="cgbadge" x1="2" y1="5" x2="22" y2="19" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFE566"/><stop offset="45%" stop-color="#F7931A"/><stop offset="100%" stop-color="#FF6B00"/></linearGradient></defs><path d="M3 19h18" stroke="url(#cgbadge)" stroke-width="2" stroke-linecap="round"/><path d="M3 19L4.5 9.5L9 14L12 6L15 14L19.5 9.5L21 19z" fill="url(#cgbadge)" stroke="url(#cgbadge)" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="12" cy="6" r="1.4" fill="#FFE566"/><circle cx="4.5" cy="9.5" r="1.1" fill="#FFE566"/><circle cx="19.5" cy="9.5" r="1.1" fill="#FFE566"/></svg>PREMIUM</div><div class="plan-price"><span style="color:var(--a)" id="plan-price-usd">$…</span> <em>/ разово</em> <span id="plan-price-tag" style="display:inline-flex;align-items:center;gap:4px;font-size:.57rem;font-family:var(--mono);padding:2px 8px;border-radius:4px;background:rgba(247,147,26,.12);color:var(--a);vertical-align:middle;margin-left:4px"><span class="net-heart calm no-transition sm" id="price-tag-dot"><svg width="12" height="12" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g class="h-flame"><path d="M9 19 Q7 15 9.5 11 Q10.5 15 12 11 Q13.5 15 14.5 11 Q17 15 15 19" fill="#ff6b00" opacity=".85"/></g><path class="h-body" d="M12 20.5C12 20.5 2.5 14 2.5 8C2.5 5.2 4.7 3 7.5 3C9.1 3 10.6 3.8 12 5.2C13.4 3.8 14.9 3 16.5 3C19.3 3 21.5 5.2 21.5 8C21.5 14 12 20.5 12 20.5Z"/><g class="h-ice" stroke="#cff0ff" stroke-width="1" stroke-linecap="round" fill="none"><line x1="12" y1="5.5" x2="12" y2="8.5"/><line x1="10.4" y1="6.3" x2="13.6" y2="7.7"/><line x1="10.4" y1="7.7" x2="13.6" y2="6.3"/></g></svg></span><span id="price-tag-text" data-i18n="plan.price_tag">сеть</span></span></div><div id="plan-conf-time" style="font-family:var(--mono);font-size:.62rem;color:var(--g);margin-top:2px;margin-bottom:4px" data-i18n="plan.premium_time">Premium ≈ 10–20 мин ⚡</div><div class="plan-desc">30 каналов: 8 hex-узлов + 22 пула (~88% хешрейта). Реальные ответы от Foundry, AntPool, MARA. 8 волн до 4 часов.</div><ul class="fl"><li><span class="fi ok">✓</span><strong>8 hex-broadcast узлов</strong> — mempool.space · blockstream · Blockchair · BlockCypher · btcscan · blockchain.info · bitaps · sochain</li><li><span class="fi ok">✓</span><strong>22 пул-акселератора</strong> — Foundry ⭐ · AntPool · MARA Slipstream ★★ · ViaBTC · SpiderPool · F2Pool · Luxor · CloverPool · BitFuFu · Ocean · EMCDPool · SBI Crypto · 2Miners · Rawpool и ещё 8</li><li><span class="fi ok">✓</span><span id="plan-p-li3"><strong>~88% хешрейта</strong> Bitcoin охвачено · Last-Block-Miner boost</span></li><li><span class="fi ok">✓</span><strong>8 волн</strong>: адаптивный интервал · Anti-Stuck режим при зависании >48ч</li><li><span class="fi ok">✓</span><span id="plan-p-li5">Цена $3–18 — дешевле когда сеть спокойна</span></li><li><span class="fi ok">✓</span><span id="plan-p-li6">Пакет до 20 TX · Smart Advisor · Возврат за 6 ч если не помогло</span></li></ul><button class="pbtn pbp" onclick="openM()"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><defs><linearGradient id="cg16" x1="2" y1="5" x2="22" y2="19" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFE566"/><stop offset="45%" stop-color="#F7931A"/><stop offset="100%" stop-color="#FF6B00"/></linearGradient></defs><path d="M3 19h18" stroke="url(#cg16)" stroke-width="2" stroke-linecap="round"/><path d="M3 19L4.5 9.5L9 14L12 6L15 14L19.5 9.5L21 19z" fill="url(#cg16)" stroke="url(#cg16)" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="12" cy="6" r="1.4" fill="#FFE566"/><circle cx="4.5" cy="9.5" r="1.1" fill="#FFE566"/><circle cx="19.5" cy="9.5" r="1.1" fill="#FFE566"/></svg id="plan-prem-btn-label">Купить Premium — <span id="plan-btn-price">$…</span></span></button></div>
 </div></div>
 
 <!-- TRUST & REVIEWS -->
-<!-- NETWORK INTELLIGENCE v13 — новый блок -->
-<div style="margin-bottom:28px">
+<!-- NETWORK INTELLIGENCE v14 — новый блок -->
+<div id="network-intelligence" style="margin-bottom:28px">
   <div class="sh" style="display:flex;align-items:center;gap:10px;justify-content:space-between">
     <span style="display:flex;align-items:center;gap:8px">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent3)" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -1604,7 +1601,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
     <!-- Карточка 1: Текущая цена ускорения -->
     <div style="background:linear-gradient(145deg,rgba(247,147,26,.08),rgba(13,13,20,.95));border:1px solid rgba(247,147,26,.18);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden">
       <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:radial-gradient(circle,rgba(247,147,26,.12),transparent 70%);pointer-events:none"></div>
-      <div style="font-family:var(--mono);font-size:.55rem;color:var(--m);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Цена сейчас</div>
+      <div style="font-family:var(--mono);font-size:.55rem;color:var(--m);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px" id="ni-label-price">Цена сейчас</div>
       <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px">
         <span style="font-size:1.8rem;font-weight:800;color:var(--a);font-family:var(--display)" id="ni-price-usd">—</span>
         <span style="font-family:var(--mono);font-size:.62rem;color:var(--m2)">USD</span>
@@ -1626,7 +1623,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
     <!-- Карточка 3: Мемпул -->
     <div style="background:linear-gradient(145deg,rgba(124,92,252,.07),rgba(13,13,20,.95));border:1px solid rgba(124,92,252,.18);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden">
       <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:radial-gradient(circle,rgba(124,92,252,.1),transparent 70%);pointer-events:none"></div>
-      <div style="font-family:var(--mono);font-size:.55rem;color:var(--m);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Мемпул</div>
+      <div style="font-family:var(--mono);font-size:.55rem;color:var(--m);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px" id="ni-label-mempool">Мемпул</div>
       <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px">
         <span style="font-size:1.8rem;font-weight:800;color:var(--accent2);font-family:var(--display)" id="ni-mempool-mb">—</span>
         <span style="font-family:var(--mono);font-size:.62rem;color:var(--m2)">МБ</span>
@@ -1637,7 +1634,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
     <!-- Карточка 4: Рекомендация -->
     <div style="background:linear-gradient(145deg,rgba(38,208,168,.07),rgba(13,13,20,.95));border:1px solid rgba(38,208,168,.18);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden">
       <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:radial-gradient(circle,rgba(38,208,168,.1),transparent 70%);pointer-events:none"></div>
-      <div style="font-family:var(--mono);font-size:.55rem;color:var(--m);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Smart совет</div>
+      <div style="font-family:var(--mono);font-size:.55rem;color:var(--m);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px" id="ni-label-advice">Smart совет</div>
       <div style="font-size:.75rem;font-weight:700;color:var(--accent3);font-family:var(--display);margin-bottom:4px;line-height:1.3" id="ni-advice-title">Анализ…</div>
       <div style="font-family:var(--mono);font-size:.58rem;color:var(--m2);line-height:1.5" id="ni-advice-text">Получаем данные сети</div>
     </div>
@@ -1648,11 +1645,11 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
 
 <div style="margin-bottom:28px"><div class="sh">Почему нам доверяют</div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:8px;margin-bottom:16px">
-    <div style="background:linear-gradient(160deg,rgba(13,13,20,.95),rgba(10,10,16,.95));border:1px solid rgba(255,255,255,.07);border-radius:var(--r2);padding:16px 18px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="width:32px;height:32px;background:rgba(0,232,122,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><div style="font-weight:700;font-size:.82rem;color:var(--t)">Без приватных ключей</div></div><div style="font-family:var(--mono);font-size:.65rem;color:var(--m2);line-height:1.7">Мы принимаем только TXID — публичный номер транзакции. Никаких паролей, seed-фраз или доступа к кошельку.</div></div>
-    <div style="background:linear-gradient(160deg,rgba(13,13,20,.95),rgba(10,10,16,.95));border:1px solid rgba(255,255,255,.07);border-radius:var(--r2);padding:16px 18px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="width:32px;height:32px;background:rgba(0,232,122,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div><div style="font-weight:700;font-size:.82rem;color:var(--t)">Возврат за 6 часов</div></div><div style="font-family:var(--mono);font-size:.65rem;color:var(--m2);line-height:1.7">Premium не сработал в течение 6 часов — возвращаем оплату. Рассматриваем в течение 24 часов, без бюрократии.</div></div>
-    <div style="background:linear-gradient(160deg,rgba(13,13,20,.95),rgba(10,10,16,.95));border:1px solid rgba(255,255,255,.07);border-radius:var(--r2);padding:16px 18px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="width:32px;height:32px;background:rgba(0,232,122,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div style="font-weight:700;font-size:.82rem;color:var(--t)">Данные реальные</div></div><div style="font-family:var(--mono);font-size:.65rem;color:var(--m2);line-height:1.7">Счётчик ускорений, статус сети и пулов — всё берётся напрямую из mempool.space и Firebase в реальном времени.</div></div>
+    <div style="background:linear-gradient(160deg,rgba(13,13,20,.95),rgba(10,10,16,.95));border:1px solid rgba(255,255,255,.07);border-radius:var(--r2);padding:16px 18px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="width:32px;height:32px;background:rgba(0,232,122,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div><div style="font-weight:700;font-size:.82rem;color:var(--t)" id="trust-key-title">Без приватных ключей</div></div><div style="font-family:var(--mono);font-size:.65rem;color:var(--m2);line-height:1.7" id="trust-key-desc">Мы принимаем только TXID — публичный номер транзакции. Никаких паролей, seed-фраз или доступа к кошельку.</div></div>
+    <div style="background:linear-gradient(160deg,rgba(13,13,20,.95),rgba(10,10,16,.95));border:1px solid rgba(255,255,255,.07);border-radius:var(--r2);padding:16px 18px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="width:32px;height:32px;background:rgba(0,232,122,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg></div><div style="font-weight:700;font-size:.82rem;color:var(--t)" id="trust-refund-title">Возврат за 6 часов</div></div><div style="font-family:var(--mono);font-size:.65rem;color:var(--m2);line-height:1.7" id="trust-refund-desc">Premium не сработал в течение 6 часов — возвращаем оплату. Рассматриваем в течение 24 часов, без бюрократии.</div></div>
+    <div style="background:linear-gradient(160deg,rgba(13,13,20,.95),rgba(10,10,16,.95));border:1px solid rgba(255,255,255,.07);border-radius:var(--r2);padding:16px 18px"><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div style="width:32px;height:32px;background:rgba(0,232,122,.1);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div><div style="font-weight:700;font-size:.82rem;color:var(--t)" id="trust-data-title">Данные реальные</div></div><div style="font-family:var(--mono);font-size:.65rem;color:var(--m2);line-height:1.7" id="trust-data-desc">Счётчик ускорений, статус сети и пулов — всё берётся напрямую из mempool.space и Firebase в реальном времени.</div></div>
   </div>
-  <a href="https://t.me/TurboTXcoment" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:16px;padding:18px 20px; background:linear-gradient(110deg,rgba(0,136,204,.08),rgba(0,136,204,.03)); border:1px solid rgba(0,136,204,.2);border-radius:var(--r2); text-decoration:none;transition:all .2s" onmouseover="this.style.borderColor='rgba(0,136,204,.5)';this.style.background='linear-gradient(110deg,rgba(0,136,204,.12),rgba(0,136,204,.05))'" onmouseout="this.style.borderColor='rgba(0,136,204,.2)';this.style.background='linear-gradient(110deg,rgba(0,136,204,.08),rgba(0,136,204,.03))'"><div style="width:44px;height:44px;background:rgba(0,136,204,.15);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0088cc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2.5L2 10.5l7 1.5 2 6 3-3 4 3 3.5-15.5z"/><line x1="9" y1="12" x2="14.5" y2="7.5"/></svg></div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.9rem;color:var(--t);margin-bottom:4px">Отзывы пользователей — @TurboTXcoment</div><div style="font-family:var(--mono);font-size:.67rem;color:var(--m2);line-height:1.6">Канал с реальными отзывами тех, кто использовал TurboTX. Только настоящий опыт — хороший и плохой.</div></div><div style="font-family:var(--mono);font-size:.65rem;color:#0088cc;white-space:nowrap;flex-shrink:0">Читать →</div></a>
+  <a href="https://t.me/TurboTXcoment" target="_blank" rel="noopener noreferrer" style="display:flex;align-items:center;gap:16px;padding:18px 20px; background:linear-gradient(110deg,rgba(0,136,204,.08),rgba(0,136,204,.03)); border:1px solid rgba(0,136,204,.2);border-radius:var(--r2); text-decoration:none;transition:all .2s" onmouseover="this.style.borderColor='rgba(0,136,204,.5)';this.style.background='linear-gradient(110deg,rgba(0,136,204,.12),rgba(0,136,204,.05))'" onmouseout="this.style.borderColor='rgba(0,136,204,.2)';this.style.background='linear-gradient(110deg,rgba(0,136,204,.08),rgba(0,136,204,.03))'"><div style="width:44px;height:44px;background:rgba(0,136,204,.15);border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0088cc" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2.5L2 10.5l7 1.5 2 6 3-3 4 3 3.5-15.5z"/><line x1="9" y1="12" x2="14.5" y2="7.5"/></svg></div><div style="flex:1;min-width:0"><div style="font-weight:700;font-size:.9rem;color:var(--t);margin-bottom:4px" id="trust-tg-title">Отзывы пользователей — @TurboTXcoment</div><div style="font-family:var(--mono);font-size:.67rem;color:var(--m2);line-height:1.6" id="trust-tg-desc">Канал с реальными отзывами тех, кто использовал TurboTX. Только настоящий опыт — хороший и плохой.</div></div><div style="font-family:var(--mono);font-size:.65rem;color:#0088cc;white-space:nowrap;flex-shrink:0" id="trust-tg-link">Читать →</div></a>
 </div>
 
 
@@ -1717,9 +1714,9 @@ function renderAdvisor(d, out) {
   html += `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px;margin-bottom:14px">`;
   if (fa.feeRate) html += `<div class="adv-stat"><div class="adv-stat-lbl">fee rate</div><div class="adv-stat-val">${fa.feeRate} sat/vB</div></div>`;
   if (fa.feeRateNeeded) html += `<div class="adv-stat"><div class="adv-stat-lbl">нужно</div><div class="adv-stat-val">${fa.feeRateNeeded} sat/vB</div></div>`;
-  if (feeRatio !== null) html += `<div class="adv-stat"><div class="adv-stat-lbl">покрытие</div><div class="adv-stat-val" style="color:${feeRatio>=80?'var(--g)':feeRatio>=40?'var(--a)':'var(--err)'}">${feeRatio}%</div></div>`;
+  if (feeRatio !== null) html += `<div class="adv-stat"><div class="adv-stat-lbl" id="mp-lbl-coverage">покрытие</div><div class="adv-stat-val" style="color:${feeRatio>=80?'var(--g)':feeRatio>=40?'var(--a)':'var(--err)'}">${feeRatio}%</div></div>`;
   if (fa.vsize) html += `<div class="adv-stat"><div class="adv-stat-lbl">размер</div><div class="adv-stat-val">${fa.vsize} vB</div></div>`;
-  if (stuckH > 0) html += `<div class="adv-stat"><div class="adv-stat-lbl">зависла</div><div class="adv-stat-val" style="color:${stuckH>=72?'var(--err)':stuckH>=48?'#ff6b35':'var(--a)'}">${stuckH}ч</div></div>`;
+  if (stuckH > 0) html += `<div class="adv-stat"><div class="adv-stat-lbl" id="mp-lbl-stuck">зависла</div><div class="adv-stat-val" style="color:${stuckH>=72?'var(--err)':stuckH>=48?'#ff6b35':'var(--a)'}">${stuckH}ч</div></div>`;
   html += '</div>';
 
   // Time forecast
@@ -1837,7 +1834,7 @@ function openTab(tab) {
 
 <!-- HOW IT REALLY WORKS -->
 <div style="background:linear-gradient(135deg,rgba(247,147,26,.06) 0%,rgba(124,92,252,.06) 100%);border:1px solid rgba(247,147,26,.2);border-radius:14px;padding:18px 22px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-  <div style="font-family:var(--mono);font-size:.58rem;font-weight:700;color:var(--a);letter-spacing:1px;white-space:nowrap">v14 NEW</div>
+  <div style="font-family:var(--mono);font-size:.58rem;font-weight:700;color:var(--a);letter-spacing:1px;white-space:nowrap">v13 NEW</div>
   <div style="display:flex;gap:10px;flex-wrap:wrap">
     <span style="font-family:var(--mono);font-size:.6rem;color:rgba(255,214,0,.9);background:rgba(255,214,0,.08);padding:4px 10px;border-radius:6px;border:1px solid rgba(255,214,0,.2)">⚡ Lightning Network</span>
     <span style="font-family:var(--mono);font-size:.6rem;color:var(--m2);background:rgba(0,0,0,.25);padding:4px 10px;border-radius:6px;border:1px solid rgba(247,147,26,.1)">🎯 Last-Block-Miner boost</span>
@@ -1869,13 +1866,13 @@ function openTab(tab) {
         Pool accelerator API · 22 пула
       </div>
       <div style="font-family:var(--mono);font-size:.65rem;color:var(--m2);line-height:1.65">
-        ViaBTC, AntPool, MARA, F2Pool, Luxor и другие имеют <strong style="color:var(--t)">отдельную очередь ускорения</strong>. TX оттуда майнится вне зависимости от fee rate — пул добывает её в приоритете. Foundry+AntPool+MARA+ViaBTC+SpiderPool = 71% хешрейта. v14 включает MARA Slipstream, EMCDPool, SBI Crypto, 2Miners, Rawpool — итого <strong style="color:var(--t)">~88% хешрейта</strong>.
+        ViaBTC, AntPool, MARA, F2Pool, Luxor и другие имеют <strong style="color:var(--t)">отдельную очередь ускорения</strong>. TX оттуда майнится вне зависимости от fee rate — пул добывает её в приоритете. Foundry+AntPool+MARA+ViaBTC+SpiderPool = 71% хешрейта. v13 включает MARA Slipstream, EMCDPool, SBI Crypto, 2Miners, Rawpool — итого <strong style="color:var(--t)">~88% хешрейта</strong>.
       </div>
     </div>
     <div style="background:rgba(0,0,0,.25);border:1px solid rgba(247,147,26,.12);border-radius:10px;padding:14px 16px">
       <div style="font-size:.7rem;font-weight:700;color:var(--a);margin-bottom:6px;display:flex;align-items:center;gap:6px">
         <span style="width:20px;height:20px;background:rgba(247,147,26,.15);border-radius:4px;display:inline-flex;align-items:center;justify-content:center;font-size:.65rem;color:var(--a);flex-shrink:0">③</span>
-        Волновой повтор · до 10 волн
+        Волновой повтор · до 8 волн
       </div>
       <div style="font-family:var(--mono);font-size:.65rem;color:var(--m2);line-height:1.65">
         Очереди акселераторов периодически сбрасываются. Premium повторяет отправку <strong style="color:var(--t)">каждые 15–30 мин</strong> — TX остаётся в «горячем» списке пула до подтверждения. Это не разовый broadcast, а активная работа до результата.
@@ -1883,7 +1880,7 @@ function openTab(tab) {
     </div>
   </div>
   <div style="margin-top:12px;font-family:var(--mono);font-size:.6rem;color:rgba(247,147,26,.5);border-top:1px solid var(--b);padding-top:10px">
-    ⚡ v14 новинки: MARA Slipstream (приватный мемпул), Last-Block-Miner boost (кто добыл последний блок — идёт первым), Anti-Stuck (TX >72ч — агрессивный режим), Smart Advisor (GET /api/acceleration).
+    ⚡ v13 новинки: MARA Slipstream (приватный мемпул), Last-Block-Miner boost (кто добыл последний блок — идёт первым), Anti-Stuck (TX >72ч — агрессивный режим), Smart Advisor (GET /api/acceleration).
   </div>
 </div>
 
@@ -1895,7 +1892,7 @@ function openTab(tab) {
       <thead>
         <tr style="background:rgba(0,0,0,.2)">
           <th>Параметр</th>
-          <th class="us comp-us-col">TurboTX v14</th>
+          <th class="us comp-us-col">TurboTX v13</th>
           <th>ViaBTC</th>
           <th>CloverPool</th>
           <th>BitAccelerate</th>
@@ -1907,7 +1904,7 @@ function openTab(tab) {
         <tr><td class="comp-row-label">Цена Premium</td><td class="us comp-us-col" id="comp-price-cell"><strong>$3–18</strong> (динамич.)</td><td class="maybe">$25+</td><td class="maybe">$24+</td><td class="maybe">~$65</td></tr>
         <tr><td class="comp-row-label">Время Premium</td><td class="us comp-us-col">10–20 мин ⚡</td><td class="maybe">~30 мин</td><td class="maybe">30–60 мин</td><td class="maybe">повтор раз в 6ч</td></tr>
         <tr><td class="comp-row-label">Серверный broadcast</td><td class="us comp-us-col" style="color:var(--g)">✓ реальный ответ</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
-        <tr><td class="comp-row-label">Авто-повторы</td><td class="us comp-us-col" style="color:var(--g)">10 волн · 14 ч ⚡</td><td class="no">—</td><td class="no">—</td><td class="maybe">раз в 6ч</td></tr>
+        <tr><td class="comp-row-label">Авто-повторы</td><td class="us comp-us-col" style="color:var(--g)">8 волн · 4 ч ⚡</td><td class="no">—</td><td class="no">—</td><td class="maybe">раз в 6ч</td></tr>
         <tr><td class="comp-row-label">Охват хешрейта</td><td class="us comp-us-col" style="color:var(--g)">~88% (Foundry+AntPool+MARA+ViaBTC…)</td><td class="no">—</td><td class="no">—</td><td class="maybe">~30%</td></tr>
         <tr><td class="comp-row-label">RBF калькулятор</td><td class="us comp-us-col">✓ авто</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
         <tr><td class="comp-row-label">CPFP калькулятор</td><td class="us comp-us-col">✓ авто</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
@@ -1922,13 +1919,13 @@ function openTab(tab) {
 </div>
 
 <!-- POOLS -->
-<div id="pools" style="margin-bottom:36px"><div class="sh"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Подключённые узлы и пулы</div><div style="display:flex;gap:16px;margin-bottom:10px;font-family:var(--mono);font-size:.62rem;color:var(--m)"><span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:var(--g);display:inline-block"></span>Прямой API</span><span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:#7c5c9e;box-shadow:0 0 4px rgba(124,92,158,.4);display:inline-block"></span>Через p2p сеть</span><span style="display:flex;align-items:center;gap:5px"><span style="color:var(--accent3);font-size:.9em">★</span>Новый топ-пул 2026</span></div><div class="pools-grid" id="pg"></div></div>
+<div id="pools" style="margin-bottom:36px"><div class="sh"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Подключённые узлы и пулы</div><div style="display:flex;gap:16px;margin-bottom:10px;font-family:var(--mono);font-size:.62rem;color:var(--m)"><span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:var(--g);display:inline-block"></span id="pools-lbl-direct">Прямой API</span><span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:#7c5c9e;box-shadow:0 0 4px rgba(124,92,158,.4);display:inline-block"></span id="pools-lbl-p2p">Через p2p сеть</span><span style="display:flex;align-items:center;gap:5px"><span style="color:var(--accent3);font-size:.9em">★</span><span id="pools-lbl-new">Новый топ-пул 2026</span></span></div><div class="pools-grid" id="pg"></div></div>
 
 <!-- FAQ (компактный) -->
 <section class="faq-section" style="background:var(--s);border:1px solid var(--b);border-radius:20px;padding:36px;margin-bottom:40px">
   <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:20px;display:flex;align-items:center;gap:12px">Часто задаваемые вопросы <span style="flex:1;height:1px;background:var(--b);display:block"></span></h2>
   <div style="display:flex;flex-direction:column;gap:0">
-    <details style="border-bottom:1px solid var(--b);padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Как ускорить застрявшую Bitcoin транзакцию? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">Скопируйте <strong style="color:var(--t)">TXID (Transaction ID)</strong> вашей транзакции из кошелька — это строка из 64 символов. Вставьте его в форму выше и нажмите «Ускорить транзакцию». TurboTX v14 мгновенно отправит транзакцию в 30 каналов (MARA Slipstream, Foundry, AntPool, ViaBTC, SpiderPool и другие — ~88% хешрейта Bitcoin), которые включат её в следующий блок. Бесплатное ускорение занимает <strong style="color:var(--t)">1–3 часа</strong>, Premium — <strong style="color:var(--t)">10–20 минут</strong> с авто-повтором каждые 15 мин.</p></details>
+    <details style="border-bottom:1px solid var(--b);padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Как ускорить застрявшую Bitcoin транзакцию? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">Скопируйте <strong style="color:var(--t)">TXID (Transaction ID)</strong> вашей транзакции из кошелька — это строка из 64 символов. Вставьте его в форму выше и нажмите «Ускорить транзакцию». TurboTX v13 мгновенно отправит транзакцию в 30 каналов (MARA Slipstream, Foundry, AntPool, ViaBTC, SpiderPool и другие — ~88% хешрейта Bitcoin), которые включат её в следующий блок. Бесплатное ускорение занимает <strong style="color:var(--t)">1–3 часа</strong>, Premium — <strong style="color:var(--t)">10–20 минут</strong> с авто-повтором каждые 15 мин.</p></details>
     <details style="border-bottom:1px solid var(--b);padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Почему Bitcoin транзакция не подтверждается? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">Транзакция зависает в <strong style="color:var(--t)">mempool</strong> (очередь транзакций), когда сеть перегружена или комиссия (fee) была установлена слишком низкой. В 2026 году дополнительную нагрузку создают <strong style="color:var(--t)">Ordinals, BRC-20 токены и Runes</strong> — они конкурируют с обычными переводами за место в блоке. Майнеры выбирают транзакции с наибольшей комиссией в первую очередь — транзакции с низкой fee могут ждать часами и даже сутками. Акселератор TurboTX решает эту проблему без замены транзакции (RBF). Также доступен CPFP калькулятор для продвинутых пользователей.</p></details>
     <details style="border-bottom:1px solid var(--b);padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Что такое BTC transaction accelerator и как он работает? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><div style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">
 <p style="margin-bottom:10px">TurboTX работает на <strong style="color:var(--t)">трёх уровнях</strong>, каждый из которых реально ускоряет транзакцию — это не просто «бесполезный broadcast»:</p>
@@ -1936,10 +1933,10 @@ function openTab(tab) {
 Мы берём RAW HEX вашей транзакции и отправляем его через API в mempool.space, blockstream.info, blockchair, blockcypher и ещё 4 узла. Каждый из них ретранслирует TX своим пирам в P2P-сети Bitcoin. Это гарантирует, что TX не «потеряется» — её увидят все майнеры, включая тех, кто не подключён к стандартным узлам. <span style="color:rgba(247,147,26,.7)">Важно: TX, которая только у 1–2 пиров, рискует быть дропнута при высокой нагрузке.</span></p>
 <p style="margin-bottom:8px"><strong style="color:var(--a)">② Прямая отправка в акселераторы майнинг-пулов (22 пула)</strong><br>
 ViaBTC, AntPool, MARA, SpiderPool, F2Pool, Luxor и другие пулы имеют <strong style="color:var(--t)">отдельную очередь ускорения</strong> — это не обычный mempool. Транзакции из этой очереди пул майнит в приоритетном порядке, <strong style="color:var(--t)">вне зависимости от fee rate</strong>. Мы отправляем TXID напрямую в эти API. Foundry (27%) + AntPool (16%) + MARA Slipstream (11%) + ViaBTC (9%) + SpiderPool (8%) = уже 71% сети. Вместе с EMCDPool, SBI Crypto, Luxor и другими — ~88% хешрейта получает TX.</p>
-<p style="margin-bottom:0"><strong style="color:var(--a)">③ Волновой повтор (Premium: 10 волн за 14 часов)</strong><br>
+<p style="margin-bottom:0"><strong style="color:var(--a)">③ Волновой повтор (Premium: 8 волн за 10.5 часов)</strong><br>
 Акселераторы пулов очищают свои очереди периодически — TX подаётся заново каждые 15–30 минут, чтобы оставаться в «горячем» списке. Это <strong style="color:var(--t)">принципиально отличается</strong> от разовой отправки в mempool: мы не просто «говорим пулу один раз», а напоминаем регулярно до подтверждения.</p>
 </div></details>
-    <details style="border-bottom:1px solid var(--b);padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Сколько времени займёт ускорение транзакции? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7"><strong style="color:var(--t)">Бесплатный режим:</strong> 1–3 часа в зависимости от загрузки сети.<br><strong style="color:var(--t)">Premium режим:</strong> 10–20 минут — MARA Slipstream + Foundry + AntPool + ViaBTC + SpiderPool + 17 других пулов (10 волн) до подтверждения. Средний блок Bitcoin появляется каждые 10 минут.</p></details>
+    <details style="border-bottom:1px solid var(--b);padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Сколько времени займёт ускорение транзакции? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7"><strong style="color:var(--t)">Бесплатный режим:</strong> 1–3 часа в зависимости от загрузки сети.<br><strong style="color:var(--t)">Premium режим:</strong> 10–20 минут — MARA Slipstream + Foundry + AntPool + ViaBTC + SpiderPool + 17 других пулов (8 волн) до подтверждения. Средний блок Bitcoin появляется каждые 10 минут.</p></details>
     <details style="padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Безопасно ли использовать акселератор транзакций? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">Да, абсолютно безопасно. TurboTX использует только <strong style="color:var(--t)">TXID транзакции</strong> — публичную информацию из блокчейна. Мы не запрашиваем приватные ключи, seed-фразы или данные кошелька. Rebroadcast транзакций — стандартная практика в экосистеме Bitcoin. Сервис работает аналогично ViaBTC Accelerator и BTC.com Accelerator.</p></details>
   </div>
 </section>
@@ -1960,7 +1957,7 @@ ViaBTC, AntPool, MARA, SpiderPool, F2Pool, Luxor и другие пулы име
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--a)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
     </div>
     <div>
-      <h2 style="font-size:1.15rem;font-weight:800;margin:0 0 4px;letter-spacing:-.3px">О сервисе TurboTX v14</h2>
+      <h2 style="font-size:1.15rem;font-weight:800;margin:0 0 4px;letter-spacing:-.3px">О сервисе TurboTX v13</h2>
       <div style="font-family:var(--mono);font-size:.65rem;color:var(--m);letter-spacing:.5px">Прозрачность · Законность · Безопасность</div>
     </div>
     <div style="margin-left:auto;font-family:var(--mono);font-size:.58rem;color:var(--m);background:rgba(0,232,122,.08);border:1px solid rgba(0,232,122,.2);border-radius:6px;padding:4px 10px;white-space:nowrap">✓ Легальный сервис</div>
@@ -2063,7 +2060,7 @@ ViaBTC, AntPool, MARA, SpiderPool, F2Pool, Luxor и другие пулы име
       </div>
       <div>
         <div style="font-weight:800;font-size:.82rem;color:var(--t)">TurboTX</div>
-        <div style="font-family:var(--mono);font-size:.58rem;color:var(--g)">✓ Легальный технический сервис · v14</div>
+        <div style="font-family:var(--mono);font-size:.58rem;color:var(--g)">✓ Легальный технический сервис · v13</div>
       </div>
       <button onclick="toggleLegalCard()" style="margin-left:auto;background:none;border:none;cursor:pointer;color:var(--m);font-size:1rem;line-height:1;padding:2px 6px" onmouseover="this.style.color='var(--t)'" onmouseout="this.style.color='var(--m)'">✕</button>
     </div>
@@ -2310,13 +2307,13 @@ async function calcRbf() {
 
   document.getElementById('rbf-metrics').innerHTML = `
     <div style="background:rgba(0,0,0,.3);border:1px solid var(--b);border-radius:10px;padding:16px;font-family:var(--mono);font-size:.72rem">
-      <div class="rr"><span class="rk">Размер TX</span><span class="rv">${tx.vsize} vBytes (${tx.size} bytes)</span></div>
+      <div class="rr"><span class="rk" data-i18n="tx.size">Размер TX</span><span class="rv">${tx.vsize} vBytes (${tx.size} bytes)</span></div>
       <div class="rr"><span class="rk">Inputs / Outputs</span><span class="rv">${inputCount} / ${outputCount}</span></div>
-      <div class="rr"><span class="rk">Текущая комиссия</span><span class="rv">${tx.fee} sat · ${curFeeRate.toFixed(1)} sat/vB</span></div>
-      <div class="rr"><span class="rk">Новая ставка</span><span class="rv a">${newFeeRate} sat/vB</span></div>
-      <div class="rr"><span class="rk">Новая комиссия</span><span class="rv a">${newFee.toLocaleString('ru')} sat</span></div>
+      <div class="rr"><span class="rk" data-i18n="rbf.cur_fee">Текущая комиссия</span><span class="rv">${tx.fee} sat · ${curFeeRate.toFixed(1)} sat/vB</span></div>
+      <div class="rr"><span class="rk" data-i18n="rbf.new_rate">Новая ставка</span><span class="rv a">${newFeeRate} sat/vB</span></div>
+      <div class="rr"><span class="rk" data-i18n="rbf.new_fee">Новая комиссия</span><span class="rv a">${newFee.toLocaleString('ru')} sat</span></div>
       <div class="rr"><span class="rk" style="color:var(--g)">Доплата к текущей</span><span class="rv" style="color:var(--g);font-weight:700">+${addFee.toLocaleString('ru')} sat</span></div>
-      <div class="rr"><span class="rk">RBF флаг</span><span class="rv" style="color:${rbfOk ? 'var(--g)' : '#ff9320'}">${rbfOk ? '✓ включён (BIP-125)' : '✗ не включён'}</span></div>
+      <div class="rr"><span class="rk" data-i18n="rbf.flag">RBF флаг</span><span class="rv" style="color:${rbfOk ? 'var(--g)' : '#ff9320'}">${rbfOk ? '✓ включён (BIP-125)' : '✗ не включён'}</span></div>
     </div>`;
 
   if (rbfOk) {
@@ -2885,7 +2882,7 @@ function renderFeedFromData(feed) {
     const safeTxid = sanitizeTxid(item.txid || '');
     const short = safeTxid.slice(0,6) + '...' + safeTxid.slice(-4);
     return `<a class="feed-item" href="https://mempool.space/tx/${safeTxid}" target="_blank" rel="noopener noreferrer"
-      title="Открыть на mempool.space"
+      title="Открыть на mempool.space" data-i18n-attr-title="misc.open_mempool"
       style="text-decoration:none;cursor:pointer;transition:background .15s,border-color .15s"
       onmouseover="this.style.background='rgba(247,147,26,.04)';this.style.borderColor='rgba(247,147,26,.15)'"
       onmouseout="this.style.background='';this.style.borderColor=''">
@@ -3177,7 +3174,7 @@ function pick(p) {
 }
 
 const FREE_S = ['Валидация TXID...','Подключение к серверному API...','blockstream.info (CORS ✓)...','Blockchair broadcast (CORS ✓)...','BlockCypher broadcast...','btcscan.org relay...','Финализация + авто-повтор 20 мин...'];
-const PREM_S = ['Валидация TXID...','Серверный API — загрузка hex...','blockstream.info (CORS ✓)...','Blockchair (CORS ✓)...','BlockCypher...','btcscan.org + blockchain.info...','ViaBTC Accelerator — топ-1 2026...','AntPool (Bitmain)...','CloverPool (ex BTC.com)...','SpiderPool — топ-5 хешрейт 2026...','BitFuFu — облачный майнинг 2026...','BitAccelerate + BitAccelerate...','360BTC + txfaster + btcspeed...','mempoolAccel + BitAccelerate...','Планирование 10 волн повтора ⚡...'];
+const PREM_S = ['Валидация TXID...','Серверный API — загрузка hex...','blockstream.info (CORS ✓)...','Blockchair (CORS ✓)...','BlockCypher...','btcscan.org + blockchain.info...','ViaBTC Accelerator — топ-1 2026...','AntPool (Bitmain)...','CloverPool (ex BTC.com)...','SpiderPool — топ-5 хешрейт 2026...','BitFuFu — облачный майнинг 2026...','BitAccelerate + BitAccelerate...','360BTC + txfaster + btcspeed...','mempoolAccel + BitAccelerate...','Планирование 8 волн повтора ⚡...'];
 
 // ── BROADCAST ENGINE ───────────────────────────────────────────
 async function _getHex(txid) {
@@ -3603,9 +3600,9 @@ async function go() {
         <span style="color:var(--g);font-family:var(--mono);font-weight:700;font-size:.82rem;letter-spacing:.5px">УЖЕ ПОДТВЕРЖДЕНА</span>
       </div>
       <div style="font-family:var(--mono);font-size:.72rem;color:var(--m2);margin-bottom:14px;line-height:1.6">Эта транзакция уже включена в блок — ускорение не требуется.</div>
-      <div class="rr"><span class="rk">Блок</span><span class="rv a">#${txData.status.block_height}</span></div>
+      <div class="rr"><span class="rk" data-i18n="tx.block">Блок</span><span class="rv a">#${txData.status.block_height}</span></div>
       <div class="rr"><span class="rk">Размер</span><span class="rv">${txData.size} bytes</span></div>
-      <div class="rr"><span class="rk">Комиссия</span><span class="rv">${txData.fee} sat · ${feeRate} sat/vB</span></div>
+      <div class="rr"><span class="rk" data-i18n="tx.fee">Комиссия</span><span class="rv">${txData.fee} sat · ${feeRate} sat/vB</span></div>
       <a class="mp-link" href="https://mempool.space/tx/${txid}" target="_blank" style="margin-top:16px">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         Открыть на mempool.space
@@ -3650,13 +3647,13 @@ async function go() {
       <span style="color:var(--a);font-family:var(--mono);font-weight:700;font-size:.82rem;letter-spacing:.5px">ОТПРАВЛЕНО В ${poolCount} КАНАЛОВ</span>
     </div>
     <div class="rr"><span class="rk">TXID</span><span class="rv">${txid.slice(0,12)}…${txid.slice(-8)}</span></div>
-    <div class="rr"><span class="rk">Режим</span><span class="rv a">${plan.toUpperCase()}</span></div>
-    <div class="rr"><span class="rk">Комиссия</span><span class="rv">${txData.fee} sat · ${feeRate} sat/vB${lowFee ? ' ⚠' : ''}</span></div>
-    <div class="rr"><span class="rk">Ожидаемое время</span><span class="rv a">${eta}</span></div>
-    <div class="rr"><span class="rk">Время запроса</span><span class="rv">${new Date().toLocaleTimeString('ru')}</span></div>
-    ${plan === 'premium' ? `<div class="rr"><span class="rk">Авто-повтор</span><span class="rv" style="color:var(--a)">10 волн: 15·15·30·60·120·120·120·120·180·180 мин ⚡</span></div>
+    <div class="rr"><span class="rk" data-i18n="tx.mode">Режим</span><span class="rv a">${plan.toUpperCase()}</span></div>
+    <div class="rr"><span class="rk" data-i18n="tx.fee">Комиссия</span><span class="rv">${txData.fee} sat · ${feeRate} sat/vB${lowFee ? ' ⚠' : ''}</span></div>
+    <div class="rr"><span class="rk" data-i18n="tx.eta">Ожидаемое время</span><span class="rv a">${eta}</span></div>
+    <div class="rr"><span class="rk" data-i18n="tx.req_time">Время запроса</span><span class="rv">${new Date().toLocaleTimeString('ru')}</span></div>
+    ${plan === 'premium' ? `<div class="rr"><span class="rk" data-i18n="tx.auto_repeat">Авто-повтор</span><span class="rv" style="color:var(--a)">8 волн: 15·15·30·60·120·120·120·120 мин ⚡</span></div>
     <div id="${_apiStatusId}" style="margin-top:12px;padding:10px 12px;background:rgba(247,147,26,.04);border:1px solid rgba(247,147,26,.12);border-radius:8px;font-family:var(--mono);font-size:.65rem;line-height:1.9">
-      <div style="color:var(--m);letter-spacing:1px;text-transform:uppercase;font-size:.58rem;margin-bottom:6px">Статус 30 каналов · v14</div>
+      <div style="color:var(--m);letter-spacing:1px;text-transform:uppercase;font-size:.58rem;margin-bottom:6px">Статус 30 каналов · v13</div>
       <div id="${_apiStatusId}-rows" style="display:flex;flex-direction:column;gap:2px">
         <div style="color:var(--m)">⏳ hex-узлы: blockstream · Blockchair · BlockCypher…</div>
         <div style="color:var(--m)">⏳ Foundry USA (~27%) · AntPool (~16%) · MARA Slipstream ★ (~11%)…</div>
@@ -3882,7 +3879,7 @@ async function go() {
           ? fmtFB(res.blockstream, 'blockstream.info') +
             fmtFB(res.blockchair,  'Blockchair') +
             fmtFB(res.hex,         'Пулы (клиент no-cors)') +
-            fmtFB(true,            '10 волн авто-повтора ⚡')
+            fmtFB(true,            '8 волн авто-повтора ⚡')
           : fmtFB(res.blockstream, 'blockstream.info') +
             fmtFB(res.blockchair,  'Blockchair') +
             fmtFB(true,            'Авто-повтор через 20 мин');
@@ -3972,7 +3969,7 @@ function _tickWave() {
     clearInterval(_waveTimerInt);
     _waveTimerInt = null;
     const wp = document.getElementById('wave-panel');
-    if (wp) wp.innerHTML += '<div style="color:var(--g);margin-top:6px;font-size:.62rem">✓ Все 10 волн завершены · Гарантия 6 часов активна</div>';
+    if (wp) wp.innerHTML += '<div style="color:var(--g);margin-top:6px;font-size:.62rem">✓ Все 8 волн завершены · Гарантия 6 часов активна</div>';
     return;
   }
   const elapsedMin = elapsedMs / 60000;
@@ -4143,10 +4140,10 @@ async function chk() {
     const feeRate = (d.fee / d.size).toFixed(1);
     sr.innerHTML = `<div class="badge ${conf ? 'y' : 'n'}">${conf ? '✓ Подтверждена' : '· В мемпуле (unconfirmed)'}</div>
       <div class="rr"><span class="rk">TXID</span><span class="rv">${txid.slice(0,14)}...${txid.slice(-6)}</span></div>
-      ${conf ? `<div class="rr"><span class="rk">Блок</span><span class="rv a">#${d.status.block_height}</span></div>` : ''}
+      ${conf ? `<div class="rr"><span class="rk" data-i18n="tx.block">Блок</span><span class="rv a">#${d.status.block_height}</span></div>` : ''}
       <div class="rr"><span class="rk">Размер</span><span class="rv">${d.size} bytes</span></div>
-      <div class="rr"><span class="rk">Комиссия</span><span class="rv">${d.fee} sat</span></div>
-      <div class="rr"><span class="rk">Ставка</span><span class="rv">${feeRate} sat/vByte</span></div>
+      <div class="rr"><span class="rk" data-i18n="tx.fee">Комиссия</span><span class="rv">${d.fee} sat</span></div>
+      <div class="rr"><span class="rk" data-i18n="tx.rate">Ставка</span><span class="rv">${feeRate} sat/vByte</span></div>
       <a class="mp-link" href="https://mempool.space/tx/${txid}" target="_blank"># Открыть на mempool.space →</a>
       ${!conf ? '<div style="margin-top:10px;font-family:var(--mono);font-size:.72rem;color:var(--m)">Транзакция ожидает включения в блок. Ускорьте её выше ↑</div>' : ''}`;
   } catch(e) {
@@ -4240,7 +4237,7 @@ function openM() {
   const bc = document.getElementById('mtab-btc');
   if (bc) bc.classList.add('show');
 
-  // Показать кнопку premium как "ожидает оплаты"
+  // Показать кнопку premium как t('status.awaiting_pay')
   const _op = document.getElementById('op');
   if (_op && plan !== 'premium') {
     _op.style.borderColor = 'rgba(247,147,26,.5)';
@@ -5190,9 +5187,9 @@ function activatePremium(paidStr, method, txShort) {
   rb.style.display = 'block'; rb.className = 'res-box';
   rb.innerHTML =
     '<div class="res-ok">✓ ОПЛАТА ПОДТВЕРЖДЕНА — Premium активирован!</div>' +
-    '<div class="rr"><span class="rk">Оплачено</span><span class="rv a">' + paidStr + '</span></div>' +
-    '<div class="rr"><span class="rk">Способ</span><span class="rv">' + method + '</span></div>' +
-    '<div class="rr"><span class="rk">Хэш</span><span class="rv">' + txShort + '</span></div>' +
+    '<div class="rr"><span class="rk" data-i18n="pay.paid">Оплачено</span><span class="rv a">' + paidStr + '</span></div>' +
+    '<div class="rr"><span class="rk" data-i18n="pay.method">Способ</span><span class="rv">' + method + '</span></div>' +
+    '<div class="rr"><span class="rk" data-i18n="pay.hash">Хэш</span><span class="rv">' + txShort + '</span></div>' +
     '<div style="color:var(--g);font-size:.78rem;margin-top:14px;font-family:var(--mono);line-height:1.6">' +
     'Теперь введите TXID застрявшей транзакции выше и нажмите Ускорить ↑</div>';
   const pw = document.getElementById('pw');
@@ -5218,7 +5215,7 @@ function activatePremium(paidStr, method, txShort) {
     const rb = document.getElementById('rb');
     if (!rb) return;
     rb.style.display = 'block'; rb.className = 'res-box';
-    rb.innerHTML = '<div class="res-ok">✓ PREMIUM АКТИВИРОВАН</div><div class="rr"><span class="rk">Режим</span><span class="rv a">PREMIUM</span></div><div style="color:var(--g);font-size:.75rem;margin-top:10px;font-family:var(--mono)">Введите TXID транзакции и нажмите Ускорить ↑</div>';
+    rb.innerHTML = '<div class="res-ok">✓ PREMIUM АКТИВИРОВАН</div><div class="rr"><span class="rk" data-i18n="tx.mode">Режим</span><span class="rv a">PREMIUM</span></div><div style="color:var(--g);font-size:.75rem;margin-top:10px;font-family:var(--mono)">Введите TXID транзакции и нажмите Ускорить ↑</div>';
     window.scrollTo({top:0, behavior:'smooth'});
   }
   document.addEventListener('keydown', async function(e) {
@@ -5621,233 +5618,419 @@ async function requestPush() {
   const perm = await Notification.requestPermission();
   const btn = document.querySelector('.push-btn');
   if (perm === 'granted') {
-    if (btn) { btn.textContent = '✓ Уведомления включены'; btn.style.opacity = '.6'; btn.onclick = null; }
+    if (btn) { btn.textContent = t('notif.enabled'); btn.style.opacity = '.6'; btn.onclick = null; }
     new Notification('TurboTX', { body: 'Уведомления включены. Мы сообщим когда транзакция подтвердится.' });
     window._pushEnabled = true;
   } else {
-    if (btn) btn.textContent = 'Доступ запрещён';
+    if (btn) btn.textContent = t('notif.denied');
   }
 }
 
 function sendPushNotification(txid) {
   if (window._pushEnabled && Notification.permission === 'granted') {
-    new Notification('TurboTX — Транзакция подтверждена!', {
+    new Notification(t('notif.confirmed'), {
       body: 'TX ' + txid.slice(0,8) + '...' + txid.slice(-6) + ' включена в блок.',
       icon: ''
     });
   }
 }
 
-// ── LANGUAGE SWITCHER ─────────────────────────────────────────
-const LANGS = [
-  {code:'ru',name:'Русский',cc:'ru',gt:'ru'},
-  {code:'en',name:'English',cc:'gb',gt:'en'},
-  {code:'zh',name:'中文',cc:'cn',gt:'zh-CN'},
-  {code:'ar',name:'العربية',cc:'sa',gt:'ar'},
-  {code:'es',name:'Español',cc:'es',gt:'es'},
-  {code:'fr',name:'Français',cc:'fr',gt:'fr'},
-  {code:'de',name:'Deutsch',cc:'de',gt:'de'},
-  {code:'pt',name:'Português',cc:'br',gt:'pt'},
-  {code:'hi',name:'Hindi',cc:'in',gt:'hi'},
-  {code:'tr',name:'Türkçe',cc:'tr',gt:'tr'},
-  {code:'ko',name:'한국어',cc:'kr',gt:'ko'},
-  {code:'ja',name:'日本語',cc:'jp',gt:'ja'},
-  {code:'it',name:'Italiano',cc:'it',gt:'it'},
-  {code:'pl',name:'Polski',cc:'pl',gt:'pl'},
-  {code:'uk',name:'Українська',cc:'ua',gt:'uk'},
-  {code:'nl',name:'Nederlands',cc:'nl',gt:'nl'},
-  {code:'vi',name:'Tiếng Việt',cc:'vn',gt:'vi'},
-  {code:'th',name:'ภาษาไทย',cc:'th',gt:'th'},
-  {code:'id',name:'Indonesia',cc:'id',gt:'id'},
-  {code:'fa',name:'فارسی',cc:'ir',gt:'fa'},
-  {code:'sv',name:'Svenska',cc:'se',gt:'sv'},
-  {code:'cs',name:'Čeština',cc:'cz',gt:'cs'},
-  {code:'ro',name:'Română',cc:'ro',gt:'ro'},
-  {code:'hu',name:'Magyar',cc:'hu',gt:'hu'},
-  {code:'el',name:'Ελληνικά',cc:'gr',gt:'el'},
-  {code:'he',name:'עברית',cc:'il',gt:'iw'},
-  {code:'bn',name:'বাংলা',cc:'bd',gt:'bn'},
-  {code:'ms',name:'Melayu',cc:'my',gt:'ms'},
-  {code:'uz',name:'Uzbek',cc:'uz',gt:'uz'},
-  {code:'kk',name:'Қазақша',cc:'kz',gt:'kk'},
-  {code:'az',name:'Azərbaycan',cc:'az',gt:'az'},
-  {code:'da',name:'Dansk',cc:'dk',gt:'da'},
-  {code:'fi',name:'Suomi',cc:'fi',gt:'fi'},
-  {code:'no',name:'Norsk',cc:'no',gt:'no'},
-  {code:'sk',name:'Slovenčina',cc:'sk',gt:'sk'},
-  {code:'bg',name:'Български',cc:'bg',gt:'bg'},
-  {code:'sr',name:'Srpski',cc:'rs',gt:'sr'},
-  {code:'hr',name:'Hrvatski',cc:'hr',gt:'hr'},
-  {code:'lt',name:'Lietuvių',cc:'lt',gt:'lt'},
-  {code:'lv',name:'Latviešu',cc:'lv',gt:'lv'},
-  {code:'et',name:'Eesti',cc:'ee',gt:'et'},
-  {code:'ka',name:'ქართული',cc:'ge',gt:'ka'},
-  {code:'hy',name:'Հայերեն',cc:'am',gt:'hy'},
-  {code:'sw',name:'Kiswahili',cc:'ke',gt:'sw'},
-  {code:'tl',name:'Filipino',cc:'ph',gt:'tl'},
-  {code:'af',name:'Afrikaans',cc:'za',gt:'af'},
-];
+// ── i18n v14: полный РУ↔EN без Google ──────────────────────────
+var _lang = 'ru';
 
-let currentLang = 'ru';
-let _langFlagsOpen = false;
-
-function _flagImg(cc) {
-  return '<img src="https://flagcdn.com/w40/' + cc + '.png" width="26" height="18" style="border-radius:3px;object-fit:cover;pointer-events:none" loading="lazy" onerror="this.style.display=\'none\'">';
+var _I18N = {
+ru: {
+  'btn.accelerate':       'УСКОРИТЬ ТРАНЗАКЦИЮ',
+  'btn.check_status':     'ПРОВЕРИТЬ СТАТУС',
+  'btn.calc_rbf':         'РАССЧИТАТЬ RBF + АВТО-КОМИССИЯ',
+  'btn.calc_cpfp':        'РАССЧИТАТЬ CPFP',
+  'btn.copy_cpfp':        'Скопировать параметры CPFP',
+  'btn.start_free':       'Начать бесплатно',
+  'btn.buy_premium':      'Купить Premium — ',
+  'btn.enable_notif':     'Включить уведомления',
+  'btn.accelerate_again': 'Ускорить снова',
+  'btn.open_accel':       'открыть ускорение',
+  'ph.txid':              'a1b2c3d4e5f6... (64 hex символа)',
+  'ph.txid_short':        'a1b2c3d4... (64 hex символа)',
+  'ph.batch':             'Вставьте по одному TXID на строку',
+  'ph.promo':             'Введите промокод...',
+  'ph.pay_txid':          'TXID / хэш транзакции оплаты...',
+  'status.analyzing':     'Анализируем TX...',
+  'status.confirmed':     '✓ TX подтверждена. CPFP не нужен.',
+  'status.not_found':     'TX не найдена в мемпуле',
+  'status.premium_active':'✓ PREMIUM АКТИВИРОВАН',
+  'status.loading':       'загрузка…',
+  'status.awaiting_pay':  'ожидает оплаты',
+  'status.copy_hint':     'Нажмите чтобы скопировать',
+  'tx.fee':               'Комиссия',
+  'tx.rate':              'Ставка',
+  'tx.mempool_pos':       'Позиция в мемпуле',
+  'tx.no_accel':          'Без ускорения',
+  'tx.with_premium':      'С Premium',
+  'tx.size':              'Размер TX',
+  'tx.block':             'Блок',
+  'tx.mode':              'Режим',
+  'tx.eta':               'Ожидаемое время',
+  'tx.req_time':          'Время запроса',
+  'tx.auto_repeat':       'Авто-повтор',
+  'rbf.new_rate':         'Новая ставка',
+  'rbf.new_fee':          'Новая комиссия',
+  'rbf.extra':            'Доплата к текущей',
+  'rbf.flag':             'RBF флаг',
+  'rbf.cur_fee':          'Текущая комиссия',
+  'rbf.market':           'Рынок (быстро)',
+  'cpfp.parent_size':     'Размер родит. TX',
+  'cpfp.parent_fee':      'Комиссия родит. TX',
+  'cpfp.parent_rate':     'Ставка родит. TX',
+  'cpfp.target_rate':     'Целевая ставка пакета',
+  'cpfp.min_fee':         'Мин. комиссия дочерней TX',
+  'cpfp.addr_type':       'Тип адреса (child TX)',
+  'cpfp.output_value':    'Value выхода',
+  'cpfp.remainder':       'Остаток после CPFP',
+  'pay.btc_addr':         'Bitcoin адрес для оплаты',
+  'pay.usdt_addr':        'USDT TRC-20 адрес для оплаты',
+  'pay.amount':           'Сумма к оплате',
+  'pay.paid':             'Оплачено',
+  'pay.method':           'Способ',
+  'pay.hash':             'Хэш',
+  'plan.free_desc':       'Серверный broadcast через 3 CORS-узла. Реальные ответы от каждого канала. Однократный broadcast.',
+  'plan.premium_desc':    '30 каналов: 8 hex-узлов + 22 пула (~88% хешрейта). 10 волн до 14 часов.',
+  'plan.channels':        '30 каналов · ~88%',
+  'plan.premium_time':    'Premium ≈ 10–20 мин ⚡',
+  'plan.price_tag':       'сеть',
+  'notif.prompt':         'Получить уведомление когда транзакция подтвердится?',
+  'notif.confirmed':      'TurboTX — Транзакция подтверждена!',
+  'notif.enabled':        '✓ Уведомления включены',
+  'notif.denied':         'Доступ запрещён',
+  'queue.last':           'Последние ускорения',
+  'queue.pending':        'Ожидают ускорения',
+  'queue.your':           'Ваши ускорения',
+  'mp.mempool':           'мемпул',
+  'mp.size':              'размер',
+  'mp.coverage':          'покрытие',
+  'mp.stuck':             'зависла',
+  'adv.prompt':           'Вставьте TXID — Advisor мгновенно скажет что делать',
+  'adv.data':             '⚙ Точные данные:',
+  'adv.rescue':           ' — план спасения',
+  'adv.child_tx':         'Дочерняя TX ~110 vB с высокой fee rate',
+  'adv.turbo_btn':        '→ Ускорить через TurboTX',
+  'pools.direct':         'Прямой API',
+  'pools.p2p':            'Через p2p сеть',
+  'pools.new':            'Новый топ-пул 2026',
+  'wave.wave':            'Волна',
+  'wave.in':              'в',
+  'wave.min':             'мин',
+  'wave.done':            '✓ Все 10 волн завершены · Гарантия 6 часов активна',
+  'wave.next':            'волна',
+  'wave.through':         'через',
+  'modal.price_now':      'Цена сейчас',
+  'misc.open_mempool':    'Открыть на mempool.space',
+  'misc.check_status':    'Проверить статус →',
+  'misc.batch_label':     'Пакетное ускорение (до 20 TX)',
+  'misc.free_label':      'Бесплатный',
+  'misc.rebroadcast5':    'Rebroadcast в 5 пулов',
+  'misc.premium_upsell':  '↑ Premium: 30 каналов · ~88% хешрейта · MARA Slipstream — в 3–5× быстрее',
+  'misc.low_fee_warn':    '⚠ Комиссия очень низкая. Даже после ускорения майнеры могут не включить TX.',
+  'misc.mempool_queue':   'очередь'
+},
+en: {
+  'btn.accelerate':       'ACCELERATE TRANSACTION',
+  'btn.check_status':     'CHECK STATUS',
+  'btn.calc_rbf':         'CALCULATE RBF + AUTO-FEE',
+  'btn.calc_cpfp':        'CALCULATE CPFP',
+  'btn.copy_cpfp':        'Copy CPFP parameters',
+  'btn.start_free':       'Start for free',
+  'btn.buy_premium':      'Buy Premium — ',
+  'btn.enable_notif':     'Enable notifications',
+  'btn.accelerate_again': 'Accelerate again',
+  'btn.open_accel':       'open accelerator',
+  'ph.txid':              'a1b2c3d4e5f6... (64 hex characters)',
+  'ph.txid_short':        'a1b2c3d4... (64 hex characters)',
+  'ph.batch':             'Paste one TXID per line',
+  'ph.promo':             'Enter promo code...',
+  'ph.pay_txid':          'Payment TXID / hash...',
+  'status.analyzing':     'Analyzing TX...',
+  'status.confirmed':     '✓ TX confirmed. CPFP not needed.',
+  'status.not_found':     'TX not found in mempool',
+  'status.premium_active':'✓ PREMIUM ACTIVATED',
+  'status.loading':       'loading…',
+  'status.awaiting_pay':  'awaiting payment',
+  'status.copy_hint':     'Click to copy',
+  'tx.fee':               'Fee',
+  'tx.rate':              'Rate',
+  'tx.mempool_pos':       'Mempool position',
+  'tx.no_accel':          'Without acceleration',
+  'tx.with_premium':      'With Premium',
+  'tx.size':              'TX size',
+  'tx.block':             'Block',
+  'tx.mode':              'Mode',
+  'tx.eta':               'Estimated time',
+  'tx.req_time':          'Request time',
+  'tx.auto_repeat':       'Auto-repeat',
+  'rbf.new_rate':         'New rate',
+  'rbf.new_fee':          'New fee',
+  'rbf.extra':            'Extra to current',
+  'rbf.flag':             'RBF flag',
+  'rbf.cur_fee':          'Current fee',
+  'rbf.market':           'Market (fast)',
+  'cpfp.parent_size':     'Parent TX size',
+  'cpfp.parent_fee':      'Parent TX fee',
+  'cpfp.parent_rate':     'Parent TX rate',
+  'cpfp.target_rate':     'Package target rate',
+  'cpfp.min_fee':         'Min child TX fee',
+  'cpfp.addr_type':       'Address type (child TX)',
+  'cpfp.output_value':    'Output value',
+  'cpfp.remainder':       'Remainder after CPFP',
+  'pay.btc_addr':         'Bitcoin payment address',
+  'pay.usdt_addr':        'USDT TRC-20 payment address',
+  'pay.amount':           'Amount to pay',
+  'pay.paid':             'Paid',
+  'pay.method':           'Method',
+  'pay.hash':             'Hash',
+  'plan.free_desc':       'Server-side broadcast via 3 CORS nodes. Real responses from each channel. One-time broadcast.',
+  'plan.premium_desc':    '30 channels: 8 hex nodes + 22 pools (~88% hashrate). 10 waves up to 14 hours.',
+  'plan.channels':        '30 channels · ~88%',
+  'plan.premium_time':    'Premium ≈ 10–20 min ⚡',
+  'plan.price_tag':       'network',
+  'notif.prompt':         'Get notified when transaction confirms?',
+  'notif.confirmed':      'TurboTX — Transaction confirmed!',
+  'notif.enabled':        '✓ Notifications enabled',
+  'notif.denied':         'Access denied',
+  'queue.last':           'Recent accelerations',
+  'queue.pending':        'Awaiting acceleration',
+  'queue.your':           'Your accelerations',
+  'mp.mempool':           'mempool',
+  'mp.size':              'size',
+  'mp.coverage':          'coverage',
+  'mp.stuck':             'stuck',
+  'adv.prompt':           'Paste TXID — Advisor will instantly tell you what to do',
+  'adv.data':             '⚙ Exact data:',
+  'adv.rescue':           ' — rescue plan',
+  'adv.child_tx':         'Child TX ~110 vB with high fee rate',
+  'adv.turbo_btn':        '→ Accelerate via TurboTX',
+  'pools.direct':         'Direct API',
+  'pools.p2p':            'Via p2p network',
+  'pools.new':            'New top pool 2026',
+  'wave.wave':            'Wave',
+  'wave.in':              'in',
+  'wave.min':             'min',
+  'wave.done':            '✓ All 10 waves done · 6-hour guarantee active',
+  'wave.next':            'wave',
+  'wave.through':         'in',
+  'modal.price_now':      'Price now',
+  'misc.open_mempool':    'Open on mempool.space',
+  'misc.check_status':    'Check status →',
+  'misc.batch_label':     'Batch acceleration (up to 20 TX)',
+  'misc.free_label':      'Free',
+  'misc.rebroadcast5':    'Rebroadcast to 5 pools',
+  'misc.premium_upsell':  '↑ Premium: 30 channels · ~88% hashrate · MARA Slipstream — 3–5× faster',
+  'misc.low_fee_warn':    '⚠ Fee is very low. Even after acceleration miners may not include TX.',
+  'misc.mempool_queue':   'queue'
 }
-
-function _renderLangFlags() {
-  const wrap = document.getElementById('lang-flags');
-  if (!wrap) return;
-  const reversed = [...LANGS].reverse();
-  wrap.innerHTML = reversed.map(l =>
-    '<div class="lang-flag-btn' + (l.code===currentLang?' active':'') + '" ' +
-    'onclick="setLang(\'' + l.code + '\',\'' + l.gt + '\',\'' + l.cc + '\',\'' + l.name + '\')" ' +
-    'data-tip="' + l.name + '">' + _flagImg(l.cc) + '</div>'
-  ).join('');
-}
-
-// ── LEGAL CARD ────────────────────────────────────────────────
-function toggleLegalCard() {
-  const card = document.getElementById('legal-card');
-  if (!card) return;
-  const isOpen = card.style.display !== 'none';
-  card.style.display = isOpen ? 'none' : 'block';
-  const btn = document.getElementById('legal-btn');
-  if (btn) btn.style.borderColor = isOpen ? 'rgba(247,147,26,.35)' : 'rgba(247,147,26,.7)';
-}
-// Закрываем при клике вне карточки
-document.addEventListener('click', function(e) {
-  const bubble = document.getElementById('legal-bubble');
-  const card = document.getElementById('legal-card');
-  if (bubble && card && card.style.display !== 'none' && !bubble.contains(e.target)) {
-    card.style.display = 'none';
-    const btn = document.getElementById('legal-btn');
-    if (btn) btn.style.borderColor = 'rgba(247,147,26,.35)';
-  }
-});
-
-function toggleLangFlags() {
-  _langFlagsOpen = !_langFlagsOpen;
-  const wrap = document.getElementById('lang-flags');
-  const btn = document.getElementById('lang-btn');
-  if (!wrap) return;
-  if (_langFlagsOpen) {
-    _renderLangFlags();
-    requestAnimationFrame(() => { wrap.classList.add('open'); });
-    if (btn) btn.classList.add('active');
-  } else {
-    wrap.classList.remove('open');
-    if (btn) btn.classList.remove('active');
-  }
-}
-
-function setLang(code, gtCode, cc, name) {
-  currentLang = code;
-  const icon = document.getElementById('lang-current-icon');
-  if (icon) {
-    if (code === 'ru') {
-      icon.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>';
-    } else {
-      icon.innerHTML = '<img src="https://flagcdn.com/w40/' + cc + '.png" width="24" height="16" style="border-radius:3px;object-fit:cover" loading="lazy">';
-    }
-  }
-  _langFlagsOpen = false;
-  const wrap = document.getElementById('lang-flags');
-  const btn = document.getElementById('lang-btn');
-  if (wrap) wrap.classList.remove('open');
-  if (btn) btn.classList.remove('active');
-  if (code === 'ru') { _gtReset(); return; }
-  _gtSetLang(gtCode);
-}
-
-document.addEventListener('click', function(e) {
-  const fs = document.getElementById('float-support');
-  if (_langFlagsOpen && fs && !fs.contains(e.target)) {
-    _langFlagsOpen = false;
-    const wrap = document.getElementById('lang-flags');
-    const btn = document.getElementById('lang-btn');
-    if (wrap) wrap.classList.remove('open');
-    if (btn) btn.classList.remove('active');
-  }
-});
-
-document.addEventListener('DOMContentLoaded', function() { _renderLangFlags(); });
-
-</script>
-
-<!-- LANGUAGE SWITCHER + GOOGLE TRANSLATE -->
-<script type="text/javascript">
-let _gtReady = false;
-let _gtPending = null;
-
-(function() {
-  const d = document.createElement('div');
-  d.id = 'google_translate_element';
-  d.style.cssText = 'position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;opacity:0;pointer-events:none';
-  document.body.appendChild(d);
-})();
-
-window.googleTranslateElementInit = function() {
-  new google.translate.TranslateElement({
-    pageLanguage: 'ru',
-    autoDisplay: false,
-    layout: google.translate.TranslateElement.InlineLayout.SIMPLE
-  }, 'google_translate_element');
-  _gtReady = true;
-  if (_gtPending && _gtPending !== 'ru') {
-    setTimeout(() => _doSetLang(_gtPending), 300);
-    _gtPending = null;
-  }
 };
 
-(function() {
-  const s = document.createElement('script');
-  s.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
-  s.async = true;
-  document.head.appendChild(s);
-})();
+function t(key) {
+  var d = _I18N[_lang];
+  if (!d) d = _I18N['ru'];
+  return d[key] || _I18N['ru'][key] || key;
+}
 
-function _doSetLang(langCode) {
-  const select = document.querySelector('.goog-te-combo');
-  if (!select) {
-    setTimeout(() => _doSetLang(langCode), 200);
-    return;
+var _currentLang = 'ru';
+
+function toggleLangFlags() {
+  _currentLang = _currentLang === 'ru' ? 'en' : 'ru';
+  _lang = _currentLang;
+  _applyLang(_currentLang);
+}
+
+function _applyLang(lang) {
+  _lang = lang;
+
+  // --- Иконка кнопки ---
+  var icon = document.getElementById('lang-current-icon');
+  if (icon) {
+    icon.innerHTML = lang === 'ru'
+      ? '<img src="https://flagcdn.com/w40/ru.png" width="24" height="16" style="border-radius:3px;object-fit:cover">'
+      : '<img src="https://flagcdn.com/w40/gb.png" width="24" height="16" style="border-radius:3px;object-fit:cover">';
   }
-  select.value = langCode;
-  select.dispatchEvent(new Event('change'));
-  const btn = document.getElementById('lang-btn');
+  var btn = document.getElementById('lang-btn');
   if (btn) {
-    btn.style.boxShadow = '0 0 0 2px rgba(247,147,26,.6)';
-    setTimeout(() => { btn.style.boxShadow = ''; }, 1500);
+    btn.setAttribute('data-tip', lang === 'ru' ? 'Switch to English' : 'Переключить на Русский');
+    btn.style.borderColor = lang === 'en' ? 'rgba(247,147,26,.6)' : '';
+    btn.style.transform = 'scale(1.15)';
+    setTimeout(function(){ btn.style.transform = ''; }, 200);
   }
+
+  // --- Карта id → перевод ---
+  var ru = lang === 'ru';
+  var idMap = {
+    // Mempool bar
+    'mp-lbl-mempool':     ru ? 'мемпул'       : 'mempool',
+    'mp-lbl-size':        ru ? 'размер'        : 'size',
+    'mp-lbl-coverage':    ru ? 'покрытие'      : 'coverage',
+    'mp-lbl-stuck':       ru ? 'зависла'       : 'stuck',
+    // Hero
+    'hero-badge-refund':  ru ? 'Гарантия возврата 6ч'                       : 'Refund guarantee 6h',
+    'hero-badge-channels':ru ? '30 каналов · ~88% хешрейта · BTC + USDT + ⚡LN' : '30 channels · ~88% hashrate · BTC + USDT + ⚡LN',
+    // Stat cards
+    'stat-lbl-blocktime': ru ? 'Среднее время блока'  : 'Avg block time',
+    // Pools legend
+    'pools-lbl-direct':   ru ? 'Прямой API'           : 'Direct API',
+    'pools-lbl-p2p':      ru ? 'Через p2p сеть'       : 'Via p2p network',
+    'pools-lbl-new':      ru ? 'Новый топ-пул 2026'   : 'New top pool 2026',
+    // Trust titles
+    'trust-key-title':    ru ? 'Без приватных ключей' : 'No private keys',
+    'trust-refund-title': ru ? 'Возврат за 6 часов'   : '6-hour refund',
+    'trust-data-title':   ru ? 'Данные реальные'      : 'Real data',
+    // Trust descriptions
+    'trust-key-desc':     ru ? 'Мы принимаем только TXID — публичный номер транзакции. Никаких паролей, seed-фраз или доступа к кошельку.'
+                             : 'We only accept TXID — the public transaction ID. No passwords, seed phrases or wallet access.',
+    'trust-refund-desc':  ru ? 'Premium не сработал в течение 6 часов — возвращаем оплату. Рассматриваем в течение 24 часов, без бюрократии.'
+                             : 'Premium didn\'t work within 6 hours — we refund. Processed within 24 hours, no bureaucracy.',
+    'trust-data-desc':    ru ? 'Счётчик ускорений, статус сети и пулов — всё берётся напрямую из mempool.space и Firebase в реальном времени.'
+                             : 'Acceleration counter, network and pool status — all pulled directly from mempool.space and Firebase in real time.',
+    'trust-tg-title':     ru ? 'Отзывы пользователей — @TurboTXcoment' : 'User reviews — @TurboTXcoment',
+    'trust-tg-desc':      ru ? 'Канал с реальными отзывами тех, кто использовал TurboTX. Только настоящий опыт — хороший и плохой.'
+                             : 'Channel with real reviews from TurboTX users. Honest experience only — good and bad.',
+    'trust-tg-link':      ru ? 'Читать →' : 'Read →',
+    // Network Intelligence labels
+    'ni-label-price':     ru ? 'Цена сейчас'  : 'Price now',
+    'ni-label-advice':    ru ? 'Smart совет'   : 'Smart tip',
+    'ni-label-mempool':   ru ? 'Мемпул'        : 'Mempool',
+    // Plans — FREE
+    'plan-free-price-label': ru ? '/ бесплатно' : '/ free',
+    'plan-free-desc':     ru ? 'Серверный broadcast через 3 CORS-узла. Реальные ответы от каждого канала. Однократный broadcast.'
+                             : 'Server-side broadcast via 3 CORS nodes. Real responses from each channel. One-time broadcast.',
+    'plan-f-li1': ru ? 'mempool.space + blockstream.info + Blockchair (3 узла)' : 'mempool.space + blockstream.info + Blockchair (3 nodes)',
+    'plan-f-li2': ru ? 'ViaBTC + mempoolAccel (2 пул-акселератора)'             : 'ViaBTC + mempoolAccel (2 pool accelerators)',
+    'plan-f-li3': ru ? 'Итого 5 каналов · Серверный broadcast, без CORS'        : 'Total 5 channels · Server broadcast, no CORS',
+    'plan-f-li4': ru ? 'Трекер подтверждений · Smart Advisor'                   : 'Confirmation tracker · Smart Advisor',
+    'plan-f-li5': ru ? 'Однократный broadcast (волны — только Premium)'         : 'One-time broadcast (waves — Premium only)',
+    'plan-f-li6': ru ? 'Пул-акселераторы — только Premium'                      : 'Pool accelerators — Premium only',
+    'plan-f-li7': ru ? '10 волн повтора (только Premium)'                       : '10 repeat waves (Premium only)',
+    // Plans — PREMIUM
+    'plan-prem-desc': ru ? '30 каналов: 8 hex-узлов + 22 пула (~88% хешрейта). Реальные ответы от Foundry, AntPool, MARA. 10 волн до 14 часов.'
+                         : '30 channels: 8 hex nodes + 22 pools (~88% hashrate). Real responses from Foundry, AntPool, MARA. 10 waves up to 14 hours.',
+    'plan-p-li3': ru ? '~88% хешрейта Bitcoin охвачено · Last-Block-Miner boost' : '~88% Bitcoin hashrate covered · Last-Block-Miner boost',
+    'plan-p-li4': ru ? '10 волн: адаптивный интервал · Anti-Stuck при >48ч'     : '10 waves: adaptive interval · Anti-Stuck after >48h',
+    'plan-p-li5': ru ? 'Цена $3–18 — дешевле когда сеть спокойна'               : 'Price $3–18 — cheaper when network is calm',
+    'plan-p-li6': ru ? 'Пакет до 20 TX · Smart Advisor · Возврат за 6 ч если не помогло'
+                     : 'Up to 20 TX batch · Smart Advisor · Refund in 6h if it didn\'t help',
+  };
+
+  // Применяем все переводы по id
+  Object.keys(idMap).forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = idMap[id];
+  });
+
+  // --- data-i18n атрибуты (динамически созданные элементы) ---
+  document.querySelectorAll('[data-i18n]').forEach(function(el) {
+    var key = el.getAttribute('data-i18n');
+    el.textContent = t(key);
+  });
+
+  // --- Плейсхолдеры ---
+  document.querySelectorAll('[data-i18n-ph]').forEach(function(el) {
+    el.placeholder = t(el.getAttribute('data-i18n-ph'));
+  });
+
+  // --- title атрибуты ---
+  document.querySelectorAll('[data-i18n-attr-title]').forEach(function(el) {
+    el.title = t(el.getAttribute('data-i18n-attr-title'));
+  });
+
+  // --- Кнопка "Начать бесплатно" ---
+  var freeBtns = document.querySelectorAll('.pbf span');
+  freeBtns.forEach(function(el) {
+    if (el.textContent.trim() === 'Начать бесплатно' || el.textContent.trim() === 'Start for free') {
+      el.textContent = t('btn.start_free');
+    }
+  });
+
+  // --- Кнопка УСКОРИТЬ ---
+  var accBtn = document.querySelector('.acc-btn');
+  if (accBtn) {
+    var spans = accBtn.querySelectorAll('span');
+    spans.forEach(function(sp) {
+      var txt = sp.textContent.trim();
+      if (txt === 'УСКОРИТЬ ТРАНЗАКЦИЮ' || txt === 'ACCELERATE TRANSACTION') {
+        sp.textContent = t('btn.accelerate');
+      }
+    });
+  }
+
+  // --- Plan price tag "сеть"/"network" ---
+  var priceTag = document.getElementById('price-tag-text');
+  if (priceTag) priceTag.textContent = t('plan.price_tag');
+
+  // --- Plan Premium time label ---
+  var confTime = document.getElementById('plan-conf-time');
+  if (confTime) confTime.textContent = t('plan.premium_time');
+
+  // --- Notif prompt ---
+  var notifSpan = document.querySelector('#push-prompt span');
+  if (notifSpan) notifSpan.textContent = t('notif.prompt');
+
+  // --- Notif button ---
+  var notifBtn = document.querySelector('#push-prompt .push-btn');
+  if (notifBtn && (notifBtn.textContent === 'Включить уведомления' || notifBtn.textContent === 'Enable notifications')) {
+    notifBtn.textContent = t('btn.enable_notif');
+  }
+
+  _showLangToast(lang === 'en' ? '🇬🇧 Switched to English' : '🇷🇺 Переключено на Русский');
+
+  _i18nRerender();
 }
 
-function _gtReset() {
-  const select = document.querySelector('.goog-te-combo');
-  if (select) {
-    select.value = 'ru';
-    select.dispatchEvent(new Event('change'));
-  }
-  const restoreBtn = document.querySelector('.goog-te-banner-frame');
-  if (restoreBtn) {
-    try {
-      restoreBtn.contentDocument.querySelector('#restoreDiv')?.click();
-    } catch(e) {}
-  }
+function _i18nRerender() {
+  // Очередь
+  const ql = document.getElementById('queue-list-header');
+  if (ql) ql.textContent = t('queue.last');
+  const qp = document.getElementById('queue-pending-header');
+  if (qp) qp.textContent = t('queue.pending');
+
+  // Кнопка ускорить
+  const accBtn = document.querySelector('.acc-btn span[data-main-label]');
+  if (accBtn) accBtn.textContent = t('btn.accelerate');
+
+  // Если результат RBF уже показан — перерендерим лейблы
+  _i18nUpdateVisible('[data-i18n-live]');
 }
 
-function _gtSetLang(langCode) {
-  if (!_gtReady) {
-    _gtPending = langCode;
-    return;
-  }
-  _doSetLang(langCode);
+function _i18nUpdateVisible(selector) {
+  document.querySelectorAll(selector).forEach(el => {
+    const key = el.getAttribute('data-i18n-live');
+    if (key) el.textContent = t(key);
+  });
 }
-</script>
 
+function _showLangToast(msg) {
+  let toast = document.getElementById('_lang-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = '_lang-toast';
+    toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:rgba(14,14,22,.97);border:1px solid rgba(247,147,26,.35);border-radius:10px;padding:8px 18px;font-family:var(--mono);font-size:.7rem;color:var(--t);z-index:99999;pointer-events:none;transition:opacity .3s';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg;
+  toast.style.opacity = '1';
+  clearTimeout(toast._timer);
+  toast._timer = setTimeout(() => { toast.style.opacity = '0'; }, 2000);
+}
 
+document.addEventListener('DOMContentLoaded', function() {
+  var icon = document.getElementById('lang-current-icon');
+  if (icon) icon.innerHTML = '<img src="https://flagcdn.com/w40/ru.png" width="24" height="16" style="border-radius:3px;object-fit:cover">';
+  var btn = document.getElementById('lang-btn');
+  if (btn) btn.setAttribute('data-tip', 'Switch to English');
+});
 
-<script>
+function setLang(code) {
+  _currentLang = code;
+  _applyLang(code);
+}
+
 
 // ── УМНАЯ ДИАГНОСТИКА TXID ─────────────────────────────────────
 let _diagTimer = null;
@@ -6029,7 +6212,7 @@ function renderHistory(page) {
           <a href="https://mempool.space/tx/${safeTxid}" target="_blank" rel="noopener noreferrer" style="font-family:var(--mono);font-size:.68rem;color:var(--m2);text-decoration:none;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0" onmouseover="this.style.color='var(--a)'" onmouseout="this.style.color='var(--m2)'">${short}</a>
           <span style="font-family:var(--mono);font-size:.55rem;padding:2px 6px;border-radius:4px;flex-shrink:0;background:${isPrem?'rgba(247,147,26,.12)':'rgba(255,255,255,.05)'};color:${isPrem?'var(--a)':'var(--m)'}">${isPrem?'PREM':'FREE'}</span>
           <span style="font-family:var(--mono);font-size:.55rem;color:var(--m);flex-shrink:0">${agoStr}</span>
-          <button onclick="document.getElementById('txid').value='${safeTxid}';document.getElementById('txid').dispatchEvent(new Event('input'));" title="Ускорить снова" style="width:24px;height:24px;flex-shrink:0;border-radius:6px;background:transparent;border:1px solid rgba(247,147,26,.2);cursor:pointer;font-size:.62rem;color:var(--a);transition:all .15s;display:flex;align-items:center;justify-content:center" onmouseover="this.style.background='rgba(247,147,26,.12)'" onmouseout="this.style.background='transparent'">↻</button>
+          <button onclick="document.getElementById('txid').value='${safeTxid}';document.getElementById('txid').dispatchEvent(new Event('input'));" title="Ускорить снова" data-i18n-attr-title="btn.accelerate_again" style="width:24px;height:24px;flex-shrink:0;border-radius:6px;background:transparent;border:1px solid rgba(247,147,26,.2);cursor:pointer;font-size:.62rem;color:var(--a);transition:all .15s;display:flex;align-items:center;justify-content:center" onmouseover="this.style.background='rgba(247,147,26,.12)'" onmouseout="this.style.background='transparent'">↻</button>
         </div>
         <div style="display:flex;align-items:center;gap:5px"><div class="hist-dots" style="display:flex;gap:5px;align-items:center">${dotsHTML}</div><span class="hist-status" style="font-family:var(--mono);font-size:.58rem;color:${statusColor};margin-left:3px;transition:color .4s">${statusText}</span></div>
       </div>`;
@@ -6065,7 +6248,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 let _histPoller = null;
 
-// Поллинг подтверждений для "Ваши ускорения" — синхронизирует точки с реальным статусом
+// Поллинг подтверждений для t('queue.your') — синхронизирует точки с реальным статусом
 function _startHistoryConfPolling() {
   if (_histPoller) { clearInterval(_histPoller); _histPoller = null; }
   async function _poll() {
@@ -6109,9 +6292,9 @@ function _startHistoryConfPolling() {
 </script>
 
 <div id="float-support">
-  <div id="lang-flags"></div>
+
   <div id="lang-btn" onclick="toggleLangFlags()" data-tip="Язык / Language">
-    <span id="lang-current-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
+    <span id="lang-current-icon"><img src="https://flagcdn.com/w40/ru.png" width="24" height="16" style="border-radius:3px;object-fit:cover"></span>
   </div>
   <a class="fs-icon fs-tg" href="https://t.me/TurboTXAcel" target="_blank" rel="noopener" data-tip="@TurboTXAcel" aria-label="Telegram">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.562 8.248-1.97 9.281c-.144.658-.537.817-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.243-.213-.053-.333-.373-.12l-6.871 4.326-2.962-.924c-.643-.204-.657-.643.135-.953l11.571-4.462c.536-.194 1.005.131.833.941z"/></svg>
@@ -6433,7 +6616,7 @@ window._TurboAPI = {
   </div>
   <!-- ВКЛАДКА 1: BTC -->
   <div id="mtab-btc" class="pay-tab-content show">
-    <div class="abox" style="margin-bottom:10px"><div class="al">Bitcoin адрес для оплаты</div><div class="av" id="direct-wallet-display" style="word-break:break-all;font-size:.7rem;cursor:pointer" onclick="cpDirect()" title="Нажмите чтобы скопировать">— загружаем —</div></div>
+    <div class="abox" style="margin-bottom:10px"><div class="al">Bitcoin адрес для оплаты</div><div class="av" id="direct-wallet-display" style="word-break:break-all;font-size:.7rem;cursor:pointer" onclick="cpDirect()" title="Нажмите чтобы скопировать" data-i18n-attr-title="status.copy_hint">— загружаем —</div></div>
     <div class="abox" style="margin-bottom:12px"><div class="al">Сумма к оплате</div><div class="av green" id="direct-amount">… BTC</div></div>
     <button class="cpbtn" onclick="cpDirect()" id="direct-copy-btn"><span style="display:inline-flex;align-items:center;gap:8px;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Скопировать BTC адрес</span></button>
     <div style="background:rgba(247,147,26,.05);border:1px solid rgba(247,147,26,.18);border-radius:10px;padding:11px 14px;margin-top:10px;font-family:var(--mono);font-size:.67rem;color:var(--m2);line-height:1.9"><div style="color:var(--a);font-weight:700;margin-bottom:3px">Инструкция:</div><div>① Скопируйте адрес выше</div><div>② Отправьте точную сумму BTC со своего кошелька</div><div>③ Нажмите «Я уже оплатил» ниже</div><div>④ Вставьте TXID платежа → Premium активируется</div></div>
@@ -6505,7 +6688,7 @@ window._TurboAPI = {
   </div>
   <!-- ВКЛАДКА 3: USDT TRC-20 -->
   <div id="mtab-usdt" class="pay-tab-content">
-    <div class="abox" style="margin-bottom:10px"><div class="al">USDT TRC-20 адрес для оплаты</div><div class="av" id="usdt-wallet-display" style="word-break:break-all;font-size:.7rem;cursor:pointer" onclick="cpUsdt()" title="Нажмите чтобы скопировать">— загружаем —</div></div>
+    <div class="abox" style="margin-bottom:10px"><div class="al">USDT TRC-20 адрес для оплаты</div><div class="av" id="usdt-wallet-display" style="word-break:break-all;font-size:.7rem;cursor:pointer" onclick="cpUsdt()" title="Нажмите чтобы скопировать" data-i18n-attr-title="status.copy_hint">— загружаем —</div></div>
     <div class="abox" style="margin-bottom:12px"><div class="al">Сумма к оплате</div><div class="av green" id="usdt-amount">… USDT</div></div>
     <button class="cpbtn" onclick="cpUsdt()" id="usdt-copy-btn"><span style="display:inline-flex;align-items:center;gap:8px;justify-content:center"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Скопировать USDT адрес</span></button>
     <div style="background:rgba(0,180,120,.05);border:1px solid rgba(0,180,120,.18);border-radius:10px;padding:11px 14px;margin-top:10px;font-family:var(--mono);font-size:.67rem;color:var(--m2);line-height:1.9"><div style="color:var(--g);font-weight:700;margin-bottom:3px">Инструкция:</div><div>① Скопируйте адрес выше</div><div>② Сеть: <span style="color:var(--g);font-weight:700">TRON TRC-20</span> (не ERC-20!)</div><div>③ Отправьте точную сумму USDT</div><div>④ Нажмите «Я уже оплатил» → вставьте TXID</div></div>
@@ -6520,7 +6703,7 @@ window._TurboAPI = {
   <!-- ВЕРИФИКАЦИЯ -->
   <div id="verify-section" style="display:none;border-top:1px solid var(--b);padding-top:14px;margin-top:12px">
     <div style="font-family:var(--mono);font-size:.62rem;color:var(--m);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Подтверждение оплаты</div>
-    <input type="text" id="pay-txid" placeholder="TXID / хэш транзакции оплаты..." maxlength="100" style="width:100%;background:var(--bg);border:1px solid var(--b);border-radius:8px;padding:11px 13px;color:var(--t);font-family:var(--mono);font-size:.75rem;outline:none;margin-bottom:10px;transition:border-color .2s">
+    <input type="text" id="pay-txid" placeholder="TXID / хэш транзакции оплаты..." data-i18n-ph="ph.pay_txid" maxlength="100" style="width:100%;background:var(--bg);border:1px solid var(--b);border-radius:8px;padding:11px 13px;color:var(--t);font-family:var(--mono);font-size:.75rem;outline:none;margin-bottom:10px;transition:border-color .2s">
     <button class="okbtn" onclick="verifyPayment()" id="verify-btn"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Активировать Premium</span></button>
     <div id="verify-result" style="margin-top:12px;font-family:var(--mono);font-size:.75rem;display:none"></div>
   </div>
