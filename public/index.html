@@ -60,7 +60,7 @@
 
 <!-- ЯНДЕКС: явные мета-теги для Яндекс.Вебмастер -->
 <meta name="yandex:title" content="TurboTX — Ускоритель Bitcoin Транзакций №1 | Бесплатно">
-<meta name="yandex:description" content="Застряла BTC транзакция? TurboTX — rebroadcast в 30 каналов — Foundry USA, AntPool, MARA, ViaBTC. 7 hex-нод + 22 пула. Бесплатно (1–3 ч) или Premium 10–20 мин. ~88% хешрейта сети.">
+<meta name="yandex:description" content="Застряла BTC транзакция? TurboTX — rebroadcast в 30 каналов — Foundry USA, AntPool, MARA, ViaBTC. 8 hex-нод + 22 пула. Бесплатно (1–3 ч) или Premium 10–20 мин. ~88% хешрейта сети.">
 <meta name="yandex:image" content="https://acelerat.vercel.app/og-image.png">
 
 <!-- ТЕМА И PWA -->
@@ -1207,7 +1207,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
       </svg>
     </span>
     <span class="stat-num" id="pools-online" style="color:var(--g);opacity:.3;animation:skeletonPulse 1.6s ease-in-out infinite">—</span>
-    <div class="stat-lbl">API узлов онлайн · p2p: <span id="p2p-count" style="font-weight:700;color:#ffd166">—</span></div>
+    <div class="stat-lbl">каналов активно · p2p: <span id="p2p-count" style="font-weight:700;color:#ffd166">—</span></div>
   </a>
 </div>
 
@@ -1542,8 +1542,8 @@ function renderAdvisor(d, out) {
 
 <!-- PLANS -->
 <div style="margin-bottom:28px"><div class="sh">Выберите план</div><div class="plans">
-  <div class="plan-card"><div class="ptag tf" style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><rect x="2.5" y="10.5" width="19" height="12" rx="3" fill="rgba(247,147,26,0.12)" stroke="#f7931a" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 10.5V7.5a5 5 0 0 1 9.9-1" stroke="#f7931a" stroke-width="1.6" stroke-linecap="round" fill="none"/><circle cx="12" cy="16" r="2" fill="#f7931a" opacity="0.85"/><rect x="11" y="16.8" width="2" height="3" rx="1" fill="#f7931a" opacity="0.7"/></svg>FREE</div><div class="plan-price">$0 <em>/ бесплатно</em></div><div class="plan-desc">Серверный broadcast через 3 CORS-узла. Реальные ответы от каждого канала. Авто-повтор через 20 мин.</div><ul class="fl"><li><span class="fi ok">✓</span>blockstream.info — Esplora (CORS ✓, реальный ответ)</li><li><span class="fi ok">✓</span>Blockchair broadcast (CORS ✓, реальный ответ)</li><li><span class="fi ok">✓</span>BlockCypher broadcast (CORS ✓)</li><li><span class="fi ok">✓</span>Серверный API — без CORS-ограничений</li><li><span class="fi ok">✓</span>Авто-повтор через 20 мин</li><li><span class="fi ok">✓</span>Трекер подтверждений онлайн</li><li><span class="fi na">—</span><span style="color:var(--m)">Пул-акселераторы (8 пулов)</span></li><li><span class="fi na">—</span><span style="color:var(--m)">6 волн повтора до 4 ч</span></li></ul><button class="pbtn pbf" onclick="pick('free');document.getElementById('txid').focus()"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><rect x="2.5" y="10.5" width="19" height="12" rx="3" fill="rgba(247,147,26,0.12)" stroke="#f7931a" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 10.5V7.5a5 5 0 0 1 9.9-1" stroke="#f7931a" stroke-width="1.6" stroke-linecap="round" fill="none"/><circle cx="12" cy="16" r="2" fill="#f7931a" opacity="0.85"/><rect x="11" y="16.8" width="2" height="3" rx="1" fill="#f7931a" opacity="0.7"/></svg>Начать бесплатно</span></button></div>
-  <div class="plan-card prem"><div class="ptag tp" style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><defs><linearGradient id="cgbadge" x1="2" y1="5" x2="22" y2="19" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFE566"/><stop offset="45%" stop-color="#F7931A"/><stop offset="100%" stop-color="#FF6B00"/></linearGradient></defs><path d="M3 19h18" stroke="url(#cgbadge)" stroke-width="2" stroke-linecap="round"/><path d="M3 19L4.5 9.5L9 14L12 6L15 14L19.5 9.5L21 19z" fill="url(#cgbadge)" stroke="url(#cgbadge)" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="12" cy="6" r="1.4" fill="#FFE566"/><circle cx="4.5" cy="9.5" r="1.1" fill="#FFE566"/><circle cx="19.5" cy="9.5" r="1.1" fill="#FFE566"/></svg>PREMIUM</div><div class="plan-price"><span style="color:var(--a)" id="plan-price-usd">$4</span> <em>/ разово</em> <span id="plan-price-tag" style="display:inline-flex;align-items:center;gap:4px;font-size:.57rem;font-family:var(--mono);padding:2px 8px;border-radius:4px;background:rgba(247,147,26,.12);color:var(--a);vertical-align:middle;margin-left:4px"><span class="net-heart calm sm" id="price-tag-dot"><svg width="12" height="12" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g class="h-flame"><path d="M9 19 Q7 15 9.5 11 Q10.5 15 12 11 Q13.5 15 14.5 11 Q17 15 15 19" fill="#ff6b00" opacity=".85"/></g><path class="h-body" d="M12 20.5C12 20.5 2.5 14 2.5 8C2.5 5.2 4.7 3 7.5 3C9.1 3 10.6 3.8 12 5.2C13.4 3.8 14.9 3 16.5 3C19.3 3 21.5 5.2 21.5 8C21.5 14 12 20.5 12 20.5Z"/><g class="h-ice" stroke="#cff0ff" stroke-width="1" stroke-linecap="round" fill="none"><line x1="12" y1="5.5" x2="12" y2="8.5"/><line x1="10.4" y1="6.3" x2="13.6" y2="7.7"/><line x1="10.4" y1="7.7" x2="13.6" y2="6.3"/></g></svg></span><span id="price-tag-text">сеть</span></span></div><div id="plan-conf-time" style="font-family:var(--mono);font-size:.62rem;color:var(--g);margin-top:2px;margin-bottom:4px">Premium ≈ 10–20 мин ⚡</div><div class="plan-desc">30 каналов: 7 hex-узлов + 22 пула (~88% хешрейта). Реальные ответы от Foundry, AntPool, MARA. 8 волн до 4 часов.</div><ul class="fl"><li><span class="fi ok">✓</span><strong>8 hex-broadcast узлов</strong> — blockstream · Blockchair · BlockCypher · btcscan · mempool</li><li><span class="fi ok">✓</span><strong>22 пул-акселератора</strong> — Foundry ⭐ · AntPool · MARA ⭐ · ViaBTC · SpiderPool ★ · Luxor ★ · CloverPool · BitFuFu ★</li><li><span class="fi ok">✓</span><strong>~88% хешрейта</strong> Bitcoin охвачено · Last-Block-Miner boost</li><li><span class="fi ok">✓</span><strong>8 волн</strong>: адаптивный интервал · Anti-Stuck режим при зависании >48ч</li><li><span class="fi ok">✓</span>Цена $3–18 — дешевле когда сеть спокойна</li><li><span class="fi ok">✓</span>Пакет до 20 TX · Smart Advisor · Возврат за 6 ч если не помогло</li></ul><button class="pbtn pbp" onclick="openM()"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><defs><linearGradient id="cg16" x1="2" y1="5" x2="22" y2="19" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFE566"/><stop offset="45%" stop-color="#F7931A"/><stop offset="100%" stop-color="#FF6B00"/></linearGradient></defs><path d="M3 19h18" stroke="url(#cg16)" stroke-width="2" stroke-linecap="round"/><path d="M3 19L4.5 9.5L9 14L12 6L15 14L19.5 9.5L21 19z" fill="url(#cg16)" stroke="url(#cg16)" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="12" cy="6" r="1.4" fill="#FFE566"/><circle cx="4.5" cy="9.5" r="1.1" fill="#FFE566"/><circle cx="19.5" cy="9.5" r="1.1" fill="#FFE566"/></svg>Купить Premium — <span id="plan-btn-price">$4</span></span></button></div>
+  <div class="plan-card"><div class="ptag tf" style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><rect x="2.5" y="10.5" width="19" height="12" rx="3" fill="rgba(247,147,26,0.12)" stroke="#f7931a" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 10.5V7.5a5 5 0 0 1 9.9-1" stroke="#f7931a" stroke-width="1.6" stroke-linecap="round" fill="none"/><circle cx="12" cy="16" r="2" fill="#f7931a" opacity="0.85"/><rect x="11" y="16.8" width="2" height="3" rx="1" fill="#f7931a" opacity="0.7"/></svg>FREE</div><div class="plan-price">$0 <em>/ бесплатно</em></div><div class="plan-desc">Серверный broadcast через 3 CORS-узла. Реальные ответы от каждого канала. Однократный broadcast.</div><ul class="fl"><li><span class="fi ok">✓</span>blockstream.info — Esplora (CORS ✓, реальный ответ)</li><li><span class="fi ok">✓</span>Blockchair broadcast (CORS ✓, реальный ответ)</li><li><span class="fi ok">✓</span>BlockCypher broadcast (CORS ✓)</li><li><span class="fi ok">✓</span>Серверный API — без CORS-ограничений</li><li><span class="fi ok">✓</span>Однократный rebroadcast (без волн)</li><li><span class="fi ok">✓</span>Трекер подтверждений онлайн</li><li><span class="fi na">—</span><span style="color:var(--m)">Пул-акселераторы — только Premium</span></li><li><span class="fi na">—</span><span style="color:var(--m)">8 волн повтора (только Premium)</span></li></ul><button class="pbtn pbf" onclick="pick('free');document.getElementById('txid').focus()"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><rect x="2.5" y="10.5" width="19" height="12" rx="3" fill="rgba(247,147,26,0.12)" stroke="#f7931a" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 10.5V7.5a5 5 0 0 1 9.9-1" stroke="#f7931a" stroke-width="1.6" stroke-linecap="round" fill="none"/><circle cx="12" cy="16" r="2" fill="#f7931a" opacity="0.85"/><rect x="11" y="16.8" width="2" height="3" rx="1" fill="#f7931a" opacity="0.7"/></svg>Начать бесплатно</span></button></div>
+  <div class="plan-card prem"><div class="ptag tp" style="display:inline-flex;align-items:center;gap:5px"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><defs><linearGradient id="cgbadge" x1="2" y1="5" x2="22" y2="19" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFE566"/><stop offset="45%" stop-color="#F7931A"/><stop offset="100%" stop-color="#FF6B00"/></linearGradient></defs><path d="M3 19h18" stroke="url(#cgbadge)" stroke-width="2" stroke-linecap="round"/><path d="M3 19L4.5 9.5L9 14L12 6L15 14L19.5 9.5L21 19z" fill="url(#cgbadge)" stroke="url(#cgbadge)" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="12" cy="6" r="1.4" fill="#FFE566"/><circle cx="4.5" cy="9.5" r="1.1" fill="#FFE566"/><circle cx="19.5" cy="9.5" r="1.1" fill="#FFE566"/></svg>PREMIUM</div><div class="plan-price"><span style="color:var(--a)" id="plan-price-usd">$4</span> <em>/ разово</em> <span id="plan-price-tag" style="display:inline-flex;align-items:center;gap:4px;font-size:.57rem;font-family:var(--mono);padding:2px 8px;border-radius:4px;background:rgba(247,147,26,.12);color:var(--a);vertical-align:middle;margin-left:4px"><span class="net-heart calm sm" id="price-tag-dot"><svg width="12" height="12" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g class="h-flame"><path d="M9 19 Q7 15 9.5 11 Q10.5 15 12 11 Q13.5 15 14.5 11 Q17 15 15 19" fill="#ff6b00" opacity=".85"/></g><path class="h-body" d="M12 20.5C12 20.5 2.5 14 2.5 8C2.5 5.2 4.7 3 7.5 3C9.1 3 10.6 3.8 12 5.2C13.4 3.8 14.9 3 16.5 3C19.3 3 21.5 5.2 21.5 8C21.5 14 12 20.5 12 20.5Z"/><g class="h-ice" stroke="#cff0ff" stroke-width="1" stroke-linecap="round" fill="none"><line x1="12" y1="5.5" x2="12" y2="8.5"/><line x1="10.4" y1="6.3" x2="13.6" y2="7.7"/><line x1="10.4" y1="7.7" x2="13.6" y2="6.3"/></g></svg></span><span id="price-tag-text">сеть</span></span></div><div id="plan-conf-time" style="font-family:var(--mono);font-size:.62rem;color:var(--g);margin-top:2px;margin-bottom:4px">Premium ≈ 10–20 мин ⚡</div><div class="plan-desc">30 каналов: 8 hex-узлов + 22 пула (~88% хешрейта). Реальные ответы от Foundry, AntPool, MARA. 8 волн до 4 часов.</div><ul class="fl"><li><span class="fi ok">✓</span><strong>8 hex-broadcast узлов</strong> — blockstream · Blockchair · BlockCypher · btcscan · mempool</li><li><span class="fi ok">✓</span><strong>22 пул-акселератора</strong> — Foundry ⭐ · AntPool · MARA ⭐ · ViaBTC · SpiderPool ★ · Luxor ★ · CloverPool · BitFuFu ★</li><li><span class="fi ok">✓</span><strong>~88% хешрейта</strong> Bitcoin охвачено · Last-Block-Miner boost</li><li><span class="fi ok">✓</span><strong>8 волн</strong>: адаптивный интервал · Anti-Stuck режим при зависании >48ч</li><li><span class="fi ok">✓</span>Цена $3–18 — дешевле когда сеть спокойна</li><li><span class="fi ok">✓</span>Пакет до 20 TX · Smart Advisor · Возврат за 6 ч если не помогло</li></ul><button class="pbtn pbp" onclick="openM()"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><defs><linearGradient id="cg16" x1="2" y1="5" x2="22" y2="19" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFE566"/><stop offset="45%" stop-color="#F7931A"/><stop offset="100%" stop-color="#FF6B00"/></linearGradient></defs><path d="M3 19h18" stroke="url(#cg16)" stroke-width="2" stroke-linecap="round"/><path d="M3 19L4.5 9.5L9 14L12 6L15 14L19.5 9.5L21 19z" fill="url(#cg16)" stroke="url(#cg16)" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="12" cy="6" r="1.4" fill="#FFE566"/><circle cx="4.5" cy="9.5" r="1.1" fill="#FFE566"/><circle cx="19.5" cy="9.5" r="1.1" fill="#FFE566"/></svg>Купить Premium — <span id="plan-btn-price">$4</span></span></button></div>
 </div></div>
 
 <!-- TRUST & REVIEWS -->
@@ -2361,6 +2361,7 @@ const POOLS_DIRECT = [
   {n:'BitAccelerate',    p:'accelerator',                   c:'g', api:true},
   {n:'360BTC',           p:'pool accelerator',              c:'g', api:true},
   {n:'txfaster',         p:'accelerator',                   c:'g', api:true},
+  {n:'btcspeed',         p:'accelerator',                   c:'g', api:true},
 ]
 const POOLS_P2P = [
   {n:'Binance Pool',  p:'via p2p broadcast', c:'y'},
@@ -2494,6 +2495,28 @@ async function fetchPools() {
   return null;
 }
 
+async function fetchHealthOnline() {
+  // FIX v13: берём реальные данные из /api/health вместо фиктивного apiOnline
+  try {
+    const r = await fetch('/api/health?_t=' + Date.now(), { signal: AbortSignal.timeout(5000) });
+    if (r.ok) {
+      const d = await r.json();
+      const el2 = document.getElementById('pools-online');
+      if (el2 && d.summary) {
+        const nodesOk = d.summary.nodes?.ok ?? 0;
+        const poolsOk = d.summary.pools?.ok ?? 0;
+        const totalOk = nodesOk + poolsOk;
+        el2.style.opacity = '';
+        el2.style.animation = 'none';
+        el2.textContent = totalOk + ' / 30';
+        el2.style.color = totalOk >= 28 ? 'var(--g)' : totalOk >= 20 ? 'var(--a)' : '#ff5555';
+      }
+    }
+  } catch(e) {}
+}
+fetchHealthOnline();
+setInterval(fetchHealthOnline, 5 * 60 * 1000);
+
 async function fetchLiveStats() {
   try {
     const blocks = await fetchBlocks();
@@ -2565,12 +2588,7 @@ async function fetchLiveStats() {
       }
     });
 
-    const el2 = document.getElementById('pools-online');
-    if (el2) {
-      el2.style.opacity = '';
-      el2.style.animation = '';
-      el2.textContent = apiOnline + ' / ' + POOLS_DIRECT.length;
-    }
+    // pools-online обновляется через fetchHealthOnline() из /api/health
     const p2pEl2 = document.getElementById('p2p-count');
     if (p2pEl2) { p2pEl2.textContent = p2pOnline + ' / ' + POOLS_P2P.length; p2pEl2.style.opacity='1'; p2pEl2.style.animation='none'; p2pEl2.style.color='#ffd166'; p2pEl2.style.fontWeight='700'; }
   } catch(e) {}
@@ -3997,35 +4015,37 @@ async function chk() {
 }
 
 // ── BTC PRICE ─────────────────────────────────────
-let _btcUsd = 0;
+let _btcUsd = 0, _btcUsdAt = 0;
 
 async function fetchBtcPrice() {
+  // FIX: Пропускаем если /api/price уже обновил _btcUsd недавно
+  if (_btcUsd > 0 && Date.now() - _btcUsdAt < 180000) return _btcUsd;
   try {
     const r = await fetch('https://blockchain.info/ticker', { cache: 'no-store' });
     if (r.ok) {
       const d = await r.json();
-      if (d.USD && d.USD.last > 0) { _btcUsd = d.USD.last; return _btcUsd; }
+      if (d.USD && d.USD.last > 0) { _btcUsd = d.USD.last; _btcUsdAt = Date.now(); return _btcUsd; }
     }
   } catch(e) {}
   try {
     const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', { cache: 'no-store' });
     if (r.ok) {
       const d = await r.json();
-      if (d.price) { _btcUsd = parseFloat(d.price); return _btcUsd; }
+      if (d.price) { _btcUsd = parseFloat(d.price); _btcUsdAt = Date.now(); return _btcUsd; }
     }
   } catch(e) {}
   try {
     const r = await fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot', { cache: 'no-store' });
     if (r.ok) {
       const d = await r.json();
-      if (d.data && d.data.amount) { _btcUsd = parseFloat(d.data.amount); return _btcUsd; }
+      if (d.data && d.data.amount) { _btcUsd = parseFloat(d.data.amount); _btcUsdAt = Date.now(); return _btcUsd; }
     }
   } catch(e) {}
   try {
     const r = await fetch('https://mempool.space/api/v1/prices', { cache: 'no-store' });
     if (r.ok) {
       const d = await r.json();
-      if (d.USD > 0) { _btcUsd = d.USD; return _btcUsd; }
+      if (d.USD > 0) { _btcUsd = d.USD; _btcUsdAt = Date.now(); return _btcUsd; }
     }
   } catch(e) {}
   return _btcUsd;
@@ -5811,10 +5831,23 @@ console.log('[TurboTX] Server API connected ✓');
   ];
 
   // BUG FIX: клиентский кэш 90 сек — не мешает CDN, но не частит запросами
-  let _cached = null, _cachedAt = 0;
+  let _cached = null, _cachedAt = 0, _inflight = null;
   const CLIENT_CACHE_MS = 90_000; // 90 сек
 
   async function loadPrice(forceRefresh) {
+    if (!forceRefresh && _cached && Date.now() - _cachedAt < CLIENT_CACHE_MS) {
+      applyPrice(_cached);
+      return _cached;
+    }
+    // FIX: предотвращаем дублирующиеся concurrent запросы (race condition)
+    if (_inflight && !forceRefresh) return _inflight;
+    const p = _doLoadPrice(forceRefresh);
+    if (!forceRefresh) _inflight = p;
+    p.finally(() => { if (_inflight === p) _inflight = null; });
+    return p;
+  }
+
+  async function _doLoadPrice(forceRefresh) {
     if (!forceRefresh && _cached && Date.now() - _cachedAt < CLIENT_CACHE_MS) {
       applyPrice(_cached);
       return _cached;
@@ -5927,8 +5960,13 @@ console.log('[TurboTX] Server API connected ✓');
     // BUG FIX: confLabel всегда берётся из tier — больше не остаётся пустым
     const confEl = document.getElementById('plan-conf-time');
     if (confEl) {
-      confEl.textContent = 'Premium ≈ ' + confLabel;
-      confEl.style.display = '';
+      // FIX v13: динамическое время по тиру
+      const confLabel = usd <= 4  ? '10–20 мин ⚡ (сеть свободна)'
+                      : usd <= 7  ? '15–30 мин ⚡'
+                      : usd <= 12 ? '20–45 мин (перегрузка)'
+                      : '30–90 мин (критично)';
+      confEl.textContent = 'Premium ≈ ' + (p.confLabel || confLabel);
+      confEl.style.color  = usd <= 4 ? 'var(--g)' : usd <= 7 ? 'var(--a)' : '#ff7755';
     }
 
     const btnEl  = document.getElementById('plan-btn-price');  if (btnEl)  btnEl.textContent  = '$' + usd;

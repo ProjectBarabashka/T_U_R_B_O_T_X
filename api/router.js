@@ -139,80 +139,166 @@ async function handleHealth(req, res) {
 // ══════════════════════════════════════════════════════════════
 //  STATUS  —  GET /api/status?txid=<64hex>
 // ══════════════════════════════════════════════════════════════
-function estimateEta(feeRate, fees, mpVsizeMB) {
-  if (!feeRate || !fees) return { eta:null, etaMinutes:null, confidence:0 };
-  const fastest=fees.fastestFee||50, halfHour=fees.halfHourFee||30, hour=fees.hourFee||20, economy=fees.economyFee||fees.minimumFee||5;
+// ① STUCK DETECTION ② FEE TREND ③ MEMPOOL POS ④ RBF ANALYSIS
+// ⑤ BLOCKCOUNT FALLBACK ⑥ ETA FULL ⑦ ACCELERATION ADVICE
+// (слито из api/status.js v12 → router.js для экономии слотов Vercel)
+
+function estimateEtaFull(feeRate, fees, mpVsizeMB) {
+  if (!feeRate||!fees) return {eta:null,etaMinutes:null,confidence:0};
+  const fastest=fees.fastestFee||50, halfHour=fees.halfHourFee||30,
+        hour=fees.hourFee||20, economy=fees.economyFee||fees.minimumFee||5;
   let etaText, etaMinutes, confidence;
-  if (feeRate >= fastest)   { etaText='~10 мин'; etaMinutes=10; confidence=feeRate>=fastest*1.2?90:70; }
-  else if (feeRate >= halfHour) { etaText='~30 мин'; etaMinutes=30; confidence=feeRate>=halfHour*1.1?75:55; }
-  else if (feeRate >= hour) { etaText='~1 час'; etaMinutes=60; confidence=50; }
-  else if (feeRate >= economy) { etaText='~несколько часов'; etaMinutes=240; confidence=30; }
-  else { etaText='неопределённо (очень низкая комиссия)'; etaMinutes=null; confidence=5; }
+  if (feeRate >= fastest)       { etaText='~10 мин';                    etaMinutes=10;   confidence=feeRate>=fastest*1.2?90:70; }
+  else if (feeRate >= halfHour) { etaText='~30 мин';                    etaMinutes=30;   confidence=feeRate>=halfHour*1.1?75:55; }
+  else if (feeRate >= hour)     { etaText='~1 час';                     etaMinutes=60;   confidence=50; }
+  else if (feeRate >= economy)  { etaText='~несколько часов';            etaMinutes=240;  confidence=30; }
+  else                          { etaText='неопределённо (низкая fee)'; etaMinutes=null; confidence=5; }
   if (mpVsizeMB > 100) confidence = Math.max(10, confidence-30);
   else if (mpVsizeMB > 50) confidence = Math.max(15, confidence-15);
-  return { eta:etaText, etaMinutes, confidence };
+  return {eta:etaText, etaMinutes, confidence};
+}
+// Legacy alias
+const estimateEta = estimateEtaFull;
+
+function accelerationAdviceFull(feeRate, fees, rbfEnabled, vsize, feePaid, stuckHours=0) {
+  if (!fees) return null;
+  const fastest = fees.fastestFee || 50;
+  const ratio   = feeRate / fastest;
+  if (ratio >= 1.0) return {action:'wait',   urgency:'low',    text:'Комиссия отличная — следующий блок'};
+  if (ratio >= 0.8) return {action:'wait',   urgency:'low',    text:'Комиссия хорошая — подтверждение скоро'};
+  if (ratio >= 0.5) return {action:'boost',  urgency:'medium', text:'TurboTX ускорит на 1–3 часа'};
+  const cpfpFee = Math.max(0, fastest*(vsize+110)-feePaid);
+  const urgency = stuckHours>=72?'critical':stuckHours>=48?'high':'high';
+  if (rbfEnabled) return {
+    action:'rbf', urgency,
+    text:`RBF доступен — замените с fee rate ${fastest} sat/vB`,
+    rbfTargetFeeRate:fastest, stuckHours:stuckHours||undefined,
+  };
+  return {
+    action:'cpfp_or_boost', urgency,
+    text:`Комиссия слишком низкая (${feeRate}/${fastest} sat/vB). CPFP или TurboTX Premium`,
+    cpfpFeeNeeded:cpfpFee, cpfpFeeSats:cpfpFee, stuckHours:stuckHours||undefined,
+  };
+}
+const accelAdvice = accelerationAdviceFull;
+
+function detectStuck(tx, fees) {
+  const firstSeen = tx?.firstSeen || null;
+  if (!firstSeen) return {isStuck:false,stuckHours:0};
+  const stuckHours = Math.round((Date.now()/1000 - firstSeen)/3600);
+  return {
+    isStuck:    stuckHours >= 48,
+    isStuck72h: stuckHours >= 72,
+    stuckHours,
+    stuckLabel: stuckHours>=72?'🚨 Критически зависла':stuckHours>=48?'⚠️ Долго в мемпуле':null,
+  };
 }
 
-function accelAdvice(feeRate, fees, rbfEnabled, vsize, feePaid) {
-  if (!fees) return null;
-  const fastest = fees.fastestFee||50;
-  const ratio = feeRate/fastest;
-  if (ratio >= 1.0) return { action:'wait',   urgency:'low',    text:'Комиссия отличная — следующий блок' };
-  if (ratio >= 0.8) return { action:'wait',   urgency:'low',    text:'Комиссия хорошая — подтверждение скоро' };
-  if (ratio >= 0.5) return { action:'boost',  urgency:'medium', text:'Ускорение сократит время на 1-3 часа' };
-  const cpfpFee = Math.max(0, fastest*(vsize+110)-feePaid);
-  if (rbfEnabled) return { action:'rbf', urgency:'high', text:`RBF доступен — замените TX с fee rate ${fastest} sat/vB`, rbfTargetFeeRate:fastest };
-  return { action:'cpfp_or_boost', urgency:cpfpFee<10000?'medium':'high', text:`Комиссия слишком низкая (${feeRate}/${fastest} sat/vB). CPFP или ускорение TurboTX`, cpfpFeeNeeded:cpfpFee };
+function getFeeTrend(fees) {
+  if (!fees) return 'stable';
+  const {fastestFee:f, halfHourFee:h} = fees;
+  if (!f||!h) return 'stable';
+  if (h < f*0.6) return 'dropping';
+  if (h >= f*0.9) return 'rising';
+  return 'stable';
+}
+
+function calcMempoolPosition(feeRate, fees, mp) {
+  if (!mp?.count||!feeRate) return null;
+  const ratio = Math.max(0, 1-Math.min(feeRate/(fees?.fastestFee||50),1));
+  const vsizeBefore = ratio*(mp.vsize||0);
+  const blocksUntilConfirm = Math.ceil(vsizeBefore/1_000_000);
+  return {
+    txsAhead:        Math.round(ratio*mp.count),
+    vsizeAheadMB:    +(vsizeBefore/1e6).toFixed(2),
+    estimatedBlocks: blocksUntilConfirm,
+    estimatedMins:   blocksUntilConfirm*10,
+  };
+}
+
+function analyzeRbf(vin=[]) {
+  const rbfInputs = vin.filter(i=>i.sequence<=0xFFFFFFFD);
+  return {
+    rbfEnabled:    rbfInputs.length > 0,
+    rbfInputCount: rbfInputs.length,
+    fullySignaled: rbfInputs.length === vin.length,
+    optIn:         rbfInputs.length > 0 && rbfInputs.length < vin.length,
+  };
 }
 
 async function handleStatus(req, res) {
-  if (!checkRl(getIp(req), 30)) return res.status(429).json({ ok:false, error:'Too many requests' });
+  if (!checkRl(getIp(req), 30)) return res.status(429).json({ok:false, error:'Too many requests'});
   const txid = req.query?.txid || req.body?.txid;
-  if (!txid || !/^[a-fA-F0-9]{64}$/.test(txid))
-    return res.status(400).json({ ok:false, error:'Invalid TXID' });
+  if (!txid||!/^[a-fA-F0-9]{64}$/.test(txid))
+    return res.status(400).json({ok:false, error:'Invalid TXID'});
   try {
-    const [txR, txStatusR, tipR, feesR, mpR] = await Promise.allSettled([
+    const [txR, statusR, tipR, tip2R, feesR, mpR] = await Promise.allSettled([
       ft(`https://mempool.space/api/tx/${txid}`),
       ft(`https://mempool.space/api/tx/${txid}/status`),
       ft('https://mempool.space/api/blocks/tip/height'),
+      ft('https://blockstream.info/api/blocks/tip/height'),   // ⑤ fallback
       ft('https://mempool.space/api/v1/fees/recommended'),
       ft('https://mempool.space/api/mempool'),
     ]);
-    const get = s => (s.status==='fulfilled' && s.value?.ok) ? s.value : null;
+    const get = s=>(s.status==='fulfilled'&&s.value?.ok)?s.value:null;
     let tx = get(txR) ? await sj(get(txR)) : null;
     if (!tx) {
-      try { const fb = await ft(`https://blockstream.info/api/tx/${txid}`,{},7000); if(fb.ok) tx=await sj(fb); } catch {}
+      try { const fb=await ft(`https://blockstream.info/api/tx/${txid}`,{},7000); if(fb.ok) tx=await sj(fb); } catch {}
     }
-    if (!tx?.txid) return res.status(200).json({ ok:true, status:'not_found', txid, message:'Transaction not found in mempool or blockchain' });
-    const txStatus = get(txStatusR) ? await sj(get(txStatusR)) : null;
-    const tip      = get(tipR) ? parseInt(await get(tipR).text()) : 0;
-    const fees     = get(feesR) ? await sj(get(feesR)) : {};
-    const mp       = get(mpR)   ? await sj(get(mpR))   : {};
-    const vsize      = tx.weight ? Math.ceil(tx.weight/4) : (tx.size||250);
-    const feePaid    = tx.fee||0;
-    const feeRate    = feePaid&&vsize ? Math.round(feePaid/vsize) : 0;
-    const fastest    = fees.fastestFee||50;
-    const confirmed  = txStatus?.confirmed||tx.status?.confirmed||false;
-    const blockH     = txStatus?.block_height||tx.status?.block_height||null;
-    const blockT     = txStatus?.block_time||tx.status?.block_time||null;
-    const confs      = confirmed&&tip&&blockH ? Math.max(1,tip-blockH+1) : 0;
-    const rbfEnabled = Array.isArray(tx.vin) && tx.vin.some(i=>i.sequence<=0xFFFFFFFD);
-    const mpVsizeMB  = mp.vsize ? +(mp.vsize/1e6).toFixed(1) : 0;
-    const mempoolPosition = !confirmed&&mp.count&&feeRate>0
-      ? Math.round((1-Math.min(feeRate/fastest,1))*mp.count) : null;
-    const { eta, etaMinutes, confidence } = !confirmed
-      ? estimateEta(feeRate, fees, mpVsizeMB)
-      : { eta:null, etaMinutes:null, confidence:100 };
-    const advice = !confirmed ? accelAdvice(feeRate, fees, rbfEnabled, vsize, feePaid) : null;
+    if (!tx?.txid) return res.status(200).json({ok:true, status:'not_found', txid, message:'Transaction not found in mempool or blockchain'});
+    const txStatus = get(statusR) ? await sj(get(statusR)) : null;
+    let tip = 0;
+    if (get(tipR))  { try { tip=parseInt(await get(tipR).text()); } catch {} }
+    if (!tip&&get(tip2R)) { try { tip=parseInt(await get(tip2R).text()); } catch {} }
+    const fees = get(feesR) ? await sj(get(feesR)) : {};
+    const mp   = get(mpR)   ? await sj(get(mpR))   : {};
+    const vsize     = tx.weight ? Math.ceil(tx.weight/4) : (tx.size||250);
+    const feePaid   = tx.fee||0;
+    const feeRate   = feePaid&&vsize ? Math.round(feePaid/vsize) : 0;
+    const fastest   = fees.fastestFee||50;
+    const confirmed = txStatus?.confirmed||tx.status?.confirmed||false;
+    const blockH    = txStatus?.block_height||tx.status?.block_height||null;
+    const blockT    = txStatus?.block_time  ||tx.status?.block_time  ||null;
+    const confs     = confirmed&&tip&&blockH ? Math.max(1,tip-blockH+1) : 0;
+    const mpVsizeMB = mp.vsize ? +(mp.vsize/1e6).toFixed(1) : 0;
+    const rbfInfo   = analyzeRbf(tx.vin||[]);
+    const stuck     = detectStuck(tx, fees);
+    const feeTrend  = getFeeTrend(fees);
+    const mempoolPos = !confirmed ? calcMempoolPosition(feeRate, fees, mp) : null;
+    const {eta, etaMinutes, confidence} = !confirmed
+      ? estimateEtaFull(feeRate, fees, mpVsizeMB)
+      : {eta:null, etaMinutes:null, confidence:100};
+    const advice = !confirmed
+      ? accelerationAdviceFull(feeRate, fees, rbfInfo.rbfEnabled, vsize, feePaid, stuck.stuckHours)
+      : null;
+    res.setHeader('Cache-Control','no-store');
     return res.status(200).json({
-      ok:true, txid, status:confirmed?'confirmed':'mempool', confirmed, confirmations:confs,
-      blockHeight:blockH, blockTime:blockT, vsize, feePaid, feeRate, feeRateNeeded:fastest,
-      needsBoost:!confirmed&&feeRate>0&&feeRate<fastest*0.5, rbfEnabled,
-      inputs:(tx.vin||[]).length, outputs:(tx.vout||[]).length,
-      eta, etaMinutes, confidence, accelerationAdvice:advice,
-      mempoolPosition, mempoolCount:mp.count||null, mempoolMB:mpVsizeMB, timestamp:Date.now(),
+      ok:true, txid,
+      status:        confirmed ? 'confirmed' : 'mempool',
+      confirmed,
+      confirmations: confs,
+      blockHeight:   blockH,
+      blockTime:     blockT,
+      vsize, feePaid, feeRate, feeRateNeeded:fastest,
+      needsBoost:    !confirmed&&feeRate>0&&feeRate<fastest*0.5,
+      ...rbfInfo,
+      fees:{ fastest, halfHour:fees.halfHourFee||fastest, hour:fees.hourFee||fastest, economy:fees.economyFee||fees.minimumFee||1 },
+      feeTrend,
+      feeTrendLabel: feeTrend==='dropping'?'📉 Комиссии падают':feeTrend==='rising'?'📈 Комиссии растут':'→ Стабильно',
+      ...stuck,
+      eta, etaMinutes, confidence,
+      accelerationAdvice: advice,
+      mempoolPosition:    mempoolPos?.txsAhead??null,
+      mempoolPositionV12: mempoolPos,
+      mempoolCount:       mp.count||null,
+      mempoolMB:          mpVsizeMB,
+      inputs:  (tx.vin ||[]).length,
+      outputs: (tx.vout||[]).length,
+      weight:  tx.weight||null,
+      firstSeen: tx.firstSeen||null,
+      timestamp: Date.now(),
     });
-  } catch(e) { return res.status(500).json({ ok:false, error:e.message }); }
+  } catch(e) { return res.status(500).json({ok:false,error:e.message}); }
 }
 
 // ══════════════════════════════════════════════════════════════
@@ -268,12 +354,12 @@ async function handleStats(req, res) {
     const avgHr=_sess.premBroadcasts>0?Math.round(_sess.totalHashreachPct/_sess.premBroadcasts):88;
     const hexRate=_sess.broadcasts>0?Math.round(_sess.broadcastsWithHex/_sess.broadcasts*100):null;
     const pub={
-      ok:true,version:'v12',
+      ok:true,version:'v13',
       network:{blockHeight:tip||null,feeRate:fastest||null,feeHalfHour:halfHour||null,feeHour:hour||null,
         feeEconomy:economy||null,congestion,congestionText:CTEXT[congestion],congestionEmoji:CEMOJI[congestion],
         btcPrice,mempoolCount:mp.count||null,mempoolMB:mp.vsize?+(mp.vsize/1e6).toFixed(1):null,
         hashrateEHs:hr.currentHashrate?+(hr.currentHashrate/1e18).toFixed(2):null},
-      service:{version:'v12',nodeChannels:8,poolChannels:22,totalChannels:30,hashrateReach:`~${avgHr}%`,
+      service:{version:'v13',nodeChannels:8,poolChannels:22,totalChannels:30,hashrateReach:`~${avgHr}%`,
         batchSupport:true,lightningSupport:true,maraSlipstream:true,lastBlockMiner:true,uptime:uptimeStr},
       timestamp:Date.now(),
     };

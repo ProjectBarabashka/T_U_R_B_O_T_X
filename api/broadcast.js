@@ -798,7 +798,7 @@ function freeChannels(hex, txid) {
   ];
 }
 
-// ─── PREMIUM CHANNELS (все 29 каналов) ────────────────────────
+// ─── PREMIUM CHANNELS (все 30 каналов) ────────────────────────
 function premiumChannels(txid, hex) {
   const UA = getUA();
 
@@ -1155,7 +1155,7 @@ export default async function handler(req, res) {
     waveStrategy,
     lastBlockMiner: lastBlock,
     feeTrend: feeTrend?.direction ?? 'stable',
-    totalChannels: 29, // 8 nodes + 21 pools (v12)
+    totalChannels: 30, // 8 nodes + 22 pools (v13)
     circuitBreakers: (() => {
       const open=[], halfOpen=[];
       for (const [name,e] of _cb) {
