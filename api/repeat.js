@@ -268,7 +268,7 @@ async function tgConfirmed(txid, blockHeight, waveNum) {
 
 // ─── MAIN HANDLER ─────────────────────────────────────────────
 export default async function handler(req, res) {
-  if (req.method === 'OPTIONS') return res.status(204).set(CORS).end();
+  if (req.method === 'OPTIONS') { Object.entries(CORS).forEach(([k,v])=>res.setHeader(k,v)); return res.status(204).end(); }
   Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
   if (req.method !== 'POST') return res.status(405).json({ ok:false, error:'POST only' });
 

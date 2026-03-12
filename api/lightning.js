@@ -242,7 +242,7 @@ function readBody(req) {
 
 // ─── MAIN HANDLER ─────────────────────────────────────────────
 export default async function handler(req, res) {
-  if (req.method === 'OPTIONS') return res.status(204).set(CORS).end();
+  if (req.method === 'OPTIONS') { Object.entries(CORS).forEach(([k,v])=>res.setHeader(k,v)); return res.status(204).end(); }
   Object.entries(CORS).forEach(([k,v]) => res.setHeader(k, v));
 
   // Парсим тело запроса один раз для всего хендлера
@@ -419,7 +419,7 @@ export function markInvoicePaid(paymentHash) {
   inv.paidAt = Date.now();
   _invoices.set(paymentHash.toLowerCase(), inv);
   // Уведомляем в Telegram об успешной оплате
-  tgNotify(inv.amountSats, inv.amountUsd, null, 'webhook', 'paid').catch(() => {});
+  tgNotify(inv.amountSats, inv.amountUsd, inv.txid || null, 'webhook', 'paid').catch(() => {});
   return true;
 }
 

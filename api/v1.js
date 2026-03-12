@@ -28,7 +28,7 @@ export const config = { maxDuration: 30 };
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key, X-TurboTX-Token',
 };
 
 // ─── API KEY STORE (env-driven) ────────────────────────────────
@@ -213,7 +213,7 @@ function handlePing(auth, rl) {
 // ─── MAIN DISPATCHER ──────────────────────────────────────────
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') {
-    return res.status(204).set(CORS).end();
+    Object.entries(CORS).forEach(([k,v])=>res.setHeader(k,v)); return res.status(204).end();
   }
   Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
 
@@ -275,6 +275,7 @@ export default async function handler(req, res) {
         congestion: data.congestion,
         history24h: data.history24h,
         predictions: data.predictions,
+        mempool: data.mempool,
         timestamp: data.timestamp,
       }};
       break;

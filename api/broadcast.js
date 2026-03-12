@@ -319,12 +319,15 @@ async function ftr(url, opts={}, ms=13000, tries=2, chName='', tier='node') {
 
 // ─── HASHRATE TABLE Q1 2026 ──────────────────────────────────
 // ⒞ v12: добавлены SBI Crypto, EMCDPool, Rawpool, 2Miners, Lincoin
+// NOTE: MaraSlipstream — это приватный мемпул MARA, тот же пул (11% хешрейта)
+// При подсчёте hr используем дедупликацию MARA/MaraSlipstream (см. uniqueHr ниже)
 const HR = {
   Foundry:27, AntPool:16, MARA:11, ViaBTC:9, SpiderPool:8,
   F2Pool:7, Luxor:5, CloverPool:4, BitFuFu:4, 'BTC.com':3,
   Ocean:2, EMCDPool:2, SBICrypto:2,
   TxBoost:1, mempoolAccel:1, bitaccelerate:1, '360btc':1, txfaster:1, btcspeed:1,
-  Rawpool:1, '2Miners':1, Lincoin:1, MaraSlipstream:11, // Slipstream = MARA's pool
+  Rawpool:1, '2Miners':1, Lincoin:1,
+  MaraSlipstream:0, // 0 здесь — дедупликация с MARA происходит через uniqueHr
 };
 
 // Итого Premium охват: ~88% хешрейта (считаем уникальных, Slipstream = MARA)
@@ -1036,7 +1039,7 @@ async function tg({results, txid, plan, analysis, ms, hr, ip, blocked, waveStrat
     const trendEmoji = feeTrend?.direction==='dropping'?'📉':feeTrend?.direction==='rising'?'📈':'→';
 
     text=[
-      `⚡ *TurboTX v13 — ${plan.toUpperCase()}*`,
+      `⚡ *TurboTX v14 — ${plan.toUpperCase()}*`,
       `📋 \`${txid.slice(0,14)}…${txid.slice(-6)}\` · \`${ip}\``,
       `⏱ ${ms}ms · \`${bar}\` ${pct}% (${ok}/${tot})`,
       hr>0 ? `⛏ ~${hr}% хешрейта охвачено` : '',
@@ -1059,7 +1062,7 @@ async function tg({results, txid, plan, analysis, ms, hr, ip, blocked, waveStrat
 
 // ─── MAIN HANDLER ─────────────────────────────────────────────
 export default async function handler(req, res) {
-  if (req.method==='OPTIONS') return res.status(204).set(CORS).end();
+  if (req.method==='OPTIONS') { Object.entries(CORS).forEach(([k,v])=>res.setHeader(k,v)); return res.status(204).end(); }
   Object.entries(CORS).forEach(([k,v])=>res.setHeader(k,v));
   if (req.method!=='POST') return res.status(405).json({ok:false,error:'Method not allowed'});
 
@@ -1163,7 +1166,7 @@ export default async function handler(req, res) {
     waveStrategy,
     lastBlockMiner: lastBlock,
     feeTrend: feeTrend?.direction ?? 'stable',
-    totalChannels: 30, // 8 nodes + 22 pools (v13)
+    totalChannels: 30, // 8 nodes + 22 pools (v14)
     circuitBreakers: (() => {
       const open=[], halfOpen=[];
       for (const [name,e] of _cb) {

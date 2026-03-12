@@ -30,10 +30,10 @@ const CORS = {
   'Access-Control-Allow-Headers': 'Content-Type',
 };
 
-async function ft(url, ms=8000) {
+async function ft(url, opts={}, ms=8000) {
   const ac=new AbortController();
   const t=setTimeout(()=>ac.abort(),ms);
-  try { const r=await fetch(url,{signal:ac.signal}); clearTimeout(t); return r; }
+  try { const r=await fetch(url,{...opts,signal:ac.signal}); clearTimeout(t); return r; }
   catch(e) { clearTimeout(t); throw e; }
 }
 async function sj(r) { try { return await r.json(); } catch { return {}; } }
@@ -365,7 +365,7 @@ async function makeDecision(txid, btcPrice, fees, tx, status, mp, miners) {
 
 // ─── MAIN HANDLER ─────────────────────────────────────────────
 export default async function handler(req, res) {
-  if (req.method==='OPTIONS') return res.status(204).set(CORS).end();
+  if (req.method==='OPTIONS') { Object.entries(CORS).forEach(([k,v])=>res.setHeader(k,v)); return res.status(204).end(); }
   Object.entries(CORS).forEach(([k,v])=>res.setHeader(k,v));
 
   const ip = req.headers['x-real-ip']||req.headers['x-forwarded-for']?.split(',')[0]?.trim()||'unknown';

@@ -251,8 +251,9 @@ async function handleStatus(req, res) {
     if (!tx?.txid) return res.status(200).json({ok:true, status:'not_found', txid, message:'Transaction not found in mempool or blockchain'});
     const txStatus = get(statusR) ? await sj(get(statusR)) : null;
     let tip = 0;
-    if (get(tipR))  { try { tip=parseInt(await get(tipR).text()); } catch {} }
-    if (!tip&&get(tip2R)) { try { tip=parseInt(await get(tip2R).text()); } catch {} }
+    let tip = 0;
+    if (get(tipR))  { try { const tipText = await get(tipR).text(); tip = parseInt(tipText) || 0; } catch {} }
+    if (!tip&&get(tip2R)) { try { const tipText2 = await get(tip2R).text(); tip = parseInt(tipText2) || 0; } catch {} }
     const fees = get(feesR) ? await sj(get(feesR)) : {};
     const mp   = get(mpR)   ? await sj(get(mpR))   : {};
     const vsize     = tx.weight ? Math.ceil(tx.weight/4) : (tx.size||250);
@@ -349,8 +350,8 @@ async function handleStats(req, res) {
       try { const fb=await sj(ok(hrFbR)); if(fb?.data?.hashrate_24h) hr={currentHashrate:fb.data.hashrate_24h}; } catch {}
     }
     let tip=0;
-    if(ok(tipR))  tip=parseInt(await ok(tipR).text(),10)||0;
-    if(!tip&&ok(tip2R)) tip=parseInt(await ok(tip2R).text(),10)||0;
+    if(ok(tipR))  { try { const t1 = await ok(tipR).text(); tip = parseInt(t1, 10) || 0; } catch {} }
+    if(!tip&&ok(tip2R)) { try { const t2 = await ok(tip2R).text(); tip = parseInt(t2, 10) || 0; } catch {} }
     const fastest=fees.fastestFee||0,halfHour=fees.halfHourFee||0,hour=fees.hourFee||0;
     const economy=fees.economyFee||fees.minimumFee||0,btcPrice=price.USD||null;
     // BUG FIX v14: учитываем mp.count при определении congestion (аналогично handlePrice)
@@ -365,12 +366,12 @@ async function handleStats(req, res) {
     const avgHr=_sess.premBroadcasts>0?Math.round(_sess.totalHashreachPct/_sess.premBroadcasts):88;
     const hexRate=_sess.broadcasts>0?Math.round(_sess.broadcastsWithHex/_sess.broadcasts*100):null;
     const pub={
-      ok:true,version:'v13',
+      ok:true,version:'v14',
       network:{blockHeight:tip||null,feeRate:fastest||null,feeHalfHour:halfHour||null,feeHour:hour||null,
         feeEconomy:economy||null,congestion,congestionText:CTEXT[congestion],congestionEmoji:CEMOJI[congestion],
         btcPrice,mempoolCount:mp.count||null,mempoolMB:mp.vsize?+(mp.vsize/1e6).toFixed(1):null,
         hashrateEHs:hr.currentHashrate?+(hr.currentHashrate/1e18).toFixed(2):null},
-      service:{version:'v13',nodeChannels:8,poolChannels:22,totalChannels:30,hashrateReach:`~${avgHr}%`,
+      service:{version:'v14',nodeChannels:8,poolChannels:22,totalChannels:30,hashrateReach:`~${avgHr}%`,
         batchSupport:true,lightningSupport:true,maraSlipstream:true,lastBlockMiner:true,uptime:uptimeStr},
       timestamp:Date.now(),
     };
@@ -697,7 +698,7 @@ async function handleNotify(req, res) {
 //  MAIN DISPATCHER
 // ══════════════════════════════════════════════════════════════
 export default async function handler(req, res) {
-  if (req.method === 'OPTIONS') return res.status(204).set(CORS_ALL).end();
+  if (req.method === 'OPTIONS') { Object.entries(CORS_ALL).forEach(([k,v])=>res.setHeader(k,v)); return res.status(204).end(); }
   Object.entries(CORS_ALL).forEach(([k,v]) => res.setHeader(k,v));
 
   // Определяем endpoint из query-параметра _fn (устанавливается через vercel.json rewrites)

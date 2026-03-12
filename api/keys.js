@@ -37,7 +37,10 @@ function checkAdmin(req) {
 }
 
 export default async function handler(req, res) {
-  if (req.method === 'OPTIONS') return res.status(204).set(CORS).end();
+  if (req.method === 'OPTIONS') {
+    Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
+    return res.status(204).end();
+  }
   Object.entries(CORS).forEach(([k, v]) => res.setHeader(k, v));
 
   if (!checkAdmin(req)) {

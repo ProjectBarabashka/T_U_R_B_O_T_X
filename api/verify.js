@@ -86,7 +86,7 @@ async function verifyLightning(paymentHash) {
       method:    'lightning',
       paid:      true,
       txHash:    paymentHash,
-      paid:      `${data.amountSats?.toLocaleString() || '?'} sats`,
+      paidAmount: `${data.amountSats?.toLocaleString() || '?'} sats`,
       amountSats: data.amountSats,
       confirmed: true,
       amountOk:  true,
@@ -300,7 +300,7 @@ async function tgNotify(result, ip) {
 
 // ─── MAIN ─────────────────────────────────────────────────────
 export default async function handler(req, res) {
-  if (req.method==='OPTIONS') return res.status(204).set(CORS).end();
+  if (req.method==='OPTIONS') { Object.entries(CORS).forEach(([k,v])=>res.setHeader(k,v)); return res.status(204).end(); }
   Object.entries(CORS).forEach(([k,v])=>res.setHeader(k,v));
   if (req.method!=='POST') return res.status(405).json({ok:false,error:'POST only'});
 
