@@ -1305,7 +1305,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
     <div class="stat-lbl">Ускорено TX</div>
   </a>
   <a href="javascript:void(0)" class="stat-card" style="text-decoration:none" onclick="document.getElementById('network-intelligence').scrollIntoView({behavior:'smooth'});return false;">
-    <span class="stat-card-icon" id="block-icon" style="transition:filter .5s,transform .3s;display:inline-block">🔥</span>
+    <canvas id="block-icon" width="48" height="48" style="display:inline-block;vertical-align:middle" title="Среднее время блока"></canvas>
     <span class="stat-num" id="avg-time" style="opacity:.3;animation:skeletonPulse 1.6s ease-in-out infinite">—</span>
     <div class="stat-lbl" id="stat-lbl-blocktime">Среднее время блока</div>
   </a>
@@ -2681,23 +2681,15 @@ async function fetchLiveStats() {
           el.textContent = '~' + avgMin + ' мин';
           el.title = 'Среднее время между блоками (последние ' + count + ' блоков)';
           if (iconEl) {
+            if (typeof window._setBlockIconMode === 'function') window._setBlockIconMode(avgMin);
             if (avgMin < 8) {
               el.style.color = '#ff4455';
-              iconEl.textContent = '🔥';
-              iconEl.style.filter = 'hue-rotate(300deg) saturate(2) brightness(1.2)';
-              iconEl.style.animation = 'flame-pulse 0.8s ease-in-out infinite';
               iconEl.title = 'Сеть перегружена';
             } else if (avgMin <= 12) {
               el.style.color = 'var(--a)';
-              iconEl.textContent = '🔥';
-              iconEl.style.filter = 'none';
-              iconEl.style.animation = 'flame-pulse 2s ease-in-out infinite';
               iconEl.title = 'Нормальная загруженность';
             } else {
               el.style.color = 'var(--g)';
-              iconEl.textContent = '✨';
-              iconEl.style.filter = 'none';
-              iconEl.style.animation = 'none';
               iconEl.title = 'Сеть свободна';
             }
           }
@@ -7118,6 +7110,265 @@ window._TurboAPI = {
     fav.href=cv.toDataURL();
     requestAnimationFrame(draw);
   }
+  draw();
+})();
+</script>
+
+<script>
+// ══════════════════════════════════════════════════════
+//  BLOCK ICON — Fire / Water / Stars particle animation
+//  Режимы: avgMin<8 → 🔥огонь, 8–12 → 💧вода, >12 → ✨звёзды
+// ══════════════════════════════════════════════════════
+(function(){
+  const cv = document.getElementById('block-icon');
+  if (!cv || !cv.getContext) return;
+  const ctx = cv.getContext('2d');
+  const W = 48, H = 48;
+  let mode = 'fire'; // fire | water | stars
+  let particles = [];
+  let raf;
+
+  // ── ЧАСТИЦЫ ──────────────────────────────────────────
+
+  function spawnFire() {
+    const x = W/2 + (Math.random()-0.5)*16;
+    return {
+      x, y: H - 4,
+      vx: (Math.random()-0.5)*1.2,
+      vy: -(1.4 + Math.random()*2.2),
+      life: 1, decay: 0.018 + Math.random()*0.018,
+      size: 2.5 + Math.random()*3.5,
+      wobble: Math.random()*Math.PI*2,
+      wobbleSpeed: 0.08 + Math.random()*0.06,
+    };
+  }
+
+  function spawnWater() {
+    return {
+      x: 4 + Math.random()*(W-8),
+      y: -4,
+      vx: (Math.random()-0.5)*0.5,
+      vy: 1.2 + Math.random()*1.5,
+      life: 1, decay: 0.022 + Math.random()*0.016,
+      size: 1.5 + Math.random()*2.5,
+      swing: Math.random()*Math.PI*2,
+      swingSpeed: 0.05 + Math.random()*0.04,
+    };
+  }
+
+  function spawnStar() {
+    return {
+      x: 4 + Math.random()*(W-8),
+      y: 4 + Math.random()*(H-8),
+      life: Math.random(),
+      decay: (0.008 + Math.random()*0.012) * (Math.random()<0.5?1:-1),
+      size: 0.8 + Math.random()*2.2,
+      twinkle: Math.random()*Math.PI*2,
+      twinkleSpeed: 0.04 + Math.random()*0.05,
+      drift: (Math.random()-0.5)*0.15,
+    };
+  }
+
+  function initParticles(m) {
+    particles = [];
+    if (m === 'fire')  for(let i=0;i<22;i++) { const p=spawnFire();  p.y=H-4-Math.random()*H; p.life=Math.random(); particles.push(p); }
+    if (m === 'water') for(let i=0;i<22;i++) { const p=spawnWater(); p.y=Math.random()*H;    p.life=Math.random(); particles.push(p); }
+    if (m === 'stars') for(let i=0;i<30;i++) particles.push(spawnStar());
+  }
+
+  // ── ОТРИСОВКА ─────────────────────────────────────────
+
+  function drawFire() {
+    ctx.clearRect(0,0,W,H);
+
+    // Фоновое свечение снизу
+    const glow = ctx.createRadialGradient(W/2, H, 2, W/2, H, 28);
+    glow.addColorStop(0,  'rgba(247,100,0,.22)');
+    glow.addColorStop(1,  'rgba(247,100,0,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(0,0,W,H);
+
+    // Частицы огня
+    for (let i = particles.length-1; i >= 0; i--) {
+      const p = particles[i];
+      p.wobble += p.wobbleSpeed;
+      p.x  += p.vx + Math.sin(p.wobble)*0.6;
+      p.y  += p.vy;
+      p.vy *= 0.985;
+      p.life -= p.decay;
+      p.size *= 0.994;
+
+      if (p.life <= 0 || p.y < -4) {
+        particles[i] = spawnFire();
+        continue;
+      }
+
+      const t = p.life;
+      const r = Math.round(255);
+      const g = Math.round(t > 0.5 ? (t-0.5)*2*180 : 0);
+      const b = 0;
+      const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.size*1.4);
+      grad.addColorStop(0,   `rgba(${r},${Math.min(255,g+80)},${b},${t*0.9})`);
+      grad.addColorStop(0.5, `rgba(${r},${g},${b},${t*0.6})`);
+      grad.addColorStop(1,   `rgba(${r},${g},0,0)`);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, p.size*1.4, 0, Math.PI*2);
+      ctx.fillStyle = grad;
+      ctx.fill();
+    }
+
+    // Яркое ядро пламени внизу
+    const core = ctx.createRadialGradient(W/2, H-2, 0, W/2, H-2, 10);
+    core.addColorStop(0,   'rgba(255,230,80,.7)');
+    core.addColorStop(0.4, 'rgba(255,120,0,.4)');
+    core.addColorStop(1,   'rgba(255,60,0,0)');
+    ctx.beginPath();
+    ctx.arc(W/2, H-2, 10, 0, Math.PI*2);
+    ctx.fillStyle = core;
+    ctx.fill();
+  }
+
+  function drawWater() {
+    ctx.clearRect(0,0,W,H);
+
+    // Фоновый градиент воды
+    const bg = ctx.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0,   'rgba(0,180,255,.07)');
+    bg.addColorStop(0.5, 'rgba(0,120,220,.04)');
+    bg.addColorStop(1,   'rgba(0,60,180,.08)');
+    ctx.fillStyle = bg;
+    ctx.fillRect(0,0,W,H);
+
+    for (let i = particles.length-1; i >= 0; i--) {
+      const p = particles[i];
+      p.swing += p.swingSpeed;
+      p.x += p.vx + Math.sin(p.swing)*0.8;
+      p.y += p.vy;
+      p.life -= p.decay;
+
+      if (p.life <= 0 || p.y > H+4) {
+        particles[i] = spawnWater();
+        continue;
+      }
+
+      const t = p.life;
+      // Каплевидная форма
+      ctx.save();
+      ctx.translate(p.x, p.y);
+      const dropGrad = ctx.createRadialGradient(0,-p.size*.3,0, 0,0,p.size);
+      dropGrad.addColorStop(0,   `rgba(180,235,255,${t*0.95})`);
+      dropGrad.addColorStop(0.4, `rgba(30,160,255,${t*0.7})`);
+      dropGrad.addColorStop(1,   `rgba(0,80,200,0)`);
+      ctx.beginPath();
+      ctx.arc(0, 0, p.size, 0, Math.PI*2);
+      ctx.fillStyle = dropGrad;
+      ctx.fill();
+      // Блик
+      ctx.beginPath();
+      ctx.arc(-p.size*.28, -p.size*.28, p.size*.28, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,255,255,${t*0.5})`;
+      ctx.fill();
+      ctx.restore();
+    }
+
+    // Волна на дне
+    ctx.beginPath();
+    const t2 = Date.now()/900;
+    ctx.moveTo(0, H-6);
+    for(let x=0;x<=W;x+=2) ctx.lineTo(x, H-6 + Math.sin(x/7+t2)*2.5 + Math.sin(x/4-t2*.7)*1.2);
+    ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath();
+    const waveG = ctx.createLinearGradient(0,H-8,0,H);
+    waveG.addColorStop(0, 'rgba(0,180,255,.35)');
+    waveG.addColorStop(1, 'rgba(0,80,200,.15)');
+    ctx.fillStyle = waveG;
+    ctx.fill();
+  }
+
+  function drawStars() {
+    ctx.clearRect(0,0,W,H);
+
+    // Тёмный фон с мягким свечением
+    const nebula = ctx.createRadialGradient(W/2,H/2,0, W/2,H/2,22);
+    nebula.addColorStop(0,   'rgba(100,80,200,.06)');
+    nebula.addColorStop(0.6, 'rgba(40,20,100,.04)');
+    nebula.addColorStop(1,   'rgba(0,0,0,0)');
+    ctx.fillStyle = nebula;
+    ctx.fillRect(0,0,W,H);
+
+    for (let i = 0; i < particles.length; i++) {
+      const p = particles[i];
+      p.twinkle += p.twinkleSpeed;
+      p.life += p.decay;
+      p.x += p.drift;
+      if (p.life > 1 || p.life < 0) { p.decay *= -1; }
+      if (p.x < 0 || p.x > W) p.drift *= -1;
+
+      const alpha = Math.max(0, p.life);
+      const pulse = 0.6 + Math.sin(p.twinkle)*0.4;
+      const sz    = p.size * pulse;
+
+      // Свечение звезды
+      const sg = ctx.createRadialGradient(p.x,p.y,0, p.x,p.y,sz*3);
+      sg.addColorStop(0,   `rgba(220,210,255,${alpha*0.6})`);
+      sg.addColorStop(0.5, `rgba(180,160,255,${alpha*0.2})`);
+      sg.addColorStop(1,   `rgba(120,100,255,0)`);
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, sz*3, 0, Math.PI*2);
+      ctx.fillStyle = sg;
+      ctx.fill();
+
+      // Ядро
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, sz, 0, Math.PI*2);
+      ctx.fillStyle = `rgba(255,252,255,${alpha*0.95})`;
+      ctx.fill();
+
+      // Крестик-блик (только для крупных звёзд)
+      if (p.size > 1.5) {
+        const len = sz*2.5;
+        ctx.strokeStyle = `rgba(255,255,255,${alpha*0.35})`;
+        ctx.lineWidth = 0.6;
+        ctx.beginPath();
+        ctx.moveTo(p.x-len,p.y); ctx.lineTo(p.x+len,p.y);
+        ctx.moveTo(p.x,p.y-len); ctx.lineTo(p.x,p.y+len);
+        ctx.stroke();
+      }
+    }
+
+    // Падающие метеоры иногда
+    if (Math.random() < 0.004) {
+      const mx = Math.random()*W, my = Math.random()*(H/2);
+      const mlen = 6 + Math.random()*10;
+      const mg = ctx.createLinearGradient(mx,my,mx+mlen,my+mlen);
+      mg.addColorStop(0, 'rgba(255,255,255,.8)');
+      mg.addColorStop(1, 'rgba(255,255,255,0)');
+      ctx.strokeStyle = mg;
+      ctx.lineWidth = 0.8;
+      ctx.beginPath(); ctx.moveTo(mx,my); ctx.lineTo(mx+mlen,my+mlen); ctx.stroke();
+    }
+  }
+
+  // ── ГЛАВНЫЙ LOOP ──────────────────────────────────────
+
+  function draw() {
+    if (mode === 'fire')  drawFire();
+    else if (mode === 'water') drawWater();
+    else drawStars();
+    raf = requestAnimationFrame(draw);
+  }
+
+  // ── СМЕНА РЕЖИМА ──────────────────────────────────────
+
+  window._setBlockIconMode = function(avgMin) {
+    const newMode = avgMin === null ? 'stars'
+                  : avgMin < 8     ? 'fire'
+                  : avgMin <= 12   ? 'water'
+                  : 'stars';
+    if (newMode !== mode) { mode = newMode; initParticles(mode); }
+  };
+
+  // ── СТАРТ ─────────────────────────────────────────────
+  initParticles(mode);
   draw();
 })();
 </script>
