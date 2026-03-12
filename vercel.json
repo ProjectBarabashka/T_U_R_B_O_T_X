@@ -24,7 +24,7 @@
         },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, X-TurboTX-Token"
+          "value": "Content-Type, X-TurboTX-Token, Authorization, X-API-Key"
         },
         {
           "key": "X-Content-Type-Options",
@@ -89,14 +89,8 @@
     "api/router.js": {
       "maxDuration": 20
     },
-    "api/acceleration.js": {
-      "maxDuration": 15
-    },
     "api/v1.js": {
       "maxDuration": 30
-    },
-    "api/keys.js": {
-      "maxDuration": 10
     }
   },
   "rewrites": [
@@ -150,11 +144,15 @@
     },
     {
       "source": "/api/keys",
-      "destination": "/api/keys"
+      "destination": "/api/v1?method=keys"
     },
     {
       "source": "/api-docs",
       "destination": "/api-docs.html"
+    },
+    {
+      "source": "/api/acceleration",
+      "destination": "/api/router?_fn=acceleration"
     },
     {
       "source": "/(.*)",
