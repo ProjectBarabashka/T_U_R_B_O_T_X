@@ -4258,6 +4258,14 @@ function closeM() {
   if (vr) { vr.style.display = 'none'; vr.innerHTML = ''; }
   const vt = document.getElementById('pay-txid');
   if (vt) vt.value = '';
+  // BUG FIX: останавливаем LN таймер и polling при закрытии модалки
+  // (раньше они продолжали работать в фоне — утечка памяти и лишний трафик)
+  if (typeof _lnPollingTimer !== 'undefined' && _lnPollingTimer) {
+    clearInterval(_lnPollingTimer); _lnPollingTimer = null;
+  }
+  if (typeof _lnCountdownTimer !== 'undefined' && _lnCountdownTimer) {
+    clearInterval(_lnCountdownTimer); _lnCountdownTimer = null;
+  }
   // Если оплата не была подтверждена — вернуть FREE как активный план
   if (plan !== 'premium') {
     const _of = document.getElementById('of');
@@ -4321,7 +4329,10 @@ function lnResetToInit() {
   const errEl = document.getElementById('ln-init-error');
   if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
   const btn = document.getElementById('ln-create-btn');
-  if (btn) { btn.disabled = false; btn.style.opacity = ''; }
+  if (btn) {
+    btn.disabled = false; btn.style.opacity = '';
+    btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10" fill="#ffd600"/></svg> Создать Lightning Invoice</span>';
+  }
 }
 
 function lnShowError(msg) {
@@ -4340,10 +4351,12 @@ async function lnCreateInvoice() {
 
   try {
     const amountUsd = typeof selectedUsd === 'number' && selectedUsd > 0 ? selectedUsd : 4;
+    // BUG FIX: добавляем таймаут 15с — иначе кнопка навсегда disabled при Vercel cold start
     const resp = await fetch('/api/lightning', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ amountUsd }),
+      signal:  AbortSignal.timeout(15000),
     });
     const data = await resp.json();
 
@@ -4377,6 +4390,12 @@ async function lnCreateInvoice() {
     if (qrContainer) {
       const qrData = encodeURIComponent(data.lightningUri || ('lightning:' + data.invoice.toUpperCase()));
       qrContainer.innerHTML = '<img src="https://api.qrserver.com/v1/create-qr-code/?size=174x174&format=png&qzone=1&color=000000&bgcolor=ffffff&data=' + qrData + '" alt="Lightning QR" width="174" height="174" style="border-radius:9px;display:block" onerror="this.parentElement.innerHTML=\'<div style=\\\'font-family:var(--mono);font-size:.6rem;color:var(--m2);text-align:center;padding:20px 10px\\\'>QR недоступен.<br>Скопируйте invoice выше</div>\'">';
+    }
+
+    // Кнопка "Открыть в кошельке" — только на мобильных устройствах
+    const walletBtn = document.getElementById('ln-open-wallet-btn');
+    if (walletBtn && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+      walletBtn.style.display = '';
     }
 
     // Запускаем таймер
@@ -4417,15 +4436,30 @@ function lnStartCountdown(totalSecs) {
 function lnStartPolling(paymentHash) {
   clearInterval(_lnPollingTimer);
   let attempts = 0;
-  const MAX_ATTEMPTS = 180; // 3 часа при интервале 60с, но обычно ~60 попыток
+  // BUG FIX: MAX_ATTEMPTS=180 при интервале 5000мс = 15 минут, а не 3 часа.
+  // Invoice живёт 3600с (1 час). При 5с/попытке нужно 720 попыток.
+  // Используем адаптивный интервал: первые 2мин — каждые 4с, потом 8с (меньше нагрузки).
+  const FAST_INTERVAL = 4000;   // первые 30 попыток ≈ 2 мин
+  const SLOW_INTERVAL = 8000;   // потом — до истечения invoice
+  const MAX_ATTEMPTS  = 450;    // 450 × ~8с ≈ 60 мин (запас)
 
   const poll = async () => {
     if (!_lnActiveHash || _lnActiveHash !== paymentHash) return;
     attempts++;
     if (attempts > MAX_ATTEMPTS) { clearInterval(_lnPollingTimer); return; }
 
+    // Пауза когда вкладка скрыта — экономим трафик (document.hidden API)
+    if (document.hidden) return;
+
+    // Обновляем счётчик в статусе
+    const dots = '.'.repeat((attempts % 3) + 1);
+    lnSetStatus('pending', '⏳ Ожидаем оплату' + dots);
+
     try {
-      const resp = await fetch('/api/lightning?hash=' + paymentHash);
+      // BUG FIX: таймаут на polling запрос — без него зависший запрос блокирует следующий тик
+      const resp = await fetch('/api/lightning?hash=' + paymentHash, {
+        signal: AbortSignal.timeout(8000),
+      });
       if (!resp.ok) return;
       const data = await resp.json();
 
@@ -4439,11 +4473,25 @@ function lnStartPolling(paymentHash) {
         clearInterval(_lnCountdownTimer);
         lnSetStatus('expired', '⌛ Invoice истёк — создайте новый');
       }
-    } catch(e) { /* silent */ }
+    } catch(e) { /* silent — сеть временно недоступна, продолжаем */ }
+
+    // Переключаем на медленный интервал после первых 30 попыток
+    if (attempts === 30) {
+      clearInterval(_lnPollingTimer);
+      _lnPollingTimer = setInterval(poll, SLOW_INTERVAL);
+    }
   };
 
   poll(); // сразу проверяем
-  _lnPollingTimer = setInterval(poll, 5000); // каждые 5 секунд
+  _lnPollingTimer = setInterval(poll, FAST_INTERVAL);
+
+  // Когда вкладка снова становится видимой — немедленно проверяем
+  const onVisible = () => { if (!document.hidden && _lnActiveHash === paymentHash) poll(); };
+  document.addEventListener('visibilitychange', onVisible, { once: false });
+  // Чистим слушатель когда invoice закрывается
+  const _origCancel = window._lnVisCleanup;
+  if (_origCancel) document.removeEventListener('visibilitychange', _origCancel);
+  window._lnVisCleanup = onVisible;
 }
 
 function lnSetStatus(type, text) {
@@ -4454,6 +4502,12 @@ function lnSetStatus(type, text) {
 }
 
 function lnOnSuccess(data) {
+  // Чистим visibilitychange listener
+  if (window._lnVisCleanup) {
+    document.removeEventListener('visibilitychange', window._lnVisCleanup);
+    window._lnVisCleanup = null;
+  }
+
   document.getElementById('ln-invoice-state').style.display = 'none';
   document.getElementById('ln-success-state').style.display = '';
 
@@ -4463,16 +4517,17 @@ function lnOnSuccess(data) {
     details.innerHTML = sats + 'Premium активирован<br><span style="color:var(--g);font-weight:700">✓ Закройте окно и запустите ускорение</span>';
   }
 
-  // Активируем Premium токен если пришёл
+  // Активируем Premium
   if (data.activationToken) {
     try { localStorage.setItem('turbotx_prem_token', data.activationToken); } catch(e) {}
     window._premToken = data.activationToken;
-    // Переключаем план на premium
     if (typeof pick === 'function') pick('premium');
   }
 
-  // Закрываем modal через 3 секунды
-  setTimeout(() => {
+  // Закрываем modal через 3.5с — сохраняем id чтобы можно было отменить
+  if (window._lnSuccessClose) clearTimeout(window._lnSuccessClose);
+  window._lnSuccessClose = setTimeout(() => {
+    window._lnSuccessClose = null;
     if (typeof closeM === 'function') closeM();
   }, 3500);
 }
@@ -4499,10 +4554,21 @@ function lnCopyInvoice() {
   });
 }
 
+function lnOpenWallet() {
+  if (!_lnInvoiceStr) return;
+  const uri = 'lightning:' + _lnInvoiceStr.toUpperCase();
+  window.location.href = uri;
+}
+
 function lnCancelInvoice() {
   clearInterval(_lnPollingTimer);
   clearInterval(_lnCountdownTimer);
   _lnActiveHash = null;
+  // Чистим слушатель visibilitychange
+  if (window._lnVisCleanup) {
+    document.removeEventListener('visibilitychange', window._lnVisCleanup);
+    window._lnVisCleanup = null;
+  }
   lnResetToInit();
 }
 
@@ -6689,6 +6755,14 @@ window._TurboAPI = {
 
       <!-- Статус -->
       <div class="ln-status pending" id="ln-status-text">⏳ Ожидаем оплату…</div>
+
+      <!-- Кнопка открыть в кошельке (deep link) -->
+      <button id="ln-open-wallet-btn" onclick="lnOpenWallet()" style="width:100%;margin-bottom:8px;background:linear-gradient(135deg,rgba(255,214,0,.18),rgba(247,147,26,.18));border:1px solid rgba(255,214,0,.35);border-radius:8px;padding:10px;font-family:var(--mono);font-size:.7rem;color:#ffd600;cursor:pointer;display:none">
+        <span style="display:inline-flex;align-items:center;justify-content:center;gap:7px">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10" fill="#ffd600"/></svg>
+          Открыть в LN-кошельке
+        </span>
+      </button>
 
       <!-- Кнопка отмены -->
       <button onclick="lnCancelInvoice()" style="width:100%;margin-top:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:9px;font-family:var(--mono);font-size:.65rem;color:var(--m2);cursor:pointer">← Создать новый invoice</button>
