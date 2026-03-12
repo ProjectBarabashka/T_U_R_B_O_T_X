@@ -61,7 +61,7 @@ function startServerRepeat(txid, token, onWave) {
   stopServerRepeat(txid);
 
   const startedAt     = Date.now();
-  const waveSchedule  = [15, 30, 60, 120, 120, 120, 120, 120]; // минуты
+  const waveSchedule  = [15, 30, 60, 120, 120, 120, 120, 120, 180, 180]; // минуты (v14: 10 волн)
   const timers        = [];
 
   let cumulativeMs = 0;
