@@ -6433,24 +6433,16 @@ function _renderHistoryItem(txid, confs) {
   }
 }
 
-// Debounce: несколько быстрых вызовов renderHistory() схлопываются в один
-let _renderHistDebounce = null;
+// Debounce убран — прямой вызов без задержки
 function renderHistory(page) {
-  if (page !== undefined) {
-    // Если передана страница — применяем немедленно
-    _doRenderHistory(page);
-  } else {
-    // Иначе — откладываем на 40мс (схлопывает двойные вызовы при DOMContentLoaded)
-    clearTimeout(_renderHistDebounce);
-    _renderHistDebounce = setTimeout(() => _doRenderHistory(), 40);
-  }
+  _doRenderHistory(page);
 }
 
 function _doRenderHistory(page) {
+  const wrap = document.getElementById('history-block');
+  const list = document.getElementById('history-list');
+  if (!wrap || !list) return;
   try {
-    const wrap = document.getElementById('history-block');
-    const list = document.getElementById('history-list');
-    if (!wrap || !list) return;
     const h = JSON.parse(localStorage.getItem('tx_history') || '[]');
     if (!h.length) { wrap.style.display = 'none'; return; }
     wrap.style.display = 'block';
@@ -6505,14 +6497,20 @@ function _doRenderHistory(page) {
     }
 
     list.innerHTML = itemsHTML + pagHTML;
-  } catch(e) {}
+  } catch(e) { console.error('[renderHistory]', e); }
 }
 
 // Инициализируем историю при загрузке и запускаем поллинг подтверждений
-document.addEventListener('DOMContentLoaded', function() {
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', function() {
+    renderHistory();
+    _startHistoryConfPolling();
+  });
+} else {
+  // DOM уже готов (скрипт выполняется после парсинга)
   renderHistory();
   _startHistoryConfPolling();
-});
+}
 
 // ── LN RESTORE AFTER F5 ───────────────────────────────────────
 (function _lnResumeOnLoad() {
