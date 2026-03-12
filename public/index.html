@@ -900,7 +900,6 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
 .fs-icon.fs-tg:hover{border-color:rgba(0,136,204,.5)} .fs-icon.fs-tg svg{color:#4aade8}
 .fs-icon.fs-sp:hover{border-color:rgba(0,136,204,.35)} .fs-icon.fs-sp svg{color:#7ab8d4}
 .fs-icon.fs-gh:hover{border-color:rgba(255,255,255,.25)} .fs-icon.fs-gh svg{color:rgba(238,238,246,.7)}
-.fs-icon.fs-api:hover{border-color:rgba(247,147,26,.45)} .fs-icon.fs-api svg{color:rgba(247,147,26,.75)}
 .fs-icon.fs-em:hover{border-color:rgba(247,147,26,.4)} .fs-icon.fs-em svg{color:var(--a)}
 .fs-icon::after{ content:attr(data-tip); position:absolute; left:44px; top:50%; transform:translateY(-50%); background:rgba(7,7,10,.94); color:rgba(238,238,246,.85); font-family:var(--mono); font-size:.58rem; letter-spacing:.5px; white-space:nowrap; padding:4px 10px; border-radius:5px; border:1px solid rgba(255,255,255,.08); pointer-events:none; opacity:0; transition:opacity .15s }
 .fs-icon:hover::after{opacity:1}
@@ -2778,15 +2777,37 @@ async function fetchLiveStats() {
           el.textContent = '~' + avgMin + ' мин';
           el.title = 'Среднее время между блоками (последние ' + count + ' блоков)';
           if (iconEl) {
-            // Цвет цифры по avgMin — иконка переключается по heartLevel (мемпул+fee+блоки)
-            if (avgMin < 8)       el.style.color = 'var(--g)';
-            else if (avgMin <= 12) el.style.color = 'var(--a)';
+            // Цвет цифры по avgMin
+            if (avgMin < 8)        el.style.color = 'var(--g)';
+            else if (avgMin <= 14) el.style.color = 'var(--a)';
             else                   el.style.color = '#ff4455';
-            // Режим иконки сохраняется в глобале и применяется после расчёта heartLevel
-            window._lastAvgMin = avgMin;
           }
         }
-      }
+        // Немедленно обновляем иконку блока по новому avgMin
+        // (не ждём следующего _rtApplyTicker)
+        (function() {
+          const fire  = document.getElementById('bi-fire');
+          const water = document.getElementById('bi-water');
+          const stars = document.getElementById('bi-stars');
+          const svg   = document.getElementById('block-anim-svg');
+          const icon  = document.getElementById('block-icon');
+          if (!fire) return;
+          const show = function(el2) { if (el2) el2.style.display = ''; };
+          const hide = function(el2) { if (el2) el2.style.display = 'none'; };
+          if (avgMin < 8) {
+            hide(fire); hide(water); show(stars);
+            if (svg)  svg.style.filter = 'drop-shadow(0 0 6px rgba(167,139,250,.3))';
+            if (icon) icon.title = 'Блоки быстрее нормы (~' + avgMin + ' мин)';
+          } else if (avgMin <= 14) {
+            hide(fire); show(water); hide(stars);
+            if (svg)  svg.style.filter = 'drop-shadow(0 0 6px rgba(56,189,248,.3))';
+            if (icon) icon.title = 'Нормальное время блока (~' + avgMin + ' мин)';
+          } else {
+            show(fire); hide(water); hide(stars);
+            if (svg)  svg.style.filter = 'drop-shadow(0 0 6px rgba(247,100,0,.4))';
+            if (icon) icon.title = 'Блоки медленные (~' + avgMin + ' мин)';
+          }
+        })();
     }
   } catch(e) {}
 
@@ -5685,7 +5706,8 @@ function _rtApplyTicker(p) {
     el.className = 'net-heart ' + heartLevel + (hasSm ? ' sm' : '');
   });
 
-  // ── BLOCK ICON: огонь/вода/звёзды по тому же heartLevel ──
+  // ── BLOCK ICON: огонь/вода/звёзды — только по времени блока, НЕ по heartLevel ──
+  // Логика: <8 мин = звёзды (быстро), 8–14 мин = вода (норма), >14 мин = огонь (медленно/перегрузка)
   (function() {
     const fire  = document.getElementById('bi-fire');
     const water = document.getElementById('bi-water');
@@ -5695,18 +5717,23 @@ function _rtApplyTicker(p) {
     if (!fire) return;
     const show = function(el) { if (el) el.style.display = ''; };
     const hide = function(el) { if (el) el.style.display = 'none'; };
-    if (heartLevel === 'busy') {
+    const avgMin = window._avgBlockMin || 10;
+    let blockLevel;
+    if (avgMin < 8)        blockLevel = 'fast';   // быстрее нормы
+    else if (avgMin <= 14) blockLevel = 'normal'; // норма ~10 мин
+    else                   blockLevel = 'slow';   // медленно, мемпул копится
+    if (blockLevel === 'slow') {
       show(fire); hide(water); hide(stars);
       if (svg)  svg.style.filter = 'drop-shadow(0 0 6px rgba(247,100,0,.4))';
-      if (icon) icon.title = 'Сеть перегружена';
-    } else if (heartLevel === 'mid') {
+      if (icon) icon.title = 'Блоки медленные — мемпул растёт';
+    } else if (blockLevel === 'normal') {
       hide(fire); show(water); hide(stars);
       if (svg)  svg.style.filter = 'drop-shadow(0 0 6px rgba(56,189,248,.3))';
-      if (icon) icon.title = 'Нормальная загруженность';
+      if (icon) icon.title = 'Нормальное время блока';
     } else {
       hide(fire); hide(water); show(stars);
       if (svg)  svg.style.filter = 'drop-shadow(0 0 6px rgba(167,139,250,.3))';
-      if (icon) icon.title = 'Сеть свободна';
+      if (icon) icon.title = 'Блоки быстрее нормы';
     }
   })();
 
@@ -6745,9 +6772,6 @@ function _startHistoryConfPolling() {
   </a>
   <a class="fs-icon fs-gh" href="https://github.com/ProjectBarabashka/T_U_R_B_O_T_X" target="_blank" rel="noopener" data-tip="GitHub" aria-label="GitHub">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
-  </a>
-  <a class="fs-icon fs-api" href="/api-docs" target="_blank" rel="noopener" data-tip="API Docs" aria-label="API Docs">
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>
   </a>
   <a class="fs-icon fs-em" id="float-em-link" href="#" data-tip="Email" aria-label="Email">
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
