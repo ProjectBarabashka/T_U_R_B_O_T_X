@@ -736,6 +736,25 @@ textarea.batch-input::placeholder{color:rgba(255,255,255,.22)}
 .ln-status.pending{color:var(--m2)}
 .ln-status.paid{color:var(--g)}
 .ln-status.expired{color:var(--err)}
+/* ── LN живая анимация ожидания ─────────────────────────────── */
+@keyframes lnDotBlink {
+  0%,100%{opacity:1} 33%{opacity:.2} 66%{opacity:.6}
+}
+@keyframes lnScanPulse {
+  0%,100%{box-shadow:0 0 0 0 rgba(255,214,0,.5)}
+  50%{box-shadow:0 0 0 6px rgba(255,214,0,0)}
+}
+@keyframes lnSpin {
+  from{transform:rotate(0deg)} to{transform:rotate(360deg)}
+}
+.ln-wait-row{display:flex;align-items:center;justify-content:center;gap:8px;padding:6px 0 2px}
+.ln-wait-dot{width:7px;height:7px;border-radius:50%;background:#ffd600;flex-shrink:0;animation:lnScanPulse 1.4s ease-in-out infinite}
+.ln-wait-text{font-family:var(--mono);font-size:.7rem;color:var(--m2)}
+.ln-wait-d1{animation:lnDotBlink 1.2s ease-in-out infinite 0s}
+.ln-wait-d2{animation:lnDotBlink 1.2s ease-in-out infinite .4s}
+.ln-wait-d3{animation:lnDotBlink 1.2s ease-in-out infinite .8s}
+.ln-checking-icon{animation:lnSpin .8s linear infinite;display:inline-block;opacity:.7}
+.ln-elapsed{font-family:var(--mono);font-size:.6rem;color:rgba(255,255,255,.25);margin-left:6px}
 /* Network Intelligence card pulse animation */
 @keyframes niPulse { 0%,100%{opacity:1} 50%{opacity:.6} }
 .ni-loading { animation: niPulse 1.4s ease-in-out infinite; }
@@ -4318,6 +4337,7 @@ let _lnTotalSecs     = 3600;
 
 function lnResetToInit() {
   _lnActiveHash = null;
+  _lnStartedAt  = 0;
   clearInterval(_lnPollingTimer);
   clearInterval(_lnCountdownTimer);
   _lnPollingTimer = null;
@@ -4411,6 +4431,7 @@ async function lnCreateInvoice() {
 
 function lnStartCountdown(totalSecs) {
   clearInterval(_lnCountdownTimer);
+  _lnStartedAt = Date.now(); // фиксируем старт для elapsed-счётчика
   const startedAt = Date.now();
   function tick() {
     const elapsed = Math.floor((Date.now() - startedAt) / 1000);
@@ -4423,6 +4444,8 @@ function lnStartCountdown(totalSecs) {
     if (fillEl)  fillEl.style.width  = Math.max(0, (remaining / totalSecs) * 100) + '%';
     // Красный когда <2 минут
     if (timerEl) timerEl.style.color = remaining < 120 ? 'var(--err)' : 'var(--t)';
+    // Живой статус — обновляем каждую секунду
+    _lnTickStatus(remaining);
     if (remaining <= 0) {
       clearInterval(_lnCountdownTimer);
       clearInterval(_lnPollingTimer);
@@ -4450,10 +4473,6 @@ function lnStartPolling(paymentHash) {
 
     // Пауза когда вкладка скрыта — экономим трафик (document.hidden API)
     if (document.hidden) return;
-
-    // Обновляем счётчик в статусе
-    const dots = '.'.repeat((attempts % 3) + 1);
-    lnSetStatus('pending', '⏳ Ожидаем оплату' + dots);
 
     try {
       // BUG FIX: таймаут на polling запрос — без него зависший запрос блокирует следующий тик
@@ -4498,7 +4517,36 @@ function lnSetStatus(type, text) {
   const el = document.getElementById('ln-status-text');
   if (!el) return;
   el.className = 'ln-status ' + type;
-  el.textContent = text;
+  if (type === 'pending') {
+    // Восстанавливаем анимированный блок если он был перезаписан
+    const label = document.getElementById('ln-wait-label');
+    if (label) label.textContent = text || 'Ожидаем оплату';
+  } else {
+    // Expired / paid — простой текст поверх
+    el.innerHTML = '<div style="padding:4px 0">' + text + '</div>';
+  }
+}
+
+// Обновление живого счётчика и подписи "проверяем..." — вызывается из countdown каждую секунду
+let _lnStartedAt = 0;
+function _lnTickStatus(remaining) {
+  if (!_lnActiveHash) return;
+  const elapsed = _lnStartedAt > 0 ? Math.floor((Date.now() - _lnStartedAt) / 1000) : 0;
+  const elEl = document.getElementById('ln-elapsed-text');
+  if (elEl && elapsed > 0) {
+    const em = Math.floor(elapsed / 60), es = elapsed % 60;
+    elEl.textContent = em > 0 ? em + 'м ' + es + 'с' : es + 'с';
+  }
+  // Подпись "проверяем..." появляется на 1с каждые 4с (совпадает с poll)
+  const chkRow = document.getElementById('ln-check-row');
+  if (chkRow) {
+    const phase = elapsed % 4;
+    if (phase === 0) {
+      chkRow.innerHTML = '<span class="ln-checking-icon">↻</span> проверяем…';
+    } else if (phase === 1) {
+      chkRow.textContent = '';
+    }
+  }
 }
 
 function lnOnSuccess(data) {
@@ -6753,8 +6801,18 @@ window._TurboAPI = {
         <div class="ln-timer-bar"><div class="ln-timer-fill" id="ln-timer-fill" style="width:100%"></div></div>
       </div>
 
-      <!-- Статус -->
-      <div class="ln-status pending" id="ln-status-text">⏳ Ожидаем оплату…</div>
+      <!-- Статус — живая анимация ожидания -->
+      <div id="ln-status-text" class="ln-status pending">
+        <div class="ln-wait-row">
+          <div class="ln-wait-dot"></div>
+          <span class="ln-wait-text" id="ln-wait-label">Ожидаем оплату</span>
+          <span class="ln-wait-d1" style="color:#ffd600;font-size:.8rem">●</span>
+          <span class="ln-wait-d2" style="color:#ffd600;font-size:.8rem">●</span>
+          <span class="ln-wait-d3" style="color:#ffd600;font-size:.8rem">●</span>
+          <span class="ln-elapsed" id="ln-elapsed-text"></span>
+        </div>
+        <div id="ln-check-row" style="font-family:var(--mono);font-size:.58rem;color:rgba(255,255,255,.22);margin-top:2px;height:14px;line-height:14px"></div>
+      </div>
 
       <!-- Кнопка открыть в кошельке (deep link) -->
       <button id="ln-open-wallet-btn" onclick="lnOpenWallet()" style="width:100%;margin-bottom:8px;background:linear-gradient(135deg,rgba(255,214,0,.18),rgba(247,147,26,.18));border:1px solid rgba(255,214,0,.35);border-radius:8px;padding:10px;font-family:var(--mono);font-size:.7rem;color:#ffd600;cursor:pointer;display:none">
