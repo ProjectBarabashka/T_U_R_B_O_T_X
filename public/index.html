@@ -2979,25 +2979,55 @@ function renderFeedFromData(feed) {
   const cc = document.getElementById('confirmed-count');
   if (cc && cnt > 0) cc.textContent = cnt.toLocaleString('ru');
   else if (cc) cc.textContent = feed.length;
-  el.innerHTML = feed.map(item => {
+
+  // Удаляем пустой placeholder если есть
+  const empty = el.querySelector('.feed-empty');
+  if (empty) empty.remove();
+
+  const newIds = feed.map(item => sanitizeTxid(item.txid || ''));
+
+  // Удаляем элементы которых больше нет в новом списке
+  Array.from(el.querySelectorAll('.feed-item')).forEach(function(a) {
+    if (!newIds.includes(a.dataset.txid)) a.remove();
+  });
+
+  // Добавляем/обновляем элементы
+  feed.forEach(function(item, i) {
+    const safeTxid = sanitizeTxid(item.txid || '');
     const ago = Math.round((Date.now() - item.ts) / 60000);
     const agoStr = ago < 1 ? 'только что' : ago < 60 ? ago + ' мин назад' : Math.floor(ago/60) + ' ч назад';
-    const safeTxid = sanitizeTxid(item.txid || '');
     const short = safeTxid.slice(0,6) + '...' + safeTxid.slice(-4);
-    return `<a class="feed-item" href="https://mempool.space/tx/${safeTxid}" target="_blank" rel="noopener noreferrer"
-      title="Открыть на mempool.space" data-i18n-attr-title="misc.open_mempool"
-      style="text-decoration:none;cursor:pointer;transition:background .15s,border-color .15s"
-      onmouseover="this.style.background='rgba(247,147,26,.04)';this.style.borderColor='rgba(247,147,26,.15)'"
-      onmouseout="this.style.background='';this.style.borderColor=''">
-      <div class="feed-txid"><span style="color:var(--a)">${short}</span></div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span style="font-family:var(--mono);font-size:.58rem;color:${item.plan==='premium'?'var(--a)':'var(--m)'}">${item.plan==='premium'?'PREMIUM':'FREE'}</span>
-        <span class="feed-badge-conf">✓ ${item.mins} мин</span>
-        <span class="feed-time" data-ts="${item.ts}">${agoStr}</span>
-        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--m)" stroke-width="2" style="flex-shrink:0"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-      </div>
-    </a>`;
-  }).join('');
+
+    let node = el.querySelector('.feed-item[data-txid="' + safeTxid + '"]');
+    if (!node) {
+      // Новый элемент — создаём и вставляем с анимацией
+      node = document.createElement('a');
+      node.className = 'feed-item';
+      node.dataset.txid = safeTxid;
+      node.href = 'https://mempool.space/tx/' + safeTxid;
+      node.target = '_blank';
+      node.rel = 'noopener noreferrer';
+      node.title = 'Открыть на mempool.space';
+      node.style.cssText = 'text-decoration:none;cursor:pointer;transition:background .15s,border-color .15s;animation:feedin .4s ease';
+      node.onmouseover = function(){ this.style.background='rgba(247,147,26,.04)'; this.style.borderColor='rgba(247,147,26,.15)'; };
+      node.onmouseout  = function(){ this.style.background=''; this.style.borderColor=''; };
+      node.innerHTML =
+        '<div class="feed-txid"><span style="color:var(--a)">' + short + '</span></div>' +
+        '<div style="display:flex;align-items:center;gap:8px">' +
+          '<span style="font-family:var(--mono);font-size:.58rem;color:' + (item.plan==='premium'?'var(--a)':'var(--m)') + '">' + (item.plan==='premium'?'PREMIUM':'FREE') + '</span>' +
+          '<span class="feed-badge-conf">✓ ' + item.mins + ' мин</span>' +
+          '<span class="feed-time" data-ts="' + item.ts + '">' + agoStr + '</span>' +
+          '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--m)" stroke-width="2" style="flex-shrink:0"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>' +
+        '</div>';
+      const items = el.querySelectorAll('.feed-item');
+      items[i] ? el.insertBefore(node, items[i]) : el.appendChild(node);
+    } else {
+      // Уже существует — тихо обновляем только время, без перерисовки
+      const timeEl = node.querySelector('.feed-time');
+      if (timeEl) timeEl.textContent = agoStr;
+    }
+  });
+
   el.style.opacity = '1';
 }
 
