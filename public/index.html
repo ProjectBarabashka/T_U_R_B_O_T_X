@@ -2155,6 +2155,32 @@ ViaBTC, AntPool, MARA, SpiderPool, F2Pool, Luxor и другие пулы име
 <!-- ══════════════════════════════════════════════════════════
      ПЛАВАЮЩАЯ ЮРИДИЧЕСКАЯ КАРТОЧКА (сбоку)
      ══════════════════════════════════════════════════════════ -->
+<script>
+function toggleLegalCard() {
+  const card = document.getElementById('legal-card');
+  const btn  = document.getElementById('legal-btn');
+  if (!card) return;
+  const isOpen = card.style.display !== 'none';
+  card.style.display = isOpen ? 'none' : 'block';
+  if (btn) btn.style.boxShadow = isOpen
+    ? '0 4px 20px rgba(0,0,0,.5),0 0 0 0 rgba(247,147,26,.3)'
+    : '0 4px 24px rgba(247,147,26,.25),0 0 0 3px rgba(247,147,26,.15)';
+  // Закрыть по клику вне карточки
+  if (!isOpen) {
+    setTimeout(() => {
+      function _legalOutside(e) {
+        const bubble = document.getElementById('legal-bubble');
+        if (bubble && !bubble.contains(e.target)) {
+          card.style.display = 'none';
+          if (btn) btn.style.boxShadow = '0 4px 20px rgba(0,0,0,.5),0 0 0 0 rgba(247,147,26,.3)';
+          document.removeEventListener('click', _legalOutside);
+        }
+      }
+      document.addEventListener('click', _legalOutside);
+    }, 50);
+  }
+}
+</script>
 <div id="legal-bubble" style="position:fixed;bottom:130px;right:max(12px,calc(50% - 510px - 56px));z-index:8800;display:flex;flex-direction:column;align-items:flex-end;gap:0">
 
   <!-- Кружок-кнопка -->
@@ -2808,6 +2834,7 @@ async function fetchLiveStats() {
             if (icon) icon.title = 'Блоки медленные (~' + avgMin + ' мин)';
           }
         })();
+      }
     }
   } catch(e) {}
 
@@ -6550,13 +6577,25 @@ function updateHistoryConfs(txid, confs) {
     if (idx === -1) return;
     if (h[idx].confs === confs) return; // нет изменений
     h[idx].confs = confs;
-    if (confs >= 1) h[idx].confirmed = true;
+    if (confs >= 1 && !h[idx].confirmedAt) {
+      h[idx].confirmedAt = Date.now();
+      h[idx].accelMs = h[idx].confirmedAt - h[idx].ts;
+    }
     localStorage.setItem('tx_history', JSON.stringify(h));
-    _renderHistoryItem(txid, confs);
+    _renderHistoryItem(txid, confs, h[idx].accelMs);
   } catch(e) {}
 }
 
-function _renderHistoryItem(txid, confs) {
+function _fmtAccelTime(ms) {
+  if (!ms || ms <= 0) return null;
+  const m = Math.round(ms / 60000);
+  if (m < 1) return '< 1м';
+  if (m < 60) return m + 'м';
+  const h = Math.floor(m / 60), rm = m % 60;
+  return rm > 0 ? h + 'ч ' + rm + 'м' : h + 'ч';
+}
+
+function _renderHistoryItem(txid, confs, accelMs) {
   const wrap = document.getElementById('hist-' + sanitizeTxid(txid));
   if (!wrap) return; // не на текущей странице — пропускаем
   // Уже актуально — не трогаем DOM вообще
@@ -6565,6 +6604,7 @@ function _renderHistoryItem(txid, confs) {
 
   const dw = wrap.querySelector('.hist-dots');
   const st = wrap.querySelector('.hist-status');
+  const at = wrap.querySelector('.hist-accel-time');
   if (!dw || !st) return;
 
   if (confs === 0) {
@@ -6591,6 +6631,21 @@ function _renderHistoryItem(txid, confs) {
   const statusColor = confs >= 3 ? 'var(--g)' : confs >= 1 ? '#ffd166' : 'var(--m)';
   st.textContent = statusText;
   st.style.color  = statusColor;
+
+  // Время ускорения — показываем при первом подтверждении
+  if (at && confs >= 1) {
+    const t = accelMs || (() => {
+      try {
+        const h = JSON.parse(localStorage.getItem('tx_history') || '[]');
+        return h.find(x => x.txid === txid)?.accelMs || null;
+      } catch { return null; }
+    })();
+    const fmt = _fmtAccelTime(t);
+    if (fmt) {
+      at.innerHTML = `<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${fmt}`;
+      at.style.display = 'inline-flex';
+    }
+  }
 
   // Подсвечиваем карточку при новом подтверждении
   if (confs >= 1 && confs <= 3) {
@@ -6632,6 +6687,10 @@ function _doRenderHistory(page) {
         : dc.map(c => `<span class="hist-dot" style="width:7px;height:7px;border-radius:50%;background:${c};display:inline-block;flex-shrink:0;transition:background .4s"></span>`).join('');
       const statusText = confs === 0 ? 'ожидание...' : confs < 3 ? confs+' / 3 подтв.' : '✓ подтверждено';
       const statusColor = confs >= 3 ? 'var(--g)' : confs >= 1 ? '#ffd166' : 'var(--m)';
+      const accelFmt = confs >= 1 ? _fmtAccelTime(item.accelMs) : null;
+      const accelHTML = accelFmt
+        ? `<span class="hist-accel-time" style="display:inline-flex;align-items:center;gap:3px;font-family:var(--mono);font-size:.55rem;color:var(--g);margin-left:auto;flex-shrink:0"><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> ${accelFmt}</span>`
+        : `<span class="hist-accel-time" style="display:none;align-items:center;gap:3px;font-family:var(--mono);font-size:.55rem;color:var(--g);margin-left:auto;flex-shrink:0"></span>`;
       return `<div id="hist-${safeTxid}" data-confs="${confs}" style="background:rgba(255,255,255,.015);border:1px solid rgba(255,255,255,.06);border-radius:10px;padding:10px 12px;transition:border-color .3s"
         onmouseover="this.style.borderColor='rgba(247,147,26,.2)'" onmouseout="this.style.borderColor='rgba(255,255,255,.06)'">
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:7px">
@@ -6640,7 +6699,7 @@ function _doRenderHistory(page) {
           <span style="font-family:var(--mono);font-size:.55rem;color:var(--m);flex-shrink:0">${agoStr}</span>
           <button onclick="document.getElementById('txid').value='${safeTxid}';document.getElementById('txid').dispatchEvent(new Event('input'));" title="Ускорить снова" style="width:24px;height:24px;flex-shrink:0;border-radius:6px;background:transparent;border:1px solid rgba(247,147,26,.2);cursor:pointer;font-size:.62rem;color:var(--a);transition:all .15s;display:flex;align-items:center;justify-content:center" onmouseover="this.style.background='rgba(247,147,26,.12)'" onmouseout="this.style.background='transparent'">↻</button>
         </div>
-        <div style="display:flex;align-items:center;gap:5px"><div class="hist-dots" style="display:flex;gap:5px;align-items:center">${dotsHTML}</div><span class="hist-status" style="font-family:var(--mono);font-size:.58rem;color:${statusColor};margin-left:3px;transition:color .4s">${statusText}</span></div>
+        <div style="display:flex;align-items:center;gap:5px"><div class="hist-dots" style="display:flex;gap:5px;align-items:center">${dotsHTML}</div><span class="hist-status" style="font-family:var(--mono);font-size:.58rem;color:${statusColor};margin-left:3px;transition:color .4s">${statusText}</span>${accelHTML}</div>
       </div>`;
     }).join('');
 
