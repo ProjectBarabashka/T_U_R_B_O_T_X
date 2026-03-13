@@ -16,6 +16,9 @@
 
 export const config = { maxDuration: 20 };
 
+// BUG FIX: импортируем счётчик статистики
+import { incVerify } from './router.js';
+
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -332,6 +335,7 @@ export default async function handler(req, res) {
 
   if (result.ok) {
     tgNotify(result, ip).catch(()=>{});
+    try { incVerify(); } catch {} // BUG FIX: счётчик верификаций
     // Выдаём server-side токен активации (PREMIUM_SECRET)
     // Фронтенд использует его для последующих /api/broadcast вызовов
     result.activationToken = PREMIUM_SECRET;

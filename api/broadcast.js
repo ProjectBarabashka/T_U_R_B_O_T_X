@@ -43,6 +43,10 @@
 
 export const config = { maxDuration: 60 };
 
+// BUG FIX: импортируем счётчики статистики из router.js
+// Без этого /api/stats всегда показывал broadcasts:0, errors:0 и т.д.
+import { incBroadcast, incError } from './router.js';
+
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
@@ -952,6 +956,12 @@ function premiumChannels(txid, hex) {
       const j=await safeJson(r);
       return {ok:r.ok||j?.ok===true||ok400(JSON.stringify(j),r.status), status:r.status, ve:ve(r)};
     }},
+    // BUG FIX: Lincoin был в HR и POOL_GEO, но канала не было → никогда не использовался
+    { name:'Lincoin', tier:'pool', call: async()=>{
+      const r=await ftr('https://lincoin.com/api/accelerate',{method:'POST',body:JSON.stringify({txid}),headers:{'Content-Type':'application/json','User-Agent':UA}},12000,2,'Lincoin','pool');
+      const j=await safeJson(r);
+      return {ok:r.ok||j?.success===true||ok400(JSON.stringify(j),r.status), status:r.status, ve:ve(r)};
+    }},
     { name:'TxBoost', tier:'pool', call: async()=>{
       const r=await ftr('https://txboost.com/',{method:'POST',body:`txid=${txid}`,headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':UA}},12000,2,'TxBoost','pool');
       const t=await safeText(r);
@@ -1178,6 +1188,9 @@ export default async function handler(req, res) {
   };
 
   tg({results,txid,plan:effectivePlan,analysis,ms,hr:uniqueHr,ip,waveStrategy,lastBlockMiner:lastBlock,feeTrend}).catch(()=>{});
+
+  // BUG FIX: обновляем счётчик статистики (был 0 всегда)
+  try { incBroadcast(effectivePlan, uniqueHr, !!hex); } catch {}
 
   return res.status(200).json({
     ok: okCount>0, results, summary, analysis, waveStrategy,

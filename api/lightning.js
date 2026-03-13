@@ -19,6 +19,9 @@
 
 export const config = { maxDuration: 20 };
 
+// BUG FIX: импортируем счётчик статистики
+import { incLightning } from './router.js';
+
 const CORS = {
   'Access-Control-Allow-Origin':  '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
@@ -383,6 +386,7 @@ export default async function handler(req, res) {
 
     // 6. Telegram уведомление о новом invoice (async, не блокирует ответ)
     tgNotify(amountSats, amountUsd, txid, ip, 'created').catch(() => {});
+    try { incLightning(); } catch {} // BUG FIX: счётчик Lightning invoice
 
     // 7. Возвращаем клиенту
     return res.status(200).json({

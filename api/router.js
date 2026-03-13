@@ -751,7 +751,7 @@ async function cheapWindowForecast(currentFeeRate) {
 
   try {
     if (!_feeWindowCache.data || Date.now() - _feeWindowCache.at > FEE_WINDOW_TTL) {
-      const r = await ft('https://mempool.space/api/v1/mining/blocks/fee-rates/24h', 7000);
+      const r = await ft('https://mempool.space/api/v1/mining/blocks/fee-rates/24h', {}, 7000); // BUG FIX: был ft(url, 7000) — opts пропущен
       if (r.ok) {
         const blocks = await r.json();
         if (Array.isArray(blocks) && blocks.length > 0) {
@@ -1034,7 +1034,7 @@ async function handleAcceleration(req, res) {
     const get = s=>(s.status==='fulfilled'&&s.value?.ok)?s.value:null;
     let tx = get(txR) ? await sj(get(txR)) : null;
     if (!tx) {
-      try { const fb=await ft(`https://blockstream.info/api/tx/${txid}`,7000); if(fb.ok) tx=await sj(fb); }
+      try { const fb=await ft(`https://blockstream.info/api/tx/${txid}`,{},7000); if(fb.ok) tx=await sj(fb); } // BUG FIX: был ft(url, 7000) — opts пропущен
       catch {}
     }
 

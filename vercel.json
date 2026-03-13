@@ -79,6 +79,9 @@
     },
     "api/router.js": {
       "maxDuration": 20
+    },
+    "api/v1.js": {
+      "maxDuration": 30
     }
   },
   "rewrites": [
