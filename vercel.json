@@ -3,15 +3,6 @@
   "outputDirectory": "public",
   "headers": [
     {
-      "source": "/api-docs",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "public, max-age=3600"
-        }
-      ]
-    },
-    {
       "source": "/api/(.*)",
       "headers": [
         {
@@ -24,7 +15,7 @@
         },
         {
           "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, X-TurboTX-Token, Authorization, X-API-Key"
+          "value": "Content-Type, X-TurboTX-Token"
         },
         {
           "key": "X-Content-Type-Options",
@@ -91,12 +82,6 @@
     },
     "api/acceleration.js": {
       "maxDuration": 15
-    },
-    "api/v1.js": {
-      "maxDuration": 30
-    },
-    "api/keys.js": {
-      "maxDuration": 10
     }
   },
   "rewrites": [
@@ -139,22 +124,6 @@
     {
       "source": "/robots.txt",
       "destination": "/robots.txt"
-    },
-    {
-      "source": "/api/v1",
-      "destination": "/api/v1"
-    },
-    {
-      "source": "/api/v1/(.*)",
-      "destination": "/api/v1"
-    },
-    {
-      "source": "/api/keys",
-      "destination": "/api/keys"
-    },
-    {
-      "source": "/api-docs",
-      "destination": "/api-docs.html"
     },
     {
       "source": "/(.*)",
