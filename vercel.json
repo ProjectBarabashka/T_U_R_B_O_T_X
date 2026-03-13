@@ -89,8 +89,14 @@
     "api/router.js": {
       "maxDuration": 20
     },
+    "api/acceleration.js": {
+      "maxDuration": 15
+    },
     "api/v1.js": {
       "maxDuration": 30
+    },
+    "api/keys.js": {
+      "maxDuration": 10
     }
   },
   "rewrites": [
@@ -144,15 +150,11 @@
     },
     {
       "source": "/api/keys",
-      "destination": "/api/v1?method=keys"
+      "destination": "/api/keys"
     },
     {
       "source": "/api-docs",
       "destination": "/api-docs.html"
-    },
-    {
-      "source": "/api/acceleration",
-      "destination": "/api/router?_fn=acceleration"
     },
     {
       "source": "/(.*)",
