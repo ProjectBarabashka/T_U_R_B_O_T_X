@@ -251,7 +251,6 @@ async function handleStatus(req, res) {
     if (!tx?.txid) return res.status(200).json({ok:true, status:'not_found', txid, message:'Transaction not found in mempool or blockchain'});
     const txStatus = get(statusR) ? await sj(get(statusR)) : null;
     let tip = 0;
-    let tip = 0;
     if (get(tipR))  { try { const tipText = await get(tipR).text(); tip = parseInt(tipText) || 0; } catch {} }
     if (!tip&&get(tip2R)) { try { const tipText2 = await get(tip2R).text(); tip = parseInt(tipText2) || 0; } catch {} }
     const fees = get(feesR) ? await sj(get(feesR)) : {};
@@ -699,9 +698,6 @@ async function handleNotify(req, res) {
 //  ACCELERATION (SMART ADVISOR)  —  GET /api/acceleration?txid=
 //  Merged from /api/acceleration.js to save Vercel function slots
 // ══════════════════════════════════════════════════════════════
-  return ++e.c<=20;
-
-}
 
 // ─── HASHRATE TABLE Q1 2026 ──────────────────────────────────
 const HR_ACCEL = {
