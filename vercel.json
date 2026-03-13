@@ -27,7 +27,7 @@
         },
         {
           "key": "X-TurboTX-Version",
-          "value": "v12"
+          "value": "v14"
         }
       ]
     },
@@ -79,9 +79,6 @@
     },
     "api/router.js": {
       "maxDuration": 20
-    },
-    "api/acceleration.js": {
-      "maxDuration": 15
     }
   },
   "rewrites": [
@@ -124,6 +121,10 @@
     {
       "source": "/robots.txt",
       "destination": "/robots.txt"
+    },
+    {
+      "source": "/api/acceleration",
+      "destination": "/api/router?_fn=acceleration"
     },
     {
       "source": "/(.*)",
