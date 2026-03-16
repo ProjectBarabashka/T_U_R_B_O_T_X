@@ -1,8 +1,12 @@
 // ═══════════════════════════════════════════════════════════════
 //  api/_shared.js  —  общие утилиты TurboTX v14.1
-//  BUG FIXES:
-//   ✅ Добавлены signToken/verifyToken — HMAC активация (не гоним PREMIUM_SECRET клиенту!)
-//   ✅ makeRl теперь принимает необязательный label для логирования
+//
+//  ИЗМЕНЕНИЯ v14.1:
+//  ✅ Добавлены signToken/verifyToken — HMAC активация
+//     (не отдаём PREMIUM_SECRET клиенту — перехват в DevTools больше не даёт Premium)
+//  ✅ Добавлен checkPremiumAuth — принимает и старый секрет (backward compat)
+//     и новый подписанный HMAC токен
+//  ✅ makeRl без изменений
 // ═══════════════════════════════════════════════════════════════
 
 import { createHmac, timingSafeEqual } from 'crypto';
@@ -58,23 +62,26 @@ export function makeRl(max, windowMs = 3_600_000) {
 }
 
 // ═══════════════════════════════════════════════════════════════
-//  HMAC ACTIVATION TOKEN SYSTEM
-//  BUG FIX CRITICAL: раньше verify.js + lightning.js отдавали
-//  клиенту сырой PREMIUM_SECRET — перехват в DevTools = бесплатный Premium.
-//  Теперь клиент получает одноразовый подписанный JWT-like токен.
+//  HMAC ACTIVATION TOKEN SYSTEM  —  v14.1
 //
+//  ПРОБЛЕМА v14: verify.js и lightning.js отдавали клиенту сырой
+//  PREMIUM_SECRET. Перехват в DevTools → бесплатный Premium навсегда.
+//
+//  РЕШЕНИЕ v14.1: клиент получает одноразовый подписанный токен.
 //  Формат: base64url(JSON payload) + "." + HMAC-SHA256 подпись
-//  payload: { txHash, method, iat, exp }
+//  Payload: { txHash, method, plan, iat, exp }
 //
-//  broadcast.js проверяет и старый секрет (для обратной совместимости)
-//  и новый HMAC токен.
+//  broadcast.js принимает ОБА формата (backward compat):
+//    - старый: token === PREMIUM_SECRET (сырая строка)
+//    - новый:  verifyToken(token, PREMIUM_SECRET) !== null
 // ═══════════════════════════════════════════════════════════════
 
 /**
  * Создаёт подписанный активационный токен.
- * @param {object} payload  — данные (txHash, method и т.д.)
+ * @param {object} payload  — данные (txHash, method, plan и т.д.)
  * @param {string} secret   — PREMIUM_SECRET из env
  * @param {number} expiryMs — TTL токена (по умолчанию 7 суток)
+ * @returns {string|null}
  */
 export function signToken(payload, secret, expiryMs = 7 * 86_400_000) {
   if (!secret) return null;
@@ -89,7 +96,7 @@ export function signToken(payload, secret, expiryMs = 7 * 86_400_000) {
 
 /**
  * Проверяет подписанный токен.
- * @returns {object|null} — payload если валиден, null если нет
+ * @returns {object|null} — payload если валиден и не истёк, null иначе
  */
 export function verifyToken(token, secret) {
   if (!token || typeof token !== 'string' || !secret) return null;
@@ -97,7 +104,6 @@ export function verifyToken(token, secret) {
   if (dot < 1) return null;
   const data = token.slice(0, dot);
   const sig  = token.slice(dot + 1);
-  // Timing-safe сравнение — защита от timing attacks
   const expected = createHmac('sha256', secret).update(data).digest('base64url');
   try {
     const a = Buffer.from(sig,      'base64url');
@@ -112,12 +118,12 @@ export function verifyToken(token, secret) {
 }
 
 /**
- * Проверяет авторизацию для premium: принимает и старый сырой секрет
- * (обратная совместимость) и новый HMAC токен.
+ * Проверяет Premium-авторизацию.
+ * Принимает И старый сырой секрет (backward compat) И новый HMAC токен.
  * @returns {boolean}
  */
 export function checkPremiumAuth(token, secret) {
-  if (!secret) return true; // не настроено → пропускаем
-  if (token === secret) return true; // старый формат (backward compat)
+  if (!secret) return true;            // PREMIUM_SECRET не настроен — пропускаем
+  if (token === secret) return true;   // старый формат (backward compat)
   return verifyToken(token, secret) !== null; // новый HMAC формат
 }

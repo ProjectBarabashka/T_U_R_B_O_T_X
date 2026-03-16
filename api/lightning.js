@@ -1,10 +1,10 @@
 // ══════════════════════════════════════════════════════════════
 //  TurboTX v14.1 ★ LIGHTNING PAYMENT ★  —  /api/lightning.js
 //
-//  BUG FIXES v14.1:
+//  ИЗМЕНЕНИЯ v14.1:
 //  🔐 CRITICAL: activationToken теперь HMAC токен, не сырой PREMIUM_SECRET
-//  🐛 extractPaymentHash: улучшен парсер bech32 (lastIndexOf → первый '1' после HRP)
-//  🐛 GET ?hash=X: возвращал activationToken из lightning, теперь из signToken
+//  🐛 extractPaymentHash: исправлен парсер bech32 (lastIndexOf → первый '1' после HRP)
+//  🐛 GET ?hash=X: возвращал activationToken напрямую из lightning, теперь через signToken
 //  🐛 Polling endpoint не проверял expiry правильно при paid=false
 // ══════════════════════════════════════════════════════════════
 
@@ -16,11 +16,11 @@ import { incLightning } from './router.js';
 const checkRl = makeRl(20, 3_600_000);
 
 const _invoices = new Map();
-const INVOICE_TTL = 60 * 60_000;
+const INVOICE_TTL = 60 * 60_000; // 1 час
 
 function cleanInvoices() {
   const now = Date.now();
-  const PAID_GRACE = 24 * 60 * 60_000;
+  const PAID_GRACE = 24 * 60 * 60_000; // хранить оплаченные 24ч
   for (const [k, v] of _invoices) {
     if (v.paid) {
       if (now - v.paidAt > PAID_GRACE) _invoices.delete(k);
@@ -52,9 +52,8 @@ const LNURL_CACHE_MS = 5 * 60_000;
 
 async function fetchLnurlPayParams(lightningAddress) {
   const now = Date.now();
-  if (_lnurlCache && _lnurlCachedAddr === lightningAddress && now - _lnurlCachedAt < LNURL_CACHE_MS) {
+  if (_lnurlCache && _lnurlCachedAddr === lightningAddress && now - _lnurlCachedAt < LNURL_CACHE_MS)
     return _lnurlCache;
-  }
   const [user, domain] = lightningAddress.split('@');
   if (!user || !domain) throw new Error('Invalid Lightning Address format');
   const url = `https://${domain}/.well-known/lnurlp/${user}`;
@@ -62,7 +61,7 @@ async function fetchLnurlPayParams(lightningAddress) {
   if (!r.ok) throw new Error(`LNURL endpoint error: ${r.status}`);
   const data = await sj(r);
   if (data.tag !== 'payRequest') throw new Error('Not a valid LNURL-pay endpoint');
-  if (!data.callback)           throw new Error('No callback URL in LNURL response');
+  if (!data.callback)            throw new Error('No callback URL in LNURL response');
   _lnurlCache = data; _lnurlCachedAt = now; _lnurlCachedAddr = lightningAddress;
   return data;
 }
@@ -79,7 +78,8 @@ async function requestInvoice(callback, amountMsats, comment) {
   return data;
 }
 
-// BUG FIX: извлечение payment hash — правильный поиск разделителя HRP
+// BUG FIX v14.1: правильный поиск разделителя HRP в bech32
+// Старая версия использовала lastIndexOf('1') — неверно для invoice с '1' в данных
 function extractPaymentHash(invoice) {
   try {
     const inv = invoice.toLowerCase();
@@ -97,12 +97,12 @@ function extractPaymentHash(invoice) {
       if (v < 0) return null;
       decoded.push(v);
     }
-    let pos = 7; // пропускаем timestamp
+    let pos = 7; // пропускаем timestamp (7 * 5 = 35 бит)
     while (pos < decoded.length - 3) {
       const tag = decoded[pos];
       const len = decoded[pos+1] * 32 + decoded[pos+2];
       pos += 3;
-      if (tag === 1 && len === 52) {
+      if (tag === 1 && len === 52) { // payment hash tag
         const hashBits = decoded.slice(pos, pos + 52);
         let hex = '', bits = 0, value = 0;
         for (const b of hashBits) {
@@ -130,9 +130,10 @@ async function tgNotify(amountSats, amountUsd, txid, ip, type = 'paid') {
   const chat  = process.env.TG_CHAT_ID;
   if (!token || !chat) return;
   const btcAmount = (amountSats / 1e8).toFixed(8);
-  const isPaid = type === 'paid', isCreated = type === 'created';
-  const header = isPaid ? '✅ *ОПЛАТА ПОЛУЧЕНА — TurboTX LN*'
-    : isCreated ? '🔔 *Новый LN Invoice — TurboTX*' : '⚡ *LN Webhook — TurboTX*';
+  const isPaid    = type === 'paid', isCreated = type === 'created';
+  const header = isPaid    ? '✅ *ОПЛАТА ПОЛУЧЕНА — TurboTX LN*'
+    : isCreated ? '🔔 *Новый LN Invoice — TurboTX*'
+    : '⚡ *LN Webhook — TurboTX*';
   const text = [
     header, '━━━━━━━━━━━━━━━━',
     `⚡ ${amountSats.toLocaleString()} sats (~$${amountUsd})`,
@@ -142,8 +143,8 @@ async function tgNotify(amountSats, amountUsd, txid, ip, type = 'paid') {
     `🕐 ${new Date().toLocaleString('ru', {timeZone:'Europe/Moscow'})} МСК`,
   ].filter(Boolean).join('\n');
   await ft(`https://api.telegram.org/bot${token}/sendMessage`, {
-    method:'POST', headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({ chat_id:chat, text, parse_mode:'Markdown' }),
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: chat, text, parse_mode: 'Markdown' }),
   }, 5000).catch(()=>{});
 }
 
@@ -161,19 +162,24 @@ function readBody(req) {
 }
 
 export default async function handler(req, res) {
-  if (req.method === 'OPTIONS') { Object.entries(CORS).forEach(([k,v])=>res.setHeader(k,v)); return res.status(204).end(); }
+  if (req.method === 'OPTIONS') {
+    Object.entries(CORS).forEach(([k,v]) => res.setHeader(k, v));
+    return res.status(204).end();
+  }
   Object.entries(CORS).forEach(([k,v]) => res.setHeader(k, v));
 
   const body = req.method === 'POST' ? await readBody(req) : {};
   req.body = body;
   const ip = getIp(req);
 
+  // Webhook от внешнего LN узла (отмечает invoice оплаченным)
   if (req.query?.webhook === '1' || req.body?.webhook === true)
     return handleWebhook(req, res);
 
+  // Debug endpoint
   if (req.method === 'GET' && req.query?.debug === '1') {
     const lightningAddress = process.env.LIGHTNING_ADDRESS;
-    const hasTg = !!(process.env.TG_TOKEN && process.env.TG_CHAT_ID);
+    const hasTg    = !!(process.env.TG_TOKEN && process.env.TG_CHAT_ID);
     const hasSecret = !!process.env.PREMIUM_SECRET;
     let lnurlOk = false, lnurlErr = '';
     if (lightningAddress) {
@@ -183,17 +189,17 @@ export default async function handler(req, res) {
     let priceOk = false;
     try { priceOk = !!(await getBtcPrice()); } catch {}
     return res.status(200).json({
-      ok:true,
-      config:{
+      ok: true,
+      config: {
         LIGHTNING_ADDRESS: lightningAddress ? lightningAddress.replace(/^.+@/, '***@') : 'NOT SET',
         PREMIUM_SECRET: hasSecret ? 'SET (HMAC mode)' : 'NOT SET',
         TG_TOKEN: hasTg ? 'SET' : 'NOT SET',
       },
-      checks:{ lnurlOk, lnurlErr:lnurlErr||null, priceOk },
+      checks: { lnurlOk, lnurlErr: lnurlErr || null, priceOk },
     });
   }
 
-  // GET ?hash=X — проверить оплату
+  // GET ?hash=X — проверить статус оплаты
   if (req.method === 'GET') {
     const hash = req.query?.hash?.toLowerCase();
     if (!hash || !/^[a-f0-9]{64}$/.test(hash))
@@ -206,27 +212,30 @@ export default async function handler(req, res) {
 
     if (inv.paid) {
       const secret = process.env.PREMIUM_SECRET;
-      // BUG FIX CRITICAL: возвращаем HMAC токен, не сырой secret
+      // BUG FIX v14.1 CRITICAL: возвращаем HMAC токен, не сырой secret
       const activationToken = secret
         ? signToken({ paymentHash: hash, method: 'lightning', plan: 'premium' }, secret)
         : null;
       return res.status(200).json({
-        ok:true, paid:true, settled:true,
-        amountSats:inv.amountSats, amountUsd:inv.amountUsd,
+        ok: true, paid: true, settled: true,
+        amountSats:   inv.amountSats,
+        amountUsd:    inv.amountUsd,
         ...(activationToken ? { activationToken } : {}),
-        activatedAt:inv.paidAt,
+        activatedAt:  inv.paidAt,
       });
     }
 
-    // BUG FIX: проверяем expiry корректно
+    // BUG FIX v14.1: корректная проверка expiry при paid=false
     const now = Date.now();
     if (now > inv.expiresAt)
       return res.status(200).json({ ok:true, paid:false, settled:false, expired:true });
 
     return res.status(200).json({
-      ok:true, paid:false, settled:false,
-      amountSats:inv.amountSats,
-      expiresIn:Math.max(0, Math.ceil((inv.expiresAt - now) / 1000)),
+      ok:        true,
+      paid:      false,
+      settled:   false,
+      amountSats: inv.amountSats,
+      expiresIn:  Math.max(0, Math.ceil((inv.expiresAt - now) / 1000)),
     });
   }
 
@@ -250,9 +259,9 @@ export default async function handler(req, res) {
     if (!btcPrice)
       return res.status(503).json({ ok:false, error:'Cannot fetch BTC price, try again' });
 
-    const amountSats  = usdToSats(amountUsd, btcPrice);
-    const amountMsats = amountSats * 1000;
-    const lnurlParams = await fetchLnurlPayParams(lightningAddress);
+    const amountSats   = usdToSats(amountUsd, btcPrice);
+    const amountMsats  = amountSats * 1000;
+    const lnurlParams  = await fetchLnurlPayParams(lightningAddress);
 
     if (amountMsats < lnurlParams.minSendable)
       return res.status(400).json({ ok:false, error:`Amount too small. Min: ${Math.ceil(lnurlParams.minSendable/1000)} sats` });
@@ -260,7 +269,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ ok:false, error:`Amount too large. Max: ${Math.floor(lnurlParams.maxSendable/1000)} sats` });
 
     const invoiceComment = comment || (txid ? `TurboTX acceleration ${txid.slice(0,8)}` : 'TurboTX Premium');
-    const invoiceData = await requestInvoice(lnurlParams.callback, amountMsats, invoiceComment);
+    const invoiceData    = await requestInvoice(lnurlParams.callback, amountMsats, invoiceComment);
 
     const paymentHash = extractPaymentHash(invoiceData.pr);
     if (!paymentHash)
@@ -268,25 +277,28 @@ export default async function handler(req, res) {
 
     cleanInvoices();
     const invoiceExpiry = invoiceData.expiry ? invoiceData.expiry * 1000 : INVOICE_TTL;
-    const expiresAt = Date.now() + invoiceExpiry;
+    const expiresAt     = Date.now() + invoiceExpiry;
     _invoices.set(paymentHash, {
-      amountSats, amountUsd, txid:txid||null,
-      invoice:invoiceData.pr, createdAt:Date.now(), expiresAt, paid:false,
+      amountSats, amountUsd, txid: txid || null,
+      invoice: invoiceData.pr, createdAt: Date.now(), expiresAt, paid: false,
     });
 
     tgNotify(amountSats, amountUsd, txid, ip, 'created').catch(()=>{});
     try { incLightning(); } catch {}
 
     return res.status(200).json({
-      ok:true,
-      invoice:invoiceData.pr,
+      ok:               true,
+      invoice:          invoiceData.pr,
       paymentHash,
-      amountSats, amountMsats, amountUsd, btcPrice,
-      lightningUri:lightningUri(invoiceData.pr),
+      amountSats,
+      amountMsats,
+      amountUsd,
+      btcPrice,
+      lightningUri:     lightningUri(invoiceData.pr),
       expiresAt,
-      expiresInSeconds:Math.ceil(invoiceExpiry / 1000),
-      successAction:invoiceData.successAction||null,
-      note:`Оплатите ${amountSats.toLocaleString()} sats (~$${amountUsd}) через Lightning Network`,
+      expiresInSeconds: Math.ceil(invoiceExpiry / 1000),
+      successAction:    invoiceData.successAction || null,
+      note: `Оплатите ${amountSats.toLocaleString()} sats (~$${amountUsd}) через Lightning Network`,
     });
   } catch(e) {
     console.error('[lightning] error:', e.message);
@@ -298,16 +310,16 @@ export function markInvoicePaid(paymentHash) {
   const inv = _invoices.get(paymentHash?.toLowerCase());
   if (!inv) return false;
   if (inv.paid) return true;
-  inv.paid = true;
+  inv.paid   = true;
   inv.paidAt = Date.now();
   _invoices.set(paymentHash.toLowerCase(), inv);
-  tgNotify(inv.amountSats, inv.amountUsd, inv.txid||null, 'webhook', 'paid').catch(()=>{});
+  tgNotify(inv.amountSats, inv.amountUsd, inv.txid || null, 'webhook', 'paid').catch(()=>{});
   return true;
 }
 
 function handleWebhook(req, res) {
   const secret = process.env.PREMIUM_SECRET;
-  const { hash, secret:reqSecret } = req.method==='GET' ? req.query : (req.body||{});
+  const { hash, secret: reqSecret } = req.method === 'GET' ? req.query : (req.body || {});
   if (!secret || reqSecret !== secret)
     return res.status(403).json({ ok:false, error:'Forbidden' });
   if (!hash || !/^[a-f0-9]{64}$/i.test(hash))

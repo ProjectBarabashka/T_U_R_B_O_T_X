@@ -271,4 +271,4 @@ window._TurboAPI = {
   waitPayment:   waitForLightningPayment,
 };
 
-console.log('[TurboTX] v14.1 Server API connected ✓ (broadcast + batch + lightning + waves + acceleration)');
+console.log('[TurboTX] v14 Server API connected ✓ (broadcast + batch + lightning + waves + acceleration)');
