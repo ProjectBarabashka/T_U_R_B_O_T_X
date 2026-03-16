@@ -5,138 +5,52 @@
     {
       "source": "/api/(.*)",
       "headers": [
-        {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
-        },
-        {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, OPTIONS"
-        },
-        {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, X-TurboTX-Token"
-        },
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "X-TurboTX-Version",
-          "value": "v14"
-        }
+        { "key": "Access-Control-Allow-Origin",  "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type, X-TurboTX-Token, Authorization, X-API-Key" },
+        { "key": "X-Content-Type-Options",       "value": "nosniff" },
+        { "key": "X-Frame-Options",              "value": "DENY" },
+        { "key": "X-TurboTX-Version",            "value": "v14.1" }
       ]
     },
     {
       "source": "/(.*)",
       "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "SAMEORIGIN"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
-        },
-        {
-          "key": "Permissions-Policy",
-          "value": "camera=(), microphone=(), geolocation=()"
-        },
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "X-Frame-Options",        "value": "SAMEORIGIN" },
+        { "key": "X-XSS-Protection",       "value": "1; mode=block" },
+        { "key": "Referrer-Policy",        "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy",     "value": "camera=(), microphone=(), geolocation=()" },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' wss://mempool.space https://mempool.space https://blockstream.info https://api.blockchair.com https://blockchain.info https://api.blockcypher.com https://btcscan.org https://sochain.com https://bitaps.com https://chain.api.btc.com https://api.trongrid.io https://apilist.tronscanapi.com https://turbotx-ebbe4-default-rtdb.europe-west1.firebasedatabase.app https://api.telegram.org https://api.coinbase.com https://api.binance.com https://walletofsatoshi.com https://ocean.xyz https://slipstream.mara.com https://emcd.io https://sbicrypto.com https://2miners.com https://rawpool.com https://flagcdn.com; img-src 'self' data: https://api.qrserver.com https://flagcdn.com; frame-ancestors 'none'"
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' wss://mempool.space https://mempool.space https://blockstream.info https://api.blockchair.com https://blockchain.info https://api.blockcypher.com https://btcscan.org https://sochain.com https://bitaps.com https://chain.api.btc.com https://api.trongrid.io https://apilist.tronscanapi.com https://turbotx-ebbe4-default-rtdb.europe-west1.firebasedatabase.app https://api.telegram.org https://api.coinbase.com https://api.binance.com https://walletofsatoshi.com https://ocean.xyz https://slipstream.mara.com https://emcd.io https://sbicrypto.com https://2miners.com https://rawpool.com https://flagcdn.com; img-src 'self' data: https://api.qrserver.com https://flagcdn.com; frame-ancestors 'none'"
         }
       ]
     }
   ],
   "functions": {
-    "api/broadcast.js": {
-      "maxDuration": 60
-    },
-    "api/repeat.js": {
-      "maxDuration": 35
-    },
-    "api/verify.js": {
-      "maxDuration": 20
-    },
-    "api/lightning.js": {
-      "maxDuration": 20
-    },
-    "api/telegram.js": {
-      "maxDuration": 20
-    },
-    "api/router.js": {
-      "maxDuration": 20
-    },
-    "api/v1.js": {
-      "maxDuration": 30
-    }
+    "api/broadcast.js": { "maxDuration": 60 },
+    "api/repeat.js":    { "maxDuration": 35 },
+    "api/verify.js":    { "maxDuration": 20 },
+    "api/lightning.js": { "maxDuration": 20 },
+    "api/telegram.js":  { "maxDuration": 20 },
+    "api/router.js":    { "maxDuration": 20 },
+    "api/v1.js":        { "maxDuration": 30 }
   },
   "rewrites": [
-    {
-      "source": "/api/health",
-      "destination": "/api/router?_fn=health"
-    },
-    {
-      "source": "/api/status",
-      "destination": "/api/router?_fn=status"
-    },
-    {
-      "source": "/api/stats",
-      "destination": "/api/router?_fn=stats"
-    },
-    {
-      "source": "/api/price",
-      "destination": "/api/router?_fn=price"
-    },
-    {
-      "source": "/api/mempool",
-      "destination": "/api/router?_fn=mempool"
-    },
-    {
-      "source": "/api/cpfp",
-      "destination": "/api/router?_fn=cpfp"
-    },
-    {
-      "source": "/api/rbf",
-      "destination": "/api/router?_fn=rbf"
-    },
-    {
-      "source": "/api/notify",
-      "destination": "/api/router?_fn=notify"
-    },
-    {
-      "source": "/sitemap.xml",
-      "destination": "/sitemap.xml"
-    },
-    {
-      "source": "/robots.txt",
-      "destination": "/robots.txt"
-    },
-    {
-      "source": "/api/acceleration",
-      "destination": "/api/router?_fn=acceleration"
-    },
-    {
-      "source": "/api-docs",
-      "destination": "/api-docs.html"
-    },
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+    { "source": "/api/health",       "destination": "/api/router?_fn=health" },
+    { "source": "/api/status",       "destination": "/api/router?_fn=status" },
+    { "source": "/api/stats",        "destination": "/api/router?_fn=stats" },
+    { "source": "/api/price",        "destination": "/api/router?_fn=price" },
+    { "source": "/api/mempool",      "destination": "/api/router?_fn=mempool" },
+    { "source": "/api/cpfp",         "destination": "/api/router?_fn=cpfp" },
+    { "source": "/api/rbf",          "destination": "/api/router?_fn=rbf" },
+    { "source": "/api/notify",       "destination": "/api/router?_fn=notify" },
+    { "source": "/api/acceleration", "destination": "/api/router?_fn=acceleration" },
+    { "source": "/sitemap.xml",      "destination": "/sitemap.xml" },
+    { "source": "/robots.txt",       "destination": "/robots.txt" },
+    { "source": "/api-docs",         "destination": "/api-docs.html" },
+    { "source": "/(.*)",             "destination": "/index.html" }
   ],
   "env": {
     "NODE_ENV": "production"
