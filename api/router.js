@@ -31,7 +31,7 @@ const checkRl = makeRl(30, 60_000); // 30 запросов / минуту с о�
 // v13: хешрейт обновлён Q1 2026 + новые пулы
 const HR_HEALTH = {
   Foundry:27, AntPool:16, MARA:11, MaraSlipstream:11, ViaBTC:9, SpiderPool:8,
-  F2Pool:7, Luxor:5, CloverPool:4, BitFuFu:4, 'BTC.com':3,
+  F2Pool:7, Luxor:5, CloverPool:4, BitFuFu:4, 'BTC.com':3,Bitdeer:3,Braiins:2,Poolin:1,
   Ocean:2, EMCDPool:2, SBICrypto:2,
   TxBoost:1, mempoolAccel:1, bitaccelerate:1, '360btc':1, txfaster:1, btcspeed:1,
   '2Miners':1, Rawpool:1, Lincoin:1,
@@ -343,12 +343,12 @@ async function handleStats(req, res) {
     const avgHr=_sess.premBroadcasts>0?Math.round(_sess.totalHashreachPct/_sess.premBroadcasts):88;
     const hexRate=_sess.broadcasts>0?Math.round(_sess.broadcastsWithHex/_sess.broadcasts*100):null;
     const pub={
-      ok:true,version:'v14',
+      ok:true,version:'v14.1',
       network:{blockHeight:tip||null,feeRate:fastest||null,feeHalfHour:halfHour||null,feeHour:hour||null,
         feeEconomy:economy||null,congestion,congestionText:CTEXT[congestion],congestionEmoji:CEMOJI[congestion],
         btcPrice,mempoolCount:mp.count||null,mempoolMB:mp.vsize?+(mp.vsize/1e6).toFixed(1):null,
         hashrateEHs:hr.currentHashrate?+(hr.currentHashrate/1e18).toFixed(2):null},
-      service:{version:'v14',nodeChannels:8,poolChannels:22,totalChannels:30,hashrateReach:`~${avgHr}%`,
+      service:{version:'v14.1',nodeChannels:8,poolChannels:23,totalChannels:31,hashrateReach:`~${avgHr}%`,
         batchSupport:true,lightningSupport:true,maraSlipstream:true,lastBlockMiner:true,uptime:uptimeStr},
       timestamp:Date.now(),
     };
@@ -680,7 +680,7 @@ async function handleNotify(req, res) {
 // ─── HASHRATE TABLE Q1 2026 ──────────────────────────────────
 const HR_ACCEL = {
   Foundry:27, AntPool:16, MARA:11, ViaBTC:9, SpiderPool:8,
-  F2Pool:7, Luxor:5, CloverPool:4, BitFuFu:4, 'BTC.com':3,
+  F2Pool:7, Luxor:5, CloverPool:4, BitFuFu:4, 'BTC.com':3,Bitdeer:3,Braiins:2,Poolin:1,
   Ocean:2, EMCDPool:2, SBICrypto:2,
   TxBoost:1, '2Miners':1, Rawpool:1, Lincoin:1,
 };

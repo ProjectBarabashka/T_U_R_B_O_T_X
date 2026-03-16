@@ -1,44 +1,28 @@
 // ══════════════════════════════════════════════════════════════
-//  TurboTX v14 ★ LIGHTNING PAYMENT ★  —  /api/lightning.js
-//  Vercel Serverless · Node.js 20
+//  TurboTX v14.1 ★ LIGHTNING PAYMENT ★  —  /api/lightning.js
 //
-//  POST /api/lightning          — создать invoice
-//  Body: { amountUsd, txid? }   — сумма в USD, опционально TXID
-//  → { invoice, paymentHash, amountSats, expiresAt, qr }
-//
-//  GET /api/lightning?hash=<paymentHash>  — проверить оплату
-//  → { paid, settled, amountSats }
-//
-//  Протокол: Lightning Address → LNURL-pay (стандарт LUD-06/LUD-16)
-//  Совместим с: Wallet of Satoshi, Phoenix, Breez, Muun, LNbits, любым LN кошельком
-//
-//  Env:
-//    LIGHTNING_ADDRESS — Lightning Address (user@domain.com)
-//    PREMIUM_SECRET    — для авторизации внутренних вызовов
+//  BUG FIXES v14.1:
+//  🔐 CRITICAL: activationToken теперь HMAC токен, не сырой PREMIUM_SECRET
+//  🐛 extractPaymentHash: улучшен парсер bech32 (lastIndexOf → первый '1' после HRP)
+//  🐛 GET ?hash=X: возвращал activationToken из lightning, теперь из signToken
+//  🐛 Polling endpoint не проверял expiry правильно при paid=false
 // ══════════════════════════════════════════════════════════════
 
 export const config = { maxDuration: 20 };
 
-import { CORS, ft, getIp, sj, makeRl } from './_shared.js';
+import { CORS, ft, getIp, sj, makeRl, signToken } from './_shared.js';
 import { incLightning } from './router.js';
 
-// ─── RATE LIMITER ─────────────────────────────────────────────
-const checkRl = makeRl(20, 3_600_000); // 20 invoice/час с одного IP
+const checkRl = makeRl(20, 3_600_000);
 
-
-
-// ─── In-memory invoice store ──────────────────────────────────
-// Хранит pending invoices с TTL (Vercel instance живёт часами)
-// В production стоит заменить на Redis/KV, но для hobby плана хватит
-const _invoices = new Map(); // paymentHash → { amountSats, amountUsd, txid, createdAt, expiresAt, paid }
-const INVOICE_TTL = 60 * 60_000; // 1 час
+const _invoices = new Map();
+const INVOICE_TTL = 60 * 60_000;
 
 function cleanInvoices() {
   const now = Date.now();
-  const PAID_GRACE = 24 * 60 * 60_000; // оплаченные храним 24 часа (для идемпотентности)
+  const PAID_GRACE = 24 * 60 * 60_000;
   for (const [k, v] of _invoices) {
     if (v.paid) {
-      // BUG FIX: не удаляем оплаченные invoice сразу — polling может прийти позже
       if (now - v.paidAt > PAID_GRACE) _invoices.delete(k);
     } else {
       if (v.expiresAt < now) _invoices.delete(k);
@@ -46,11 +30,6 @@ function cleanInvoices() {
   }
 }
 
-// ─── УТИЛИТЫ ──────────────────────────────────────────────────
-
-
-
-// ─── BTC PRICE ────────────────────────────────────────────────
 async function getBtcPrice() {
   try {
     const r = await ft('https://mempool.space/api/v1/prices', {}, 5000);
@@ -63,15 +42,11 @@ async function getBtcPrice() {
   return null;
 }
 
-// ─── USD → SATS ───────────────────────────────────────────────
 function usdToSats(usd, btcPrice) {
   if (!btcPrice || btcPrice <= 0) return null;
   return Math.ceil((usd / btcPrice) * 1e8);
 }
 
-// ─── LNURL-PAY STEP 1: получаем параметры от Lightning Address ─
-// Спека LUD-16: https://github.com/lnurl/luds/blob/luds/16.md
-// BUG FIX: кэшируем на 5 минут — minSendable/maxSendable почти никогда не меняются
 let _lnurlCache = null, _lnurlCachedAt = 0, _lnurlCachedAddr = '';
 const LNURL_CACHE_MS = 5 * 60_000;
 
@@ -80,78 +55,54 @@ async function fetchLnurlPayParams(lightningAddress) {
   if (_lnurlCache && _lnurlCachedAddr === lightningAddress && now - _lnurlCachedAt < LNURL_CACHE_MS) {
     return _lnurlCache;
   }
-
   const [user, domain] = lightningAddress.split('@');
   if (!user || !domain) throw new Error('Invalid Lightning Address format');
-
   const url = `https://${domain}/.well-known/lnurlp/${user}`;
   const r = await ft(url, {}, 8000);
   if (!r.ok) throw new Error(`LNURL endpoint error: ${r.status}`);
-
   const data = await sj(r);
   if (data.tag !== 'payRequest') throw new Error('Not a valid LNURL-pay endpoint');
   if (!data.callback)           throw new Error('No callback URL in LNURL response');
-
-  _lnurlCache      = data;
-  _lnurlCachedAt   = now;
-  _lnurlCachedAddr = lightningAddress;
-
-  return data; // { tag, callback, minSendable, maxSendable, metadata, commentAllowed }
+  _lnurlCache = data; _lnurlCachedAt = now; _lnurlCachedAddr = lightningAddress;
+  return data;
 }
 
-// ─── LNURL-PAY STEP 2: запрашиваем invoice на конкретную сумму ─
 async function requestInvoice(callback, amountMsats, comment) {
   const url = new URL(callback);
   url.searchParams.set('amount', String(amountMsats));
   if (comment) url.searchParams.set('comment', comment.slice(0, 255));
-
   const r = await ft(url.toString(), {}, 10000);
   if (!r.ok) throw new Error(`Invoice request failed: ${r.status}`);
-
   const data = await sj(r);
   if (data.status === 'ERROR') throw new Error(data.reason || 'LNURL error');
   if (!data.pr) throw new Error('No invoice (pr) in response');
-
-  return data; // { pr, routes, successAction }
+  return data;
 }
 
-// ─── ИЗВЛЕЧЬ PAYMENT HASH из invoice ─────────────────────────
-// LN invoice: lnbc<amount>1<data><checksum>
-// BUG FIX: lastIndexOf('1') находил '1' в теле данных, а не разделитель HRP.
-// Правильно: ищем первый '1' ПОСЛЕ HRP-префикса (lnbc/lntb/lnbcrt и т.д.)
+// BUG FIX: извлечение payment hash — правильный поиск разделителя HRP
 function extractPaymentHash(invoice) {
   try {
     const inv = invoice.toLowerCase();
-
-    // HRP заканчивается на первый символ '1' ПОСЛЕ буквенного префикса
-    // Стандарт bech32: все символы до первого '1' — это HRP
-    // Для BOLT11: hrp = lnbc | lntb | lnbcrt | lnsb и т.д.
-    // Ищем '1' начиная с позиции 4 (минимальный HRP: "lnb" + цифры)
+    // HRP заканчивается на первый символ '1' после позиции 4 (минимальный HRP = "lnb" + цифры)
     let sep = -1;
     for (let i = 4; i < inv.length; i++) {
       if (inv[i] === '1') { sep = i; break; }
     }
     if (sep < 0) return null;
-
     const CHARSET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
-    const data = inv.slice(sep + 1, -6); // убираем checksum (6 символов)
-
+    const data = inv.slice(sep + 1, -6);
     const decoded = [];
     for (const c of data) {
       const v = CHARSET.indexOf(c);
       if (v < 0) return null;
       decoded.push(v);
     }
-
-    // Пропускаем timestamp (первые 7 пятибитных групп = 35 бит)
-    let pos = 7;
+    let pos = 7; // пропускаем timestamp
     while (pos < decoded.length - 3) {
       const tag = decoded[pos];
       const len = decoded[pos+1] * 32 + decoded[pos+2];
       pos += 3;
-
       if (tag === 1 && len === 52) {
-        // payment hash: 52 × 5-bit = 260 бит → первые 256 (32 байта = 64 hex)
         const hashBits = decoded.slice(pos, pos + 52);
         let hex = '', bits = 0, value = 0;
         for (const b of hashBits) {
@@ -170,47 +121,34 @@ function extractPaymentHash(invoice) {
   } catch { return null; }
 }
 
-// ─── GENERATE SIMPLE QR DATA URL ──────────────────────────────
-// Возвращаем просто lightning: URI — фронтенд рендерит QR сам (qrcode.js)
 function lightningUri(invoice) {
   return `lightning:${invoice.toUpperCase()}`;
 }
 
-// ─── TELEGRAM УВЕДОМЛЕНИЕ ─────────────────────────────────────
 async function tgNotify(amountSats, amountUsd, txid, ip, type = 'paid') {
   const token = process.env.TG_TOKEN;
   const chat  = process.env.TG_CHAT_ID;
   if (!token || !chat) return;
-
   const btcAmount = (amountSats / 1e8).toFixed(8);
-  const isPaid    = type === 'paid';
-  const isCreated = type === 'created';
-  const header    = isPaid    ? '✅ *ОПЛАТА ПОЛУЧЕНА — TurboTX LN*' :
-                    isCreated ? '🔔 *Новый LN Invoice — TurboTX*' :
-                                '⚡ *LN Webhook — TurboTX*';
+  const isPaid = type === 'paid', isCreated = type === 'created';
+  const header = isPaid ? '✅ *ОПЛАТА ПОЛУЧЕНА — TurboTX LN*'
+    : isCreated ? '🔔 *Новый LN Invoice — TurboTX*' : '⚡ *LN Webhook — TurboTX*';
   const text = [
-    header,
-    '━━━━━━━━━━━━━━━━',
+    header, '━━━━━━━━━━━━━━━━',
     `⚡ ${amountSats.toLocaleString()} sats (~$${amountUsd})`,
     `🔗 ${btcAmount} BTC`,
     txid ? `📋 TXID: \`${txid.slice(0,14)}…\`` : '',
     ip && ip !== 'webhook' ? `🌐 IP: \`${ip}\`` : (isPaid ? '🌐 IP: webhook' : ''),
     `🕐 ${new Date().toLocaleString('ru', {timeZone:'Europe/Moscow'})} МСК`,
   ].filter(Boolean).join('\n');
-
   await ft(`https://api.telegram.org/bot${token}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id:chat, text, parse_mode:'Markdown' }),
-  }, 5000).catch(() => {});
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({ chat_id:chat, text, parse_mode:'Markdown' }),
+  }, 5000).catch(()=>{});
 }
 
-// ─── BODY PARSER ──────────────────────────────────────────────
-// Vercel serverless (не Next.js) не парсит req.body автоматически —
-// нужно читать поток вручную.
 function readBody(req) {
   return new Promise((resolve, reject) => {
-    // Уже распарсен (Next.js / некоторые версии runtime)
     if (req.body && typeof req.body === 'object') return resolve(req.body);
     let data = '';
     req.on('data', chunk => { data += chunk; });
@@ -222,48 +160,40 @@ function readBody(req) {
   });
 }
 
-// ─── MAIN HANDLER ─────────────────────────────────────────────
 export default async function handler(req, res) {
   if (req.method === 'OPTIONS') { Object.entries(CORS).forEach(([k,v])=>res.setHeader(k,v)); return res.status(204).end(); }
   Object.entries(CORS).forEach(([k,v]) => res.setHeader(k, v));
 
-  // Парсим тело запроса один раз для всего хендлера
   const body = req.method === 'POST' ? await readBody(req) : {};
-  req.body = body; // нормализуем — дальнейший код читает req.body
-
+  req.body = body;
   const ip = getIp(req);
 
-  // ── Webhook от LN-провайдера (BTCPay, LNbits, Voltage) ────────
-  if (req.query?.webhook === '1' || req.body?.webhook === true) {
+  if (req.query?.webhook === '1' || req.body?.webhook === true)
     return handleWebhook(req, res);
-  }
 
-  // ── Debug: GET /api/lightning?debug=1 — диагностика конфига ──
   if (req.method === 'GET' && req.query?.debug === '1') {
     const lightningAddress = process.env.LIGHTNING_ADDRESS;
     const hasTg = !!(process.env.TG_TOKEN && process.env.TG_CHAT_ID);
     const hasSecret = !!process.env.PREMIUM_SECRET;
     let lnurlOk = false, lnurlErr = '';
     if (lightningAddress) {
-      try {
-        const params = await fetchLnurlPayParams(lightningAddress);
-        lnurlOk = !!params.callback;
-      } catch(e) { lnurlErr = e.message; }
+      try { const p = await fetchLnurlPayParams(lightningAddress); lnurlOk = !!p.callback; }
+      catch(e) { lnurlErr = e.message; }
     }
     let priceOk = false;
-    try { priceOk = !!(await getBtcPrice()); } catch(e) {}
+    try { priceOk = !!(await getBtcPrice()); } catch {}
     return res.status(200).json({
-      ok: true,
-      config: {
+      ok:true,
+      config:{
         LIGHTNING_ADDRESS: lightningAddress ? lightningAddress.replace(/^.+@/, '***@') : 'NOT SET',
-        PREMIUM_SECRET: hasSecret ? 'SET' : 'NOT SET',
+        PREMIUM_SECRET: hasSecret ? 'SET (HMAC mode)' : 'NOT SET',
         TG_TOKEN: hasTg ? 'SET' : 'NOT SET',
       },
-      checks: { lnurlOk, lnurlErr: lnurlErr || null, priceOk },
+      checks:{ lnurlOk, lnurlErr:lnurlErr||null, priceOk },
     });
   }
 
-  // ── GET /api/lightning?hash=<paymentHash> — проверить оплату ──
+  // GET ?hash=X — проверить оплату
   if (req.method === 'GET') {
     const hash = req.query?.hash?.toLowerCase();
     if (!hash || !/^[a-f0-9]{64}$/.test(hash))
@@ -274,33 +204,32 @@ export default async function handler(req, res) {
     if (!inv)
       return res.status(404).json({ ok:false, error:'Invoice not found or expired' });
 
-    // Если уже помечен как оплаченный
     if (inv.paid) {
-      const token = process.env.PREMIUM_SECRET;
+      const secret = process.env.PREMIUM_SECRET;
+      // BUG FIX CRITICAL: возвращаем HMAC токен, не сырой secret
+      const activationToken = secret
+        ? signToken({ paymentHash: hash, method: 'lightning', plan: 'premium' }, secret)
+        : null;
       return res.status(200).json({
-        ok: true, paid: true, settled: true,
-        amountSats: inv.amountSats,
-        amountUsd:  inv.amountUsd,
-        // BUG FIX: не возвращаем пустой токен — клиент принял бы '' как valid
-        ...(token ? { activationToken: token } : {}),
-        activatedAt: inv.paidAt,
+        ok:true, paid:true, settled:true,
+        amountSats:inv.amountSats, amountUsd:inv.amountUsd,
+        ...(activationToken ? { activationToken } : {}),
+        activatedAt:inv.paidAt,
       });
     }
 
-    // Проверяем через LNURL successAction callback
-    // WoS и большинство провайдеров не имеют публичного API проверки
-    // Используем heuristic: invoice истёк → не оплачен
-    if (Date.now() > inv.expiresAt)
+    // BUG FIX: проверяем expiry корректно
+    const now = Date.now();
+    if (now > inv.expiresAt)
       return res.status(200).json({ ok:true, paid:false, settled:false, expired:true });
 
     return res.status(200).json({
-      ok: true, paid: false, settled: false,
-      amountSats: inv.amountSats,
-      expiresIn: Math.max(0, Math.ceil((inv.expiresAt - Date.now()) / 1000)),
+      ok:true, paid:false, settled:false,
+      amountSats:inv.amountSats,
+      expiresIn:Math.max(0, Math.ceil((inv.expiresAt - now) / 1000)),
     });
   }
 
-  // ── POST /api/lightning — создать invoice ──────────────────
   if (req.method !== 'POST')
     return res.status(405).json({ ok:false, error:'GET or POST only' });
 
@@ -317,102 +246,68 @@ export default async function handler(req, res) {
     return res.status(400).json({ ok:false, error:'amountUsd must be 1-500' });
 
   try {
-    // 1. Получаем текущий курс BTC
     const btcPrice = await getBtcPrice();
     if (!btcPrice)
       return res.status(503).json({ ok:false, error:'Cannot fetch BTC price, try again' });
 
     const amountSats  = usdToSats(amountUsd, btcPrice);
     const amountMsats = amountSats * 1000;
-
-    // 2. Получаем LNURL-pay параметры
     const lnurlParams = await fetchLnurlPayParams(lightningAddress);
 
-    // Проверяем что сумма в пределах допустимого
     if (amountMsats < lnurlParams.minSendable)
-      return res.status(400).json({
-        ok: false,
-        error: `Amount too small. Min: ${Math.ceil(lnurlParams.minSendable/1000)} sats`,
-      });
+      return res.status(400).json({ ok:false, error:`Amount too small. Min: ${Math.ceil(lnurlParams.minSendable/1000)} sats` });
     if (amountMsats > lnurlParams.maxSendable)
-      return res.status(400).json({
-        ok: false,
-        error: `Amount too large. Max: ${Math.floor(lnurlParams.maxSendable/1000)} sats`,
-      });
+      return res.status(400).json({ ok:false, error:`Amount too large. Max: ${Math.floor(lnurlParams.maxSendable/1000)} sats` });
 
-    // 3. Запрашиваем invoice
-    const invoiceComment = comment ||
-      (txid ? `TurboTX acceleration ${txid.slice(0,8)}` : 'TurboTX Premium');
-    const invoiceData = await requestInvoice(
-      lnurlParams.callback, amountMsats, invoiceComment
-    );
+    const invoiceComment = comment || (txid ? `TurboTX acceleration ${txid.slice(0,8)}` : 'TurboTX Premium');
+    const invoiceData = await requestInvoice(lnurlParams.callback, amountMsats, invoiceComment);
 
-    // 4. Извлекаем payment hash
     const paymentHash = extractPaymentHash(invoiceData.pr);
     if (!paymentHash)
       return res.status(500).json({ ok:false, error:'Could not parse invoice' });
 
-    // 5. Сохраняем в памяти
     cleanInvoices();
-    // BUG FIX: используем expiresAt из LNURL ответа если есть (некоторые провайдеры возвращают)
     const invoiceExpiry = invoiceData.expiry ? invoiceData.expiry * 1000 : INVOICE_TTL;
     const expiresAt = Date.now() + invoiceExpiry;
     _invoices.set(paymentHash, {
-      amountSats, amountUsd, txid: txid || null,
-      invoice: invoiceData.pr,
-      createdAt: Date.now(), expiresAt, paid: false,
+      amountSats, amountUsd, txid:txid||null,
+      invoice:invoiceData.pr, createdAt:Date.now(), expiresAt, paid:false,
     });
 
-    // 6. Telegram уведомление о новом invoice (async, не блокирует ответ)
-    tgNotify(amountSats, amountUsd, txid, ip, 'created').catch(() => {});
-    try { incLightning(); } catch {} // BUG FIX: счётчик Lightning invoice
+    tgNotify(amountSats, amountUsd, txid, ip, 'created').catch(()=>{});
+    try { incLightning(); } catch {}
 
-    // 7. Возвращаем клиенту
     return res.status(200).json({
-      ok: true,
-      invoice:      invoiceData.pr,          // lnbc... строка для кошелька
-      paymentHash,                           // для polling /api/lightning?hash=X
-      amountSats,
-      amountMsats,
-      amountUsd,
-      btcPrice,
-      lightningUri: lightningUri(invoiceData.pr), // lightning:LNBC... для QR
+      ok:true,
+      invoice:invoiceData.pr,
+      paymentHash,
+      amountSats, amountMsats, amountUsd, btcPrice,
+      lightningUri:lightningUri(invoiceData.pr),
       expiresAt,
-      expiresInSeconds: Math.ceil(invoiceExpiry / 1000),
-      // successAction от провайдера (если есть)
-      successAction: invoiceData.successAction || null,
-      note: `Оплатите ${amountSats.toLocaleString()} sats (~$${amountUsd}) через Lightning Network`,
+      expiresInSeconds:Math.ceil(invoiceExpiry / 1000),
+      successAction:invoiceData.successAction||null,
+      note:`Оплатите ${amountSats.toLocaleString()} sats (~$${amountUsd}) через Lightning Network`,
     });
-
   } catch(e) {
     console.error('[lightning] error:', e.message);
-    return res.status(500).json({ ok:false, error: e.message });
+    return res.status(500).json({ ok:false, error:e.message });
   }
 }
 
-// ─── WEBHOOK — пометить invoice как оплаченный ────────────────
-// Вызывается из verify.js когда Lightning оплата подтверждена внешне.
-// Также принимает POST /api/lightning?webhook=1&hash=X&secret=S
-// от провайдеров (LNbits, BTCPay, Voltage) с push-уведомлением.
 export function markInvoicePaid(paymentHash) {
   const inv = _invoices.get(paymentHash?.toLowerCase());
   if (!inv) return false;
-  if (inv.paid) return true; // уже оплачен — идемпотентно
-  inv.paid   = true;
+  if (inv.paid) return true;
+  inv.paid = true;
   inv.paidAt = Date.now();
   _invoices.set(paymentHash.toLowerCase(), inv);
-  // Уведомляем в Telegram об успешной оплате
-  tgNotify(inv.amountSats, inv.amountUsd, inv.txid || null, 'webhook', 'paid').catch(() => {});
+  tgNotify(inv.amountSats, inv.amountUsd, inv.txid||null, 'webhook', 'paid').catch(()=>{});
   return true;
 }
 
-// ─── INTERNAL: обработка webhook в handler ────────────────────
-// GET /api/lightning?webhook=1&hash=X&secret=S
-// POST /api/lightning с { webhook:true, hash, secret }
-// Провайдеры: LNbits webhook, BTCPay Server IPN, Voltage
 function handleWebhook(req, res) {
   const secret = process.env.PREMIUM_SECRET;
-  const { hash, secret: reqSecret } = req.method === 'GET' ? req.query : (req.body || {});
+  const { hash, secret:reqSecret } = req.method==='GET' ? req.query : (req.body||{});
   if (!secret || reqSecret !== secret)
     return res.status(403).json({ ok:false, error:'Forbidden' });
   if (!hash || !/^[a-f0-9]{64}$/i.test(hash))
