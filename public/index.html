@@ -3916,47 +3916,63 @@ async function go() {
       const data = await r.json();
 
       if (rowsEl && data.results) {
-        const fmt = (ok, name, ms) =>
-          '<div style="display:flex;justify-content:space-between;align-items:center;' +
-          'color:' + (ok ? 'var(--g)' : 'rgba(255,255,255,.22)') + '">' +
-          '<span>' + (ok ? '✓' : '·') + ' ' + name + '</span>' +
-          (ms ? '<span style="font-size:.57rem;color:var(--m);font-family:var(--mono)">' + ms + 'ms</span>' : '') +
-          '</div>';
+        const fmt = (ok, name, ms, reason) => {
+          const isSkipped = reason === 'circuit_open' || reason === 'dead' || reason === 'neg_cached';
+          const isRateLimit = reason === 'rate_limit' || reason === 'rate_limited';
+          const color = ok ? 'var(--g)' : isRateLimit ? 'rgba(247,147,26,.5)' : 'rgba(255,255,255,.18)';
+          const icon  = ok ? '✓' : isRateLimit ? '⏱' : isSkipped ? '—' : '·';
+          const hint  = !ok && isRateLimit ? ' <span style="font-size:.54rem;color:rgba(247,147,26,.4)">(rate limit)</span>' : '';
+          return '<div style="display:flex;justify-content:space-between;align-items:center;color:' + color + '">' +
+            '<span>' + icon + ' ' + name + hint + '</span>' +
+            (ok && ms ? '<span style="font-size:.57rem;color:var(--m);font-family:var(--mono)">' + ms + 'ms</span>' : '') +
+            '</div>';
+        };
 
         const byName = {};
-        data.results.forEach(function(ch) { byName[ch.channel] = ch; });
+        data.results.forEach(function(ch) {
+          // Индексируем по обоим полям — channel и name (могут совпадать, но на всякий случай)
+          if (ch.channel) byName[ch.channel] = ch;
+          if (ch.name && ch.name !== ch.channel) byName[ch.name] = ch;
+        });
 
         if (plan === 'premium') {
+          // ВАЖНО: ключи byName должны точно совпадать с ch.name из broadcast.js
+          // Хелпер: достаёт ok/ms/reason из byName
+          const ch = (key) => byName[key] || {};
           rowsEl.innerHTML =
-            fmt(byName['mempool.space']?.ok,     'mempool.space · broadcast',          byName['mempool.space']?.ms) +
-            fmt(byName['blockstream.info']?.ok,  'blockstream.info · CORS ✓',          byName['blockstream.info']?.ms) +
-            fmt(byName['blockchair']?.ok,        'Blockchair · broadcast',             byName['blockchair']?.ms) +
-            fmt(byName['blockcypher']?.ok,       'BlockCypher · CORS ✓',               byName['blockcypher']?.ms) +
-            fmt(byName['btcscan.org']?.ok,       'btcscan.org · relay',                byName['btcscan.org']?.ms) +
-            fmt(byName['blockchain.info']?.ok,   'blockchain.info · broadcast',        byName['blockchain.info']?.ms) +
-            fmt(byName['bitaps.com']?.ok,        'Bitaps broadcast',                   byName['bitaps.com']?.ms) +
-            fmt(byName['Foundry']?.ok,           'Foundry USA ⭐ #1 · ~27% хешрейта', byName['Foundry']?.ms) +
-            fmt(byName['AntPool']?.ok,           'AntPool (Bitmain) ⭐ · ~16%',        byName['AntPool']?.ms) +
-            fmt(byName['MARA']?.ok,              'MARA Pool (Marathon) ⭐ · ~11%',     byName['MARA']?.ms) +
-            fmt(byName['ViaBTC']?.ok,            'ViaBTC ⭐ · ~9%',                    byName['ViaBTC']?.ms) +
-            fmt(byName['SpiderPool']?.ok,        'SpiderPool ★ · ~8%',            byName['SpiderPool']?.ms) +
-            fmt(byName['Luxor']?.ok,             'Luxor ★ · ~5% US-пул',          byName['Luxor']?.ms) +
-            fmt(byName['CloverPool']?.ok,        'CloverPool · ~4%',     byName['CloverPool']?.ms) +
-            fmt(byName['BitFuFu']?.ok,           'BitFuFu ★ Bitmain Cloud · ~4%',     byName['BitFuFu']?.ms) +
-            fmt(byName['BTC.com']?.ok,           'BTC.com · ~4%',                     byName['BTC.com']?.ms) +
-            fmt(byName['TxBoost']?.ok,           'TxBoost Accelerator',            byName['TxBoost']?.ms) +
-            fmt(byName['mempoolAccel']?.ok,      'mempool.space Accelerator API',     byName['mempoolAccel']?.ms) +
-            fmt(byName['BitAccelerate']?.ok,     'BitAccelerate · accelerator API',    byName['BitAccelerate']?.ms) +
-            fmt(byName['360btc']?.ok,            '360BTC Accelerator',                byName['360btc']?.ms) +
-            fmt(byName['MaraSlipstream']?.ok,    'MARA Slipstream ★★ (приватный мемпул)', byName['MaraSlipstream']?.ms) +
-            fmt(byName['F2Pool']?.ok,            'F2Pool · ~7%',                      byName['F2Pool']?.ms) +
-            fmt(byName['Ocean']?.ok,             'Ocean.xyz · децентр. пул',          byName['Ocean']?.ms) +
-            fmt(byName['EMCDPool']?.ok,          'EMCDPool · ~2%',                    byName['EMCDPool']?.ms) +
-            fmt(byName['SBICrypto']?.ok,         'SBI Crypto (Япония) · ~2%',         byName['SBICrypto']?.ms) +
-            fmt(byName['2Miners']?.ok,           '2Miners · ~1%',                     byName['2Miners']?.ms) +
-            fmt(byName['Rawpool']?.ok,           'Rawpool (Европа) · ~1%',            byName['Rawpool']?.ms) +
-            fmt(byName['txfaster']?.ok,          'txfaster Accelerator',               byName['txfaster']?.ms) +
-            fmt(byName['btcspeed']?.ok,          'btcspeed Accelerator',               byName['btcspeed']?.ms);
+            // ── 8 HEX-узлов ────────────────────────────────────────────
+            fmt(ch('mempool.space').ok,    'mempool.space · broadcast',              ch('mempool.space').ms,    ch('mempool.space').reason) +
+            fmt(ch('blockstream.info').ok, 'blockstream.info · CORS ✓',              ch('blockstream.info').ms, ch('blockstream.info').reason) +
+            fmt(ch('blockchair').ok,       'Blockchair · broadcast',                 ch('blockchair').ms,       ch('blockchair').reason) +
+            fmt(ch('blockcypher').ok,      'BlockCypher · CORS ✓',                   ch('blockcypher').ms,      ch('blockcypher').reason) +
+            fmt(ch('btcscan.org').ok,      'btcscan.org · relay',                    ch('btcscan.org').ms,      ch('btcscan.org').reason) +
+            fmt(ch('blockchain.info').ok,  'blockchain.info · broadcast',            ch('blockchain.info').ms,  ch('blockchain.info').reason) +
+            fmt(ch('bitaps.com').ok,       'bitaps.com · broadcast',                 ch('bitaps.com').ms,       ch('bitaps.com').reason) +
+            fmt(ch('sochain.com').ok,      'sochain.com · relay',                    ch('sochain.com').ms,      ch('sochain.com').reason) +
+            // ── 22 пул-акселератора ────────────────────────────────────
+            fmt(ch('Foundry').ok,          'Foundry USA ⭐ · ~27% хешрейта',         ch('Foundry').ms,          ch('Foundry').reason) +
+            fmt(ch('AntPool').ok,          'AntPool (Bitmain) ⭐ · ~16%',            ch('AntPool').ms,          ch('AntPool').reason) +
+            fmt(ch('MARA').ok,             'MARA Pool ⭐ · ~11%',                    ch('MARA').ms,             ch('MARA').reason) +
+            fmt(ch('MaraSlipstream').ok,   'MARA Slipstream ★★ · приватный мемпул', ch('MaraSlipstream').ms,   ch('MaraSlipstream').reason) +
+            fmt(ch('ViaBTC').ok,           'ViaBTC ⭐ · ~9%',                        ch('ViaBTC').ms,           ch('ViaBTC').reason) +
+            fmt(ch('SpiderPool').ok,       'SpiderPool ★ · ~8%',                    ch('SpiderPool').ms,       ch('SpiderPool').reason) +
+            fmt(ch('F2Pool').ok,           'F2Pool · ~7%',                           ch('F2Pool').ms,           ch('F2Pool').reason) +
+            fmt(ch('Luxor').ok,            'Luxor ★ · ~5%',                         ch('Luxor').ms,            ch('Luxor').reason) +
+            fmt(ch('CloverPool').ok,       'CloverPool · ~4%',                       ch('CloverPool').ms,       ch('CloverPool').reason) +
+            fmt(ch('BitFuFu').ok,          'BitFuFu · ~4%',                         ch('BitFuFu').ms,          ch('BitFuFu').reason) +
+            fmt(ch('BTC.com').ok,          'BTC.com · ~3%',                         ch('BTC.com').ms,          ch('BTC.com').reason) +
+            fmt(ch('Ocean').ok,            'Ocean.xyz · децентр. пул',               ch('Ocean').ms,            ch('Ocean').reason) +
+            fmt(ch('EMCDPool').ok,         'EMCDPool · ~2%',                         ch('EMCDPool').ms,         ch('EMCDPool').reason) +
+            fmt(ch('SBICrypto').ok,        'SBI Crypto · ~2%',                       ch('SBICrypto').ms,        ch('SBICrypto').reason) +
+            fmt(ch('2Miners').ok,          '2Miners · ~1%',                          ch('2Miners').ms,          ch('2Miners').reason) +
+            fmt(ch('Rawpool').ok,          'Rawpool (Европа) · ~1%',                 ch('Rawpool').ms,          ch('Rawpool').reason) +
+            fmt(ch('Lincoin').ok,          'Lincoin · ~1%',                          ch('Lincoin').ms,          ch('Lincoin').reason) +
+            fmt(ch('mempoolAccel').ok,     'mempool.space Accelerator',              ch('mempoolAccel').ms,     ch('mempoolAccel').reason) +
+            fmt(ch('TxBoost').ok,          'TxBoost Accelerator',                    ch('TxBoost').ms,          ch('TxBoost').reason) +
+            fmt(ch('bitaccelerate').ok,    'BitAccelerate · accelerator',            ch('bitaccelerate').ms,    ch('bitaccelerate').reason) +
+            fmt(ch('360btc').ok,           '360BTC Accelerator',                     ch('360btc').ms,           ch('360btc').reason) +
+            fmt(ch('txfaster').ok,         'txfaster Accelerator',                   ch('txfaster').ms,         ch('txfaster').reason) +
+            fmt(ch('btcspeed').ok,         'btcspeed Accelerator',                   ch('btcspeed').ms,         ch('btcspeed').reason);
         } else {
           rowsEl.innerHTML =
             fmt(byName['blockstream.info']?.ok, 'blockstream.info (CORS ✓)', byName['blockstream.info']?.ms) +
@@ -4022,14 +4038,12 @@ async function go() {
 
         rowsEl.parentElement.appendChild(summaryEl);
 
-        // Обновляем запись в истории с реальными данными от сервера
+        // Сохраняем реальные данные ускорения в историю
         try {
-          const _rbEl = document.getElementById('rb');
           updateHistoryExtra(txid, {
             hrReach:  hrReach  || null,
             channels: okCnt + '/' + total,
             rbf:      !!rbf,
-            html:     _rbEl ? _rbEl.innerHTML : null,
           });
         } catch(_) {}
 
@@ -4105,8 +4119,24 @@ async function go() {
           : fmtFB(res.blockstream, 'blockstream.info') +
             fmtFB(res.blockchair,  'Blockchair') +
             fmtFB(true,            'Авто-повтор через 20 мин');
+        // Сохраняем fallback html тоже
+        try {
+          const _rbEl = document.getElementById('rb');
+          updateHistoryExtra(txid, { html: _rbEl ? _rbEl.innerHTML : null });
+        } catch(_) {}
       }
     }
+
+    // Сохраняем финальный html после всех изменений DOM
+    // (вызывается в обоих путях — основном и fallback)
+    setTimeout(function() {
+      try {
+        const _rbEl = document.getElementById('rb');
+        if (_rbEl && _rbEl.innerHTML.trim()) {
+          updateHistoryExtra(txid, { html: _rbEl.innerHTML });
+        }
+      } catch(_) {}
+    }, 100);
   })();
 }
 
@@ -6657,22 +6687,38 @@ function restoreLastResult() {
     const h = JSON.parse(localStorage.getItem('tx_history') || '[]');
     if (!h.length) return;
     const last = h[0];
-    // Показываем только если ускорение было < 4 часов назад
-    if (Date.now() - last.ts > 4 * 3600_000) return;
+    if (Date.now() - last.ts > 4 * 3600_000) return; // старше 4 часов — не показываем
     if (!last.html) return;
+
     rb.style.display = 'block';
     rb.className = 'res-box';
     rb.innerHTML = last.html;
+
+    // Убираем wave-panel таймеры (они не работают после F5)
+    rb.querySelectorAll('.wave-panel-instance').forEach(el => {
+      el.innerHTML = '<div style="font-family:var(--mono);font-size:.58rem;color:var(--m);padding:6px 0">↻ Волны повтора запущены на сервере — работают в фоне</div>';
+    });
+
+    // Убираем спиннеры прогресса которые уже не актуальны
+    rb.querySelectorAll('#pw,#pf').forEach(el => el.style.display = 'none');
+
+    // Добавляем плашку "восстановлено"
+    const badge = document.createElement('div');
+    badge.style.cssText = 'margin-top:10px;padding:4px 10px;border-radius:5px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);font-family:var(--mono);font-size:.58rem;color:var(--m);display:inline-flex;align-items:center;gap:5px';
+    badge.innerHTML = '↺ восстановлено после перезагрузки · ' + Math.round((Date.now() - last.ts) / 60000) + ' мин назад';
+    rb.appendChild(badge);
+
     // Восстанавливаем конфирмейшн трекер
     if (last.confs < 3 && typeof startConfTracker === 'function') {
       startConfTracker(last.txid);
     }
-    // Восстанавливаем Premium токен если есть
+
+    // Восстанавливаем Premium токен
     if (last.plan === 'premium') {
       const saved = localStorage.getItem('turbotx_prem_token');
       if (saved && !_PREM_TOKEN) _PREM_TOKEN = saved;
     }
-  } catch(e) {}
+  } catch(e) { console.debug('[restoreLastResult]', e); }
 }
 
 function updateHistoryConfs(txid, confs) {
