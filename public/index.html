@@ -4864,7 +4864,8 @@ function lnOnSuccess(data) {
   // Активируем Premium
   if (data.activationToken) {
     try { localStorage.setItem('turbotx_prem_token', data.activationToken); } catch(e) {}
-    window._premToken = data.activationToken;
+    window._premToken  = data.activationToken;
+    _PREM_TOKEN        = data.activationToken; // FIX: синхронизируем с broadcast переменной
     if (typeof pick === 'function') pick('premium');
   }
 
@@ -5115,6 +5116,21 @@ async function applyPromo() {
     res.style.color = 'var(--g)';
     res.textContent = '✓ Промокод принят — Premium активирован!';
     inp.value = '';
+    // FIX: получаем серверный токен для промокода
+    try {
+      const tr = await fetch('/api/router?_fn=promo-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ promoId, code }),
+      });
+      if (tr.ok) {
+        const td = await tr.json();
+        if (td.activationToken) {
+          _PREM_TOKEN = td.activationToken;
+          try { localStorage.setItem('turbotx_prem_token', td.activationToken); } catch(_) {}
+        }
+      }
+    } catch(_) {}
     setTimeout(() => {
       activatePremium('Промокод', 'Promo', '****');
     }, 600);
@@ -7050,11 +7066,11 @@ window._TurboAPI = {
 
   // Маппинг congestion → состояние сердечка и цвета
   const CONGESTION_STATE = {
-    low:      { level:'calm', color:'var(--g)',  bg:'rgba(0,232,122,.13)',    netText:'спокойно'  },
-    medium:   { level:'mid',  color:'var(--a)',  bg:'rgba(247,147,26,.13)',   netText:'умеренно'  },
-    high:     { level:'mid',  color:'var(--a)',  bg:'rgba(247,147,26,.13)',   netText:'нагрузка'  },
-    extreme:  { level:'busy', color:'#ff5555',   bg:'rgba(255,50,50,.13)',    netText:'перегруз'  },
-    critical: { level:'busy', color:'#ff3333',   bg:'rgba(255,30,30,.16)',    netText:'критично'  },
+    low:      { level:'calm', color:'var(--g)',  bg:'rgba(0,232,122,.13)',    netText:'спокойно',  emoji:'🟢' },
+    medium:   { level:'mid',  color:'var(--a)',  bg:'rgba(247,147,26,.13)',   netText:'умеренно',  emoji:'🟡' },
+    high:     { level:'mid',  color:'var(--a)',  bg:'rgba(247,147,26,.13)',   netText:'нагрузка',  emoji:'🟠' },
+    extreme:  { level:'busy', color:'#ff5555',   bg:'rgba(255,50,50,.13)',    netText:'перегруз',  emoji:'🔴' },
+    critical: { level:'busy', color:'#ff3333',   bg:'rgba(255,30,30,.16)',    netText:'критично',  emoji:'🔴' },
   };
 
   function applyPrice(p) {
@@ -7107,7 +7123,7 @@ window._TurboAPI = {
     const heroEl = document.getElementById('hero-price-badge'); if (heroEl) heroEl.textContent = '$' + usd;
 
     const compEl = document.getElementById('comp-price-cell');
-    if (compEl) compEl.innerHTML = '<strong>$3–18</strong> <span style="color:var(--m);font-size:.85em">(сейчас ' + emoji + ' $' + usd + ')</span>';
+    if (compEl) compEl.innerHTML = '<strong>$3–18</strong> <span style="color:var(--m);font-size:.85em">(сейчас ' + (p.emoji || state.emoji || '💲') + ' $' + usd + ')</span>';
 
     const modalUsd  = document.getElementById('modal-price-usd');
     const modalBtc  = document.getElementById('modal-price-btc');

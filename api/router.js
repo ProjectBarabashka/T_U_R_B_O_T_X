@@ -1063,6 +1063,14 @@ export default async function handler(req, res) {
     case 'rbf':     return handleRbf(req, res);
     case 'notify':  return handleNotify(req, res);
     case 'acceleration': return handleAcceleration(req, res);
+    case 'promo-token': {
+      // Выдаём подписанный HMAC токен для промокод-активации Premium
+      const secret = process.env.PREMIUM_SECRET;
+      if (!secret) return res.status(200).json({ ok:true, activationToken: null });
+      const { signToken } = await import('./_shared.js');
+      const tok = signToken({ method:'promo', plan:'premium' }, secret);
+      return res.status(200).json({ ok:true, activationToken: tok });
+    }
     default:
       return res.status(400).json({ ok:false, error:`Unknown endpoint: ${fn}. Use _fn=health|status|stats|price|mempool|cpfp|rbf|notify` });
   }
