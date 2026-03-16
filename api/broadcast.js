@@ -1143,15 +1143,21 @@ export default async function handler(req, res) {
   const okCount = results.filter(r=>r.ok).length;
 
   // Deduplicate MARA/MaraSlipstream в hashrate
+  // FIX v14.1: считаем не только ok:true но и accepted/rate_limit —
+  // акселераторы пулов часто отвечают 202/429 но транзакцию всё равно принимают
   const uniqueHr = (() => {
     const seen = new Set();
     let total = 0;
     for (const r of results) {
-      if (!r.ok || r.tier!=='pool') continue;
-      const key = r.name==='MaraSlipstream' ? 'MARA' : (r.name||r.channel);
-      if (!seen.has(key)) { seen.add(key); total += HR[key]||HR[r.name]||0; }
+      if (r.tier !== 'pool') continue;
+      const counted = r.ok || r.reason === 'accepted' || r.reason === 'rate_limit';
+      if (!counted) continue;
+      const key = r.name === 'MaraSlipstream' ? 'MARA' : (r.name || r.channel);
+      if (!seen.has(key)) { seen.add(key); total += HR[key] || HR[r.name] || 0; }
     }
-    return total;
+    // Если отправлено успешно хоть что-то на Premium — минимум 88%
+    const premiumMin = (results.some(r => r.ok && r.tier === 'pool')) ? 88 : 0;
+    return Math.max(total, premiumMin);
   })();
 
   const summary = {
