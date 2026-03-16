@@ -1,4 +1,3 @@
-```markdown
 # ⚡ TurboTX — Bitcoin Transaction Accelerator
 
 <div align="center">
