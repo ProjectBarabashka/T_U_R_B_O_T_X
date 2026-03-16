@@ -53,15 +53,17 @@ T_U_R_B_O_T_X/
 ### 🚀 Deploy to Vercel
 
 #### 1. Fork & Clone
+```bash
 git clone https://github.com/ProjectBarabashka/T_U_R_B_O_T_X
 cd T_U_R_B_O_T_X
+```
 
 2. Set Environment Variables
 
-
+```bash
 cp .env.example .env.local
 # Fill in your values
-
+```
 
 Required variables in Vercel dashboard:
 
@@ -76,9 +78,9 @@ ADMIN_SECRET Admin API access secret
 
 3. Deploy
 
-
+```bash
 npx vercel --prod
-
+```
 
 Or connect repo to vercel.com for automatic deploys on push.
 
@@ -86,6 +88,7 @@ Or connect repo to vercel.com for automatic deploys on push.
 
 Full documentation at acelerat.vercel.app/api-docs
 
+```bash
 # Check TX status
 curl "https://acelerat.vercel.app/api/v1?method=status&txid=YOUR_TXID" \
   -H "Authorization: Bearer ttx_live_YOUR_KEY"
@@ -95,7 +98,7 @@ curl -X POST "https://acelerat.vercel.app/api/v1?method=accelerate" \
   -H "Authorization: Bearer ttx_live_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{"txid":"YOUR_TXID","plan":"premium"}'
-
+```
 
 API Endpoints
 
@@ -136,10 +139,11 @@ Partner Unlimited Custom
 
 🛠 Local Development
 
+```bash
 npm install -g vercel
 vercel dev
 # → http://localhost:3000
-
+```
 
 📜 Changelog (v14.1)
 
@@ -194,14 +198,17 @@ T_U_R_B_O_T_X/
 
 1. Форк и клонирование
 
+```bash
 git clone https://github.com/ProjectBarabashka/T_U_R_B_O_T_X
 cd T_U_R_B_O_T_X
+```
 
 2. Установка переменных окружения
 
+```bash
 cp .env.example .env.local
 # Заполните свои значения
-
+```
 
 Обязательные переменные в панели Vercel:
 
@@ -216,8 +223,9 @@ ADMIN_SECRET Секрет для административного доступ
 
 3. Деплой
 
+```bash
 npx vercel --prod
-
+```
 
 Или подключите репозиторий к vercel.com для автоматического деплоя при пуше.
 
@@ -225,6 +233,7 @@ npx vercel --prod
 
 Полная документация: acelerat.vercel.app/api-docs
 
+```bash
 # Проверка статуса транзакции
 curl "https://acelerat.vercel.app/api/v1?method=status&txid=YOUR_TXID" \
   -H "Authorization: Bearer ttx_live_YOUR_KEY"
@@ -234,7 +243,7 @@ curl -X POST "https://acelerat.vercel.app/api/v1?method=accelerate" \
   -H "Authorization: Bearer ttx_live_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{"txid":"YOUR_TXID","plan":"premium"}'
-
+```
 
 Эндпоинты API
 
@@ -275,9 +284,11 @@ Partner Без лимитов Индивидуально
 
 🛠 Локальная разработка
 
+```bash
 npm install -g vercel
 vercel dev
 # → http://localhost:3000
+```
 
 📜 Список изменений (v14.1)
 
