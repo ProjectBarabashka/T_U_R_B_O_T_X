@@ -4419,11 +4419,13 @@ function startWaveCountdown(panelContainerId) {
 
   _renderWaveList();
   if (_waveTimerInt) clearInterval(_waveTimerInt);
+  _tickWave(); // первый tick сразу — не ждём 1 секунду (иначе остаётся 00:00:00)
   _waveTimerInt = setInterval(_tickWave, 1000);
 }
 
 function _renderWaveList() {
-  const list = document.getElementById('wave-list-items');
+  const wpGlobal = document.getElementById('wave-panel-global');
+  const list = wpGlobal ? wpGlobal.querySelector('#wave-list-items') : document.getElementById('wave-list-items');
   if (!list) return;
   const elapsedMin = (Date.now() - _waveStartTs) / 60000;
   let html = '';
@@ -4439,26 +4441,35 @@ function _renderWaveList() {
 }
 
 function _tickWave() {
+  // Ищем элементы ВНУТРИ wave-panel-global — не по document (там могут быть дубли из истории)
+  const wpGlobal = document.getElementById('wave-panel-global');
+  if (!wpGlobal) return;
+
   const elapsedMs  = Date.now() - _waveStartTs;
   const endMs      = WAVE_SCHEDULE.at(-1) * 60000;
   if (elapsedMs >= endMs + 30000) {
     clearInterval(_waveTimerInt);
     _waveTimerInt = null;
-    const wp = document.getElementById('wave-panel');
+    const wp = wpGlobal.querySelector('#wave-panel');
     if (wp) wp.innerHTML += '<div style="color:var(--g);margin-top:6px;font-size:.62rem">✓ Все 10 волн завершены · Гарантия 6 часов активна</div>';
     return;
   }
   const elapsedMin = elapsedMs / 60000;
   const nextWave   = WAVE_SCHEDULE.find(m => m > elapsedMin + 0.2);
-  const countdownEl = document.getElementById('wave-countdown-val');
-  const labelEl     = document.getElementById('wave-next-label');
+  const countdownEl = wpGlobal.querySelector('#wave-countdown-val');
+  const labelEl     = wpGlobal.querySelector('#wave-next-label');
   if (countdownEl && nextWave != null) {
     const secsLeft = Math.max(0, Math.round((nextWave * 60000 - elapsedMs) / 1000));
     const hh = String(Math.floor(secsLeft / 3600)).padStart(2,'0');
     const mm = String(Math.floor((secsLeft % 3600) / 60)).padStart(2,'0');
     const ss = String(secsLeft % 60).padStart(2,'0');
-    countdownEl.textContent = `${hh}:${mm}:${ss}`;
-    if (labelEl) labelEl.textContent = `волна ${WAVE_SCHEDULE.indexOf(nextWave)+1} через`;
+    countdownEl.textContent = hh + ':' + mm + ':' + ss;
+    if (labelEl) {
+      const waveIdx = WAVE_SCHEDULE.indexOf(nextWave);
+      labelEl.textContent = 'волна ' + (waveIdx + 1) + ' через';
+    }
+  } else if (countdownEl && nextWave == null) {
+    countdownEl.textContent = '✓';
   }
   _renderWaveList();
 }
