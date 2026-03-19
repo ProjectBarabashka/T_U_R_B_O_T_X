@@ -4211,22 +4211,6 @@ async function go() {
 
         rowsEl.parentElement.appendChild(summaryEl);
 
-        // Скрываем зелёный блок — данные уже показаны, уходят в историю
-        (function() {
-          const _rb = document.getElementById('rb');
-          if (_rb) {
-            setTimeout(function() {
-              _rb.style.transition = 'opacity .6s';
-              _rb.style.opacity = '0';
-              setTimeout(function() {
-                _rb.style.display = 'none';
-                _rb.style.opacity = '';
-                _rb.style.transition = '';
-              }, 600);
-            }, 2500);
-          }
-        })();
-
         // Сохраняем реальные данные ускорения в историю
         try {
           updateHistoryExtra(txid, {
@@ -4330,15 +4314,41 @@ async function go() {
       }
     }
 
-    // Сохраняем финальный html в историю (через 200мс — DOM уже обновлён)
+    // Сохраняем финальный html в историю (через 500мс — wave-panel тоже готов)
     setTimeout(function() {
       try {
-        const _rbEl = document.getElementById('rb');
+        const _rbEl  = document.getElementById('rb');
+        const _wpEl  = document.getElementById('wave-panel-global');
         if (_rbEl && _rbEl.innerHTML.trim()) {
-          updateHistoryExtra(txid, { html: _rbEl.innerHTML });
+          // Склеиваем rb + wave-panel-global в один html для истории
+          const wpHtml = (_wpEl && _wpEl.innerHTML.trim())
+            ? '<div id="wave-panel-in-history" style="margin-top:12px">' + _wpEl.innerHTML + '</div>'
+            : '';
+          updateHistoryExtra(txid, { html: _rbEl.innerHTML + wpHtml });
         }
+        // Скрываем rb и wave-panel после сохранения
+        setTimeout(function() {
+          if (_rbEl) {
+            _rbEl.style.transition = 'opacity .6s';
+            _rbEl.style.opacity = '0';
+            setTimeout(function() {
+              _rbEl.style.display = 'none';
+              _rbEl.style.opacity = '';
+              _rbEl.style.transition = '';
+            }, 600);
+          }
+          if (_wpEl) {
+            _wpEl.style.transition = 'opacity .6s';
+            _wpEl.style.opacity = '0';
+            setTimeout(function() {
+              _wpEl.style.display = 'none';
+              _wpEl.style.opacity = '';
+              _wpEl.style.transition = '';
+            }, 600);
+          }
+        }, 1500);
       } catch(_) {}
-    }, 200);
+    }, 500);
   })();
 }
 
@@ -6833,13 +6843,8 @@ function toggleHistDetail(btn) {
       const h = JSON.parse(localStorage.getItem('tx_history') || '[]');
       const entry = h.find(function(x) { return sanitizeTxid(x.txid) === txid; });
       if (entry && entry.html) {
-        // Клонируем wave-panel-global если он принадлежит этому txid
-        let waveHtml = '';
-        const wpGlobal = document.getElementById('wave-panel-global');
-        if (wpGlobal && wpGlobal.innerHTML.trim()) {
-          waveHtml = '<div style="margin-top:10px">' + wpGlobal.innerHTML + '</div>';
-        }
-        detail.innerHTML = entry.html + waveHtml +
+        // wave-panel уже включён в entry.html (wave-panel-in-history)
+        detail.innerHTML = entry.html +
           '<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.05);font-size:.55rem;color:var(--m);display:flex;align-items:center;gap:5px">' +
           '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
           ' Сохранено ' + new Date(entry.ts).toLocaleString('ru', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) + '</div>';
@@ -6916,7 +6921,18 @@ function restoreLastResult() {
 
     rb.style.display = 'block';
     rb.className = 'res-box';
-    rb.innerHTML = last.html;
+    // Отделяем wave-panel из сохранённого html и показываем в wave-panel-global
+    let savedHtml = last.html;
+    const wpMatch = savedHtml.match(/<div id="wave-panel-in-history"[^>]*>([\s\S]*?)<\/div>$/);
+    if (wpMatch) {
+      savedHtml = savedHtml.replace(wpMatch[0], '');
+      const wpGlobal = document.getElementById('wave-panel-global');
+      if (wpGlobal) {
+        wpGlobal.style.display = '';
+        wpGlobal.innerHTML = wpMatch[1];
+      }
+    }
+    rb.innerHTML = savedHtml;
 
     // Убираем wave-panel таймеры (они не работают после F5)
     rb.querySelectorAll('.wave-panel-instance').forEach(el => {
