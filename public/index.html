@@ -2930,28 +2930,35 @@ async function fetchLiveStats() {
   try {
     const blocks = await fetchBlocks();
     if (blocks && blocks.length >= 2) {
+      // Считаем среднее между блоками (историческое)
       let total = 0, count = 0;
       for (let i = 0; i < Math.min(blocks.length - 1, 6); i++) {
         const d = blocks[i].timestamp - blocks[i+1].timestamp;
         if (d > 0 && d < 7200) { total += d; count++; }
       }
-      if (count) {
-        const avgMin = Math.round(total / count / 60);
-        window._avgBlockMin = avgMin; // глобально — используется сердечком
-        const el = document.getElementById('avg-time');
-        const iconEl = document.getElementById('block-icon');
-        if (el) {
-          el.style.opacity = '';
-          el.style.animation = '';
-          el.textContent = '~' + avgMin + ' мин';
-          el.title = 'Среднее время между блоками (последние ' + count + ' блоков)';
-          if (iconEl) {
-            // Цвет цифры устанавливается внутри блока анимации ниже
-          }
-        }
-        // Применяем анимацию через единую функцию
-        applyBlockAnim(avgMin);
+      // Время с ПОСЛЕДНЕГО блока до сейчас (сколько ждём текущий блок)
+      const lastBlockTs = blocks[0].timestamp;
+      const sinceLastBlock = lastBlockTs ? Math.round((Date.now()/1000 - lastBlockTs) / 60) : null;
+
+      // Показываем: если ждём дольше среднего — показываем реальное время ожидания
+      const histAvg = count ? Math.round(total / count / 60) : 10;
+      const displayMin = (sinceLastBlock != null && sinceLastBlock > histAvg)
+        ? sinceLastBlock  // ждём дольше нормы — показываем реальное время
+        : histAvg;        // всё нормально — показываем историческое среднее
+
+      window._avgBlockMin = displayMin;
+      const el = document.getElementById('avg-time');
+      const iconEl = document.getElementById('block-icon');
+      if (el) {
+        el.style.opacity = '';
+        el.style.animation = '';
+        el.textContent = '~' + displayMin + ' мин';
+        el.title = sinceLastBlock != null
+          ? 'Последний блок: ' + sinceLastBlock + ' мин назад · среднее: ' + histAvg + ' мин'
+          : 'Среднее время между блоками (последние ' + count + ' блоков)';
       }
+      // Применяем анимацию через единую функцию
+      applyBlockAnim(displayMin);
     }
   } catch(e) {}
 
