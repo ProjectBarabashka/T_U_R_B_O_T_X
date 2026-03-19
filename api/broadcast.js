@@ -1143,7 +1143,8 @@ export default async function handler(req, res) {
   const okCount = results.filter(r=>r.ok).length;
 
   // Deduplicate MARA/MaraSlipstream в hashrate
-  // FIX v14.2: premiumMin только для premium — free не показывает 88%
+  // FIX v14.1: считаем не только ok:true но и accepted/rate_limit —
+  // акселераторы пулов часто отвечают 202/429 но транзакцию всё равно принимают
   const uniqueHr = (() => {
     const seen = new Set();
     let total = 0;
@@ -1156,11 +1157,15 @@ export default async function handler(req, res) {
     }
     // Минимум 88% только для Premium когда хоть один пул ответил
     const premiumMin = (effectivePlan === 'premium' && results.some(r => r.ok && r.tier === 'pool')) ? 88 : 0;
+    // Для free — реальный охват: ViaBTC(9%) + mempoolAccel(1%) = ~10%
     return Math.max(total, premiumMin);
   })();
 
+  const sentCount    = results.filter(r => !r.skipped).length;
+  const skippedCount = results.filter(r =>  r.skipped).length;
+
   const summary = {
-    total:results.length, ok:okCount, failed:results.length-okCount,
+    total:results.length, ok:okCount, sent:sentCount, skipped:skippedCount, failed:results.length-okCount-skippedCount,
     hexFound:!!hex, hexCacheHit: getCachedHex(txid)===hex&&!!hex,
     ms, plan:effectivePlan, hashrateReach:uniqueHr,
     feeRate:       analysis?.feeRate    ?? null,
