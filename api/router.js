@@ -436,18 +436,28 @@ async function handlePrice(req, res) {
   // Медленные блоки = TX накапливаются быстрее чем обрабатываются
   let blockTierIdx = 0; let _avgBlockMin = null;
   try {
-    const blkR = await ft('https://mempool.space/api/v1/mining/blocks/timestamps', {}, 4000);
-    if (blkR.ok) {
-      const blkData = await sj(blkR);
-      if (Array.isArray(blkData) && blkData.length >= 6) {
-        // Берём последние 6 блоков, считаем среднее время между ними в минутах
-        const times = blkData.slice(0, 6).map(b => b.timestamp).filter(Boolean);
-        if (times.length >= 2) {
-          const sorted = [...times].sort((a,b) => b - a);
-          const avgSec = (sorted[0] - sorted[sorted.length-1]) / (sorted.length - 1);
-          _avgBlockMin = +(avgSec / 60).toFixed(1);
-          blockTierIdx = _avgBlockMin > 22 ? 3 : _avgBlockMin > 18 ? 2 : _avgBlockMin > 14 ? 1 : 0; // 0=вода 1=огонь 2=взрыв 3=звёзды
-        }
+    // Пробуем два источника для надёжности
+    let blkData = null;
+    const blkR1 = await ft('https://mempool.space/api/v1/blocks', {}, 4000);
+    if (blkR1.ok) {
+      const d = await sj(blkR1);
+      if (Array.isArray(d) && d.length >= 6) blkData = d;
+    }
+    if (!blkData) {
+      const blkR2 = await ft('https://mempool.space/api/v1/mining/blocks/timestamps', {}, 4000);
+      if (blkR2.ok) {
+        const d = await sj(blkR2);
+        if (Array.isArray(d) && d.length >= 6) blkData = d;
+      }
+    }
+    if (blkData) {
+      // Берём последние 6 блоков, считаем среднее время между ними в минутах
+      const times = blkData.slice(0, 6).map(b => b.timestamp || b.time).filter(Boolean);
+      if (times.length >= 2) {
+        const sorted = [...times].sort((a, b) => b - a);
+        const avgSec = (sorted[0] - sorted[sorted.length - 1]) / (sorted.length - 1);
+        _avgBlockMin = +(avgSec / 60).toFixed(1);
+        blockTierIdx = _avgBlockMin > 22 ? 3 : _avgBlockMin > 18 ? 2 : _avgBlockMin > 14 ? 1 : 0;
       }
     }
   } catch {}
