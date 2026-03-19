@@ -1129,6 +1129,33 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
 @keyframes biStarRay   { 0%,100%{opacity:.4;transform:scaleX(1)} 50%{opacity:.8;transform:scaleX(1.25)} }
 @keyframes biStarSmall { 0%,100%{transform:scale(1);opacity:.7} 40%{transform:scale(1.3);opacity:1} 70%{transform:scale(.8);opacity:.4} }
 @keyframes biDust      { 0%,100%{opacity:.4;transform:scale(1)} 50%{opacity:.9;transform:scale(1.5)} }
+/* ══ EXPLOSION BLOCK ICON (avgBlock > 22 мин — критически медленно) ══ */
+#bi-expl-core  { animation: biExplCore  1.3s ease-in-out infinite; transform-origin:18px 18px; filter:drop-shadow(0 0 10px #fff) drop-shadow(0 0 22px #ff2200); }
+#bi-expl-ring1 { animation: biExplRing  1.6s ease-out 0s   infinite; transform-origin:18px 18px; }
+#bi-expl-ring2 { animation: biExplRing  1.6s ease-out 0.5s infinite; transform-origin:18px 18px; }
+#bi-expl-ray1  { animation: biExplRay   1.3s ease-in-out 0s    infinite; transform-origin:18px 18px; }
+#bi-expl-ray2  { animation: biExplRay   1.3s ease-in-out 0.16s infinite; transform-origin:18px 18px; }
+#bi-expl-ray3  { animation: biExplRay   1.3s ease-in-out 0.33s infinite; transform-origin:18px 18px; }
+#bi-expl-ray4  { animation: biExplRay   1.3s ease-in-out 0.49s infinite; transform-origin:18px 18px; }
+#bi-expl-ray5  { animation: biExplRay   1.3s ease-in-out 0.65s infinite; transform-origin:18px 18px; }
+#bi-expl-ray6  { animation: biExplRay   1.3s ease-in-out 0.81s infinite; transform-origin:18px 18px; }
+#bi-expl-ray7  { animation: biExplRay   1.3s ease-in-out 0.98s infinite; transform-origin:18px 18px; }
+#bi-expl-ray8  { animation: biExplRay   1.3s ease-in-out 1.14s infinite; transform-origin:18px 18px; }
+#bi-expl-p1    { animation: biExplP1 1.6s ease-out 0.1s  infinite; }
+#bi-expl-p2    { animation: biExplP2 1.6s ease-out 0.35s infinite; }
+#bi-expl-p3    { animation: biExplP3 1.6s ease-out 0.6s  infinite; }
+#bi-expl-p4    { animation: biExplP4 1.6s ease-out 0.85s infinite; }
+#bi-expl-p5    { animation: biExplP5 1.6s ease-out 0.05s infinite; }
+#bi-expl-p6    { animation: biExplP6 1.6s ease-out 0.55s infinite; }
+@keyframes biExplCore  { 0%,100%{transform:scale(1);opacity:1} 50%{transform:scale(1.28);opacity:1} }
+@keyframes biExplRing  { 0%{transform:scale(0.25);opacity:.85} 55%{transform:scale(1.6);opacity:.35} 100%{transform:scale(2.4);opacity:0} }
+@keyframes biExplRay   { 0%,100%{opacity:.75;transform:scale(1)} 50%{opacity:1;transform:scale(1.18)} }
+@keyframes biExplP1    { 0%{opacity:.9;transform:translate(0,0) scale(1)} 100%{opacity:0;transform:translate(-9px,-11px) scale(.2)} }
+@keyframes biExplP2    { 0%{opacity:.9;transform:translate(0,0) scale(1)} 100%{opacity:0;transform:translate(10px,-10px) scale(.2)} }
+@keyframes biExplP3    { 0%{opacity:.9;transform:translate(0,0) scale(1)} 100%{opacity:0;transform:translate(11px,8px)  scale(.2)} }
+@keyframes biExplP4    { 0%{opacity:.9;transform:translate(0,0) scale(1)} 100%{opacity:0;transform:translate(-10px,9px) scale(.2)} }
+@keyframes biExplP5    { 0%{opacity:.9;transform:translate(0,0) scale(1)} 100%{opacity:0;transform:translate(0,-14px)   scale(.2)} }
+@keyframes biExplP6    { 0%{opacity:.9;transform:translate(0,0) scale(1)} 100%{opacity:0;transform:translate(0,13px)    scale(.2)} }
 </style>
 <style>
 /* ── Tab bar ───────────────────────────────────────── */
@@ -1403,6 +1430,38 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
           <circle cx="8"  cy="20" r="0.7" fill="#c4b5fd" opacity="0.5" id="bi-dust3"/>
           <circle cx="28" cy="30" r="0.8" fill="white"   opacity="0.4" id="bi-dust4"/>
           <circle cx="13" cy="32" r="0.6" fill="#a78bfa" opacity="0.45" id="bi-dust5"/>
+        </g>
+        <!-- ══ ВЗРЫВ: avgBlock > 22 мин — критически медленные блоки ══ -->
+        <g id="bi-explosion" style="display:none">
+          <defs>
+            <radialGradient id="explBg" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ffe600" stop-opacity="0.5"/><stop offset="60%" stop-color="#ff3300" stop-opacity="0.3"/><stop offset="100%" stop-color="#ff0000" stop-opacity="0"/></radialGradient>
+            <radialGradient id="explCoreGrad" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#ffffff" stop-opacity="1"/><stop offset="45%" stop-color="#ffe566" stop-opacity="0.95"/><stop offset="100%" stop-color="#ff6600" stop-opacity="0.8"/></radialGradient>
+          </defs>
+          <!-- Фоновое свечение -->
+          <circle cx="18" cy="18" r="16" fill="url(#explBg)"/>
+          <!-- Расширяющиеся ударные волны -->
+          <circle id="bi-expl-ring1" cx="18" cy="18" r="8" fill="none" stroke="#ff4400" stroke-width="1.8" opacity="0"/>
+          <circle id="bi-expl-ring2" cx="18" cy="18" r="8" fill="none" stroke="#ffaa00" stroke-width="1"   opacity="0"/>
+          <!-- 8 острых лучей-шипов (4 кардинальных + 4 диагональных) -->
+          <polygon id="bi-expl-ray1" points="18,18 16.5,9.5 19.5,9.5"  fill="#ffe566"/>
+          <polygon id="bi-expl-ray2" points="18,18 25.5,10 28,13.5"    fill="#ffcc00"/>
+          <polygon id="bi-expl-ray3" points="18,18 26.5,16.5 26.5,19.5" fill="#ffe566"/>
+          <polygon id="bi-expl-ray4" points="18,18 25.5,25 22,28"      fill="#ffcc00"/>
+          <polygon id="bi-expl-ray5" points="18,18 16.5,26.5 19.5,26.5" fill="#ffe566"/>
+          <polygon id="bi-expl-ray6" points="18,18 10.5,25 8,21.5"     fill="#ffcc00"/>
+          <polygon id="bi-expl-ray7" points="18,18 9.5,16.5 9.5,19.5"  fill="#ffe566"/>
+          <polygon id="bi-expl-ray8" points="18,18 10.5,11 14,8"       fill="#ffcc00"/>
+          <!-- Раскалённое ядро -->
+          <circle id="bi-expl-core" cx="18" cy="18" r="7.5" fill="url(#explCoreGrad)"/>
+          <circle cx="18" cy="18" r="3.8" fill="white" opacity="0.95"/>
+          <circle cx="18" cy="18" r="1.5" fill="white" opacity="1"/>
+          <!-- Обломки-частицы разлетаются -->
+          <circle id="bi-expl-p1" cx="13.5" cy="11.5" r="1.6" fill="#ff6600"/>
+          <circle id="bi-expl-p2" cx="23"   cy="11"   r="1.3" fill="#ff8800"/>
+          <circle id="bi-expl-p3" cx="25"   cy="23"   r="1.5" fill="#ff4400"/>
+          <circle id="bi-expl-p4" cx="12"   cy="24"   r="1.3" fill="#ff6600"/>
+          <circle id="bi-expl-p5" cx="18"   cy="7"    r="1.1" fill="#ffffff" opacity="0.9"/>
+          <circle id="bi-expl-p6" cx="18"   cy="30"   r="1.1" fill="#ffaa00"/>
         </g>
       </svg>
     </span>
@@ -2820,35 +2879,51 @@ async function fetchLiveStats() {
           el.textContent = '~' + avgMin + ' мин';
           el.title = 'Среднее время между блоками (последние ' + count + ' блоков)';
           if (iconEl) {
-            // Цвет цифры по avgMin
-            if (avgMin < 8)        el.style.color = 'var(--g)';
-            else if (avgMin <= 14) el.style.color = 'var(--a)';
-            else                   el.style.color = '#ff4455';
+            // Цвет цифры по avgMin (4 состояния)
+            if      (avgMin > 22) el.style.color = '#c084fc';
+            else if (avgMin > 18) el.style.color = '#ff3355';
+            else if (avgMin > 14) el.style.color = '#ff7a00';
+            else                   el.style.color = '#ff3355';
           }
         }
         // Немедленно обновляем иконку блока по новому avgMin
         // (не ждём следующего _rtApplyTicker)
         (function() {
-          const fire  = document.getElementById('bi-fire');
-          const water = document.getElementById('bi-water');
-          const stars = document.getElementById('bi-stars');
-          const svg   = document.getElementById('block-anim-svg');
-          const icon  = document.getElementById('block-icon');
+          const fire      = document.getElementById('bi-fire');
+          const water     = document.getElementById('bi-water');
+          const stars     = document.getElementById('bi-stars');
+          const explosion = document.getElementById('bi-explosion');
+          const svg       = document.getElementById('block-anim-svg');
+          const icon      = document.getElementById('block-icon');
           if (!fire) return;
           const show = function(el2) { if (el2) el2.style.display = ''; };
           const hide = function(el2) { if (el2) el2.style.display = 'none'; };
-          if (avgMin < 8) {
-            hide(fire); hide(water); show(stars);
-            if (svg)  svg.style.filter = 'drop-shadow(0 0 6px rgba(167,139,250,.3))';
-            if (icon) icon.title = 'Блоки быстрее нормы (~' + avgMin + ' мин)';
-          } else if (avgMin <= 14) {
-            hide(fire); show(water); hide(stars);
-            if (svg)  svg.style.filter = 'drop-shadow(0 0 6px rgba(56,189,248,.3))';
-            if (icon) icon.title = 'Нормальное время блока (~' + avgMin + ' мин)';
+          // 4 состояния по реальному среднему времени блока:
+          // < 6 мин  → звёзды   (сверхбыстро, редкий случай)
+          // 6–14 мин → вода     (нормально, ~10 мин = Bitcoin target)
+          // 14–22 мин→ огонь    (медленнее нормы, мемпул растёт)
+          // > 22 мин → взрыв    (критически медленно, TX накапливаются)
+          // вода≤14 → огонь 14-18 → взрыв 18-22 → звёзды >22
+          if (avgMin > 22) {
+            hide(fire); hide(water); show(stars); hide(explosion);
+            if (svg)  svg.style.filter = 'drop-shadow(0 0 8px rgba(167,139,250,.5))';
+            if (icon) icon.title = '🌌 Блоки критически медленные (~' + avgMin + ' мин)';
+            if (el)   el.style.color = '#c084fc';
+          } else if (avgMin > 18) {
+            hide(fire); hide(water); hide(stars); show(explosion);
+            if (svg)  svg.style.filter = 'drop-shadow(0 0 10px rgba(255,50,0,.6))';
+            if (icon) icon.title = '💥 Сильное торможение (~' + avgMin + ' мин)';
+            if (el)   el.style.color = '#ff3355';
+          } else if (avgMin > 14) {
+            show(fire); hide(water); hide(stars); hide(explosion);
+            if (svg)  svg.style.filter = 'drop-shadow(0 0 6px rgba(247,100,0,.45))';
+            if (icon) icon.title = '🔥 Блоки медленнее нормы (~' + avgMin + ' мин)';
+            if (el)   el.style.color = '#ff7a00';
           } else {
-            show(fire); hide(water); hide(stars);
-            if (svg)  svg.style.filter = 'drop-shadow(0 0 6px rgba(247,100,0,.4))';
-            if (icon) icon.title = 'Блоки медленные (~' + avgMin + ' мин)';
+            hide(fire); show(water); hide(stars); hide(explosion);
+            if (svg)  svg.style.filter = 'drop-shadow(0 0 6px rgba(56,189,248,.35))';
+            if (icon) icon.title = '💧 Нормальное время блока (~' + avgMin + ' мин)';
+            if (el)   el.style.color = 'var(--a)';
           }
         })();
       }
@@ -5853,30 +5928,43 @@ function _rtApplyTicker(p) {
     el.className = 'net-heart ' + heartLevel + (hasSm ? ' sm' : '');
   });
 
-  // ── BLOCK ICON: сервер говорит 'fast'|'normal'|'slow' ─────
+  // ── BLOCK ICON: сервер говорит 'fast'|'normal'|'slow'|'explosion' ─
   (function() {
-    const fire  = document.getElementById('bi-fire');
-    const water = document.getElementById('bi-water');
-    const stars = document.getElementById('bi-stars');
-    const svg   = document.getElementById('block-anim-svg');
-    const icon  = document.getElementById('block-icon');
+    const fire      = document.getElementById('bi-fire');
+    const water     = document.getElementById('bi-water');
+    const stars     = document.getElementById('bi-stars');
+    const explosion = document.getElementById('bi-explosion');
+    const svg       = document.getElementById('block-anim-svg');
+    const icon      = document.getElementById('block-icon');
+    const numEl     = document.getElementById('avg-time');
     if (!fire) return;
     const show = function(el) { if (el) el.style.display = ''; };
     const hide = function(el) { if (el) el.style.display = 'none'; };
-    // blockIcon с сервера — источник правды (включает данные реальных блоков)
-    const blockLevel = p.blockIcon || (window._avgBlockMin < 8 ? 'fast' : window._avgBlockMin > 15 ? 'slow' : 'normal');
-    if (blockLevel === 'slow') {
-      show(fire); hide(water); hide(stars);
-      if (svg)  svg.style.filter = 'drop-shadow(0 0 6px rgba(247,100,0,.4))';
-      if (icon) icon.title = p.avgBlockMin ? `Блоки: ~${p.avgBlockMin} мин — мемпул растёт` : 'Блоки медленные';
-    } else if (blockLevel === 'fast') {
-      hide(fire); hide(water); show(stars);
-      if (svg)  svg.style.filter = 'drop-shadow(0 0 6px rgba(167,139,250,.3))';
-      if (icon) icon.title = p.avgBlockMin ? `Блоки: ~${p.avgBlockMin} мин — быстрее нормы` : 'Блоки быстрые';
+    // blockIcon с сервера — источник правды (включает avgBlock из реальных блоков mempool.space)
+    // Если сервер ещё не ответил — считаем по локальному _avgBlockMin
+    const avg = window._avgBlockMin;
+    // вода(normal)≤14 → огонь(slow)14-18 → взрыв(explosion)18-22 → звёзды(fast)>22
+    const blockLevel = p.blockIcon || (avg > 22 ? 'fast' : avg > 18 ? 'explosion' : avg > 14 ? 'slow' : 'normal');
+    if (blockLevel === 'fast') {
+      hide(fire); hide(water); show(stars); hide(explosion);
+      if (svg)   svg.style.filter = 'drop-shadow(0 0 8px rgba(167,139,250,.5))';
+      if (icon)  icon.title = p.avgBlockMin ? `🌌 Блоки: ~${p.avgBlockMin} мин — критически медленно` : 'Критически медленные блоки';
+      if (numEl) numEl.style.color = '#c084fc';
+    } else if (blockLevel === 'explosion') {
+      hide(fire); hide(water); hide(stars); show(explosion);
+      if (svg)   svg.style.filter = 'drop-shadow(0 0 10px rgba(255,50,0,.6))';
+      if (icon)  icon.title = p.avgBlockMin ? `💥 Блоки: ~${p.avgBlockMin} мин — сильное торможение` : 'Взрывная перегрузка';
+      if (numEl) numEl.style.color = '#ff3355';
+    } else if (blockLevel === 'slow') {
+      show(fire); hide(water); hide(stars); hide(explosion);
+      if (svg)   svg.style.filter = 'drop-shadow(0 0 6px rgba(247,100,0,.45))';
+      if (icon)  icon.title = p.avgBlockMin ? `🔥 Блоки: ~${p.avgBlockMin} мин — медленнее нормы` : 'Блоки медленные';
+      if (numEl) numEl.style.color = '#ff7a00';
     } else {
-      hide(fire); show(water); hide(stars);
-      if (svg)  svg.style.filter = 'drop-shadow(0 0 6px rgba(56,189,248,.3))';
-      if (icon) icon.title = p.avgBlockMin ? `Блоки: ~${p.avgBlockMin} мин` : 'Нормальное время блока';
+      hide(fire); show(water); hide(stars); hide(explosion);
+      if (svg)   svg.style.filter = 'drop-shadow(0 0 6px rgba(56,189,248,.35))';
+      if (icon)  icon.title = p.avgBlockMin ? `💧 Блоки: ~${p.avgBlockMin} мин` : 'Нормальное время блока';
+      if (numEl) numEl.style.color = 'var(--a)';
     }
   })();
 
