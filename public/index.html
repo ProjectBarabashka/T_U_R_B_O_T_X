@@ -2877,7 +2877,10 @@ fetchHealthOnline(true); // первый вызов — сразу полный 
 // Вода(≤14) → Огонь(14-18) → Взрыв(18-22) → Звёзды(>22)
 // Вызывается из fetchLiveStats И из _rtApplyTicker
 // Побеждает тот кто вызвался последним — но оба используют одни пороги
-function applyBlockAnim(avgMin, blockIconOverride) {
+function applyBlockAnim(avgMin) {
+  // Если avgMin неизвестен — не трогаем текущую анимацию
+  if (!avgMin || avgMin <= 0) return;
+
   const fire      = document.getElementById('bi-fire');
   const water     = document.getElementById('bi-water');
   const stars     = document.getElementById('bi-stars');
@@ -2887,22 +2890,11 @@ function applyBlockAnim(avgMin, blockIconOverride) {
   const numEl     = document.getElementById('avg-time');
   if (!fire) return;
 
-  // Если avgMin неизвестен (null/0/undefined) — не трогаем анимацию вообще
-  // Это предотвращает сброс в 'вода' каждые 20 сек пока fetchLiveStats ещё не отработал
-  const knownAvg = (avgMin != null && avgMin > 0) ? avgMin : null;
-  if (!knownAvg && !blockIconOverride) return; // нечего применять — оставляем как есть
-
   const show = function(el) { if (el) el.style.display = ''; };
   const hide = function(el) { if (el) el.style.display = 'none'; };
 
-  // Вычисляем уровень: avgMin — источник правды
-  // blockIconOverride используем только когда avgMin неизвестен (и то — как подсказку)
-  const localLevel = knownAvg ? (
-    knownAvg > 22 ? 'fast' :
-    knownAvg > 18 ? 'explosion' :
-    knownAvg > 14 ? 'slow' : 'normal'
-  ) : blockIconOverride;
-  const level = localLevel;
+  // Строгие пороги: вода(≤14) → огонь(14-18) → взрыв(18-22) → звёзды(>22)
+  const level = avgMin > 22 ? 'fast' : avgMin > 18 ? 'explosion' : avgMin > 14 ? 'slow' : 'normal';
 
   if (level === 'fast') {
     hide(fire); hide(water); show(stars); hide(explosion);
@@ -4360,10 +4352,17 @@ async function go() {
         const _rbEl  = document.getElementById('rb');
         const _wpEl  = document.getElementById('wave-panel-global');
         if (_rbEl && _rbEl.innerHTML.trim()) {
-          // Склеиваем rb + wave-panel-global в один html для истории
-          const wpHtml = (_wpEl && _wpEl.innerHTML.trim())
-            ? '<div id="wave-panel-in-history" style="margin-top:12px">' + _wpEl.innerHTML + '</div>'
-            : '';
+          // Сохраняем снапшот wave-panel БЕЗ живых ID (чтобы не дублировать с тикером)
+          let wpHtml = '';
+          if (_wpEl && _wpEl.innerHTML.trim()) {
+            // Заменяем ID на data-атрибуты чтобы не конфликтовать с живым тикером
+            const wpSnapshot = _wpEl.innerHTML
+              .replace(/id="wave-countdown-val"/g, 'data-snap="wave-countdown-val"')
+              .replace(/id="wave-next-label"/g, 'data-snap="wave-next-label"')
+              .replace(/id="wave-list-items"/g, 'data-snap="wave-list-items"')
+              .replace(/id="wave-panel"/g, 'data-snap="wave-panel"');
+            wpHtml = '<div id="wave-panel-in-history" style="margin-top:12px">' + wpSnapshot + '</div>';
+          }
           updateHistoryExtra(txid, { html: _rbEl.innerHTML + wpHtml });
         }
         // Скрываем только rb — wave-panel-global остаётся пока волны работают
@@ -6076,9 +6075,10 @@ function _rtApplyTicker(p) {
   });
 
   // Применяем анимацию через единую функцию (blockIcon с сервера — приоритет)
-  // Передаём реальный avgMin — 0 и undefined не считаем (вернут null → не трогаем анимацию)
-  const _rtAvg = (p.avgBlockMin > 0) ? p.avgBlockMin : (window._avgBlockMin > 0 ? window._avgBlockMin : null);
-  applyBlockAnim(_rtAvg, p.blockIcon || null);
+  // Для анимации используем ТОЛЬКО window._avgBlockMin (из fetchLiveStats — самый точный)
+  // p.blockIcon от сервера НЕ используем — сервер считает по unstable endpoint
+  const _rtAvg = (window._avgBlockMin > 0) ? window._avgBlockMin : null;
+  if (_rtAvg) applyBlockAnim(_rtAvg);
 
   // ── price-tag-text — что именно подняло цену ─────────────
   const tagText = document.getElementById('price-tag-text');
