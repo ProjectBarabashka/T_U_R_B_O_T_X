@@ -15,18 +15,40 @@ import { incLightning } from './router.js';
 
 const checkRl = makeRl(20, 3_600_000);
 
-const _invoices = new Map();
-const INVOICE_TTL = 60 * 60_000; // 1 час
+// Firebase Realtime Database — хранилище инвойсов между Vercel cold starts
+// In-memory fallback для локальной разработки
+const _invoices = new Map(); // fallback + кэш
+const INVOICE_TTL = 60 * 60_000;
+
+const FIREBASE_DB = process.env.FIREBASE_DB_URL || '';
+const FIREBASE_SECRET = process.env.FIREBASE_SECRET || ''; // для write-правил если закрыты
+
+async function fbGet(hash) {
+  if (!FIREBASE_DB) return _invoices.get(hash) || null;
+  try {
+    const url = `${FIREBASE_DB}/lightning/${hash}.json`;
+    const r = await ft(url, {}, 4000);
+    if (!r.ok) return null;
+    const data = await sj(r);
+    if (data && data.hash) { _invoices.set(hash, data); return data; }
+    return null;
+  } catch { return _invoices.get(hash) || null; }
+}
+
+async function fbSet(hash, data) {
+  _invoices.set(hash, data); // всегда обновляем in-memory кэш
+  if (!FIREBASE_DB) return;
+  try {
+    const url = `${FIREBASE_DB}/lightning/${hash}.json`;
+    await ft(url, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...data, hash }) }, 5000);
+  } catch {}
+}
 
 function cleanInvoices() {
   const now = Date.now();
-  const PAID_GRACE = 24 * 60 * 60_000; // хранить оплаченные 24ч
+  const PAID_GRACE = 24 * 60 * 60_000;
   for (const [k, v] of _invoices) {
-    if (v.paid) {
-      if (now - v.paidAt > PAID_GRACE) _invoices.delete(k);
-    } else {
-      if (v.expiresAt < now) _invoices.delete(k);
-    }
+    if (v.paid ? now - v.paidAt > PAID_GRACE : v.expiresAt < now) _invoices.delete(k);
   }
 }
 
@@ -203,7 +225,7 @@ export default async function handler(req, res) {
       return res.status(400).json({ ok:false, error:'Invalid payment hash' });
 
     cleanInvoices();
-    const inv = _invoices.get(hash);
+    const inv = await fbGet(hash);
     if (!inv)
       return res.status(404).json({ ok:false, error:'Invoice not found or expired' });
 
@@ -275,7 +297,7 @@ export default async function handler(req, res) {
     cleanInvoices();
     const invoiceExpiry = invoiceData.expiry ? invoiceData.expiry * 1000 : INVOICE_TTL;
     const expiresAt     = Date.now() + invoiceExpiry;
-    _invoices.set(paymentHash, {
+    await fbSet(paymentHash, {
       amountSats, amountUsd, txid: txid || null,
       invoice: invoiceData.pr, createdAt: Date.now(), expiresAt, paid: false,
     });
@@ -303,24 +325,25 @@ export default async function handler(req, res) {
   }
 }
 
-export function markInvoicePaid(paymentHash) {
-  const inv = _invoices.get(paymentHash?.toLowerCase());
+export async function markInvoicePaid(paymentHash) {
+  const hash = paymentHash?.toLowerCase();
+  const inv = await fbGet(hash);
   if (!inv) return false;
   if (inv.paid) return true;
   inv.paid   = true;
   inv.paidAt = Date.now();
-  _invoices.set(paymentHash.toLowerCase(), inv);
+  await fbSet(hash, inv);
   tgNotify(inv.amountSats, inv.amountUsd, inv.txid || null, 'webhook', 'paid').catch(()=>{});
   return true;
 }
 
-function handleWebhook(req, res) {
+async function handleWebhook(req, res) {
   const secret = process.env.PREMIUM_SECRET;
   const { hash, secret: reqSecret } = req.method === 'GET' ? req.query : (req.body || {});
   if (!secret || reqSecret !== secret)
     return res.status(403).json({ ok:false, error:'Forbidden' });
   if (!hash || !/^[a-f0-9]{64}$/i.test(hash))
     return res.status(400).json({ ok:false, error:'Invalid hash' });
-  const marked = markInvoicePaid(hash.toLowerCase());
+  const marked = await markInvoicePaid(hash.toLowerCase());
   return res.status(200).json({ ok:true, marked });
 }
