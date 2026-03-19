@@ -5895,6 +5895,7 @@ function activatePremium(paidStr, method, txShort) {
     window.scrollTo({top:0, behavior:'smooth'});
   }
   document.addEventListener('keydown', async function(e) {
+    if (!e.key) return;
     if (e.key.length === 1) buf += e.key;
     else if (e.key === 'Enter') { if (await sha256(buf.trim()) === HASH) unlock(); buf = ''; }
     if (buf.length > 32) buf = buf.slice(-32);
