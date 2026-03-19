@@ -446,7 +446,7 @@ async function handlePrice(req, res) {
           const sorted = [...times].sort((a,b) => b - a);
           const avgSec = (sorted[0] - sorted[sorted.length-1]) / (sorted.length - 1);
           _avgBlockMin = +(avgSec / 60).toFixed(1);
-          blockTierIdx = _avgBlockMin > 25 ? 3 : _avgBlockMin > 18 ? 2 : _avgBlockMin > 13 ? 1 : 0;
+          blockTierIdx = _avgBlockMin > 22 ? 3 : _avgBlockMin > 18 ? 2 : _avgBlockMin > 14 ? 1 : 0; // 0=вода 1=огонь 2=взрыв 3=звёзды
         }
       }
     }
@@ -504,9 +504,16 @@ async function handlePrice(req, res) {
       tier.label === 'critical' || tier.label === 'extreme' ? 'busy' :
       tier.label === 'high' || tier.label === 'medium' ? 'mid' : 'calm'
     ),
-    blockIcon: (
-      blockTierIdx >= 2 ? 'slow' :
-      blockTierIdx === 1 ? 'normal' : 'fast'
+    // blockIcon: 4 состояния — источник правды для анимации на фронте
+    // fast       = звёзды  (avgBlock < 8 мин   — блоки летят, сеть свободна)
+    // normal     = вода    (8–13 мин            — нормальный поток)
+    // slow       = огонь   (13–22 мин           — блоки тормозят, мемпул растёт)
+    // explosion  = взрыв   (> 22 мин            — критическое торможение, TX накапливаются)
+    blockIcon: (// вода<14 огонь 14-18 взрыв 18-22 звёзды>22
+    (
+      blockTierIdx >= 3 ? 'fast'      :  // звёзды > 22 мин
+      blockTierIdx >= 2 ? 'explosion' :  // взрыв 18-22 мин
+      blockTierIdx === 1 ? 'slow'      : 'normal' // огонь 14-18 / вода ≤14
     ),
     avgBlockMin: (() => {
       try {
