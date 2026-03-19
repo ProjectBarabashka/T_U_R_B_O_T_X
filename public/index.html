@@ -2891,11 +2891,15 @@ function applyBlockAnim(avgMin, blockIconOverride) {
 
   // blockIconOverride — с сервера ('fast'/'slow'/'normal'/'explosion')
   // если нет — вычисляем локально по avgMin
-  const level = blockIconOverride || (
+  // Вычисляем уровень по avgMin (локальный расчёт)
+  const localLevel = (
     avgMin > 22 ? 'fast' :
     avgMin > 18 ? 'explosion' :
     avgMin > 14 ? 'slow' : 'normal'
   );
+  // Если сервер прислал blockIcon И avgBlockMin совпадает с ним — используем серверный
+  // Если avgBlockMin говорит одно, а blockIcon другое — доверяем avgBlockMin (локальный расчёт точнее)
+  const level = (blockIconOverride && avgMin == null) ? blockIconOverride : localLevel;
 
   if (level === 'fast') {
     hide(fire); hide(water); show(stars); hide(explosion);
