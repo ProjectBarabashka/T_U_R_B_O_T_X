@@ -139,7 +139,6 @@
     }
   ],
   "env": {
-    "NODE_ENV": "production",
-    "FIREBASE_DB_URL": "@firebase_db_url"
+    "NODE_ENV": "production"
   }
 }
