@@ -5772,6 +5772,8 @@ async function _rtFetchPrice() {
 function _rtApplyTicker(p) {
   if (!p) return;
   _rtLastData = p;
+  // Синхронизируем avgBlockMin из API ответа — используется всеми анимациями
+  if (p.avgBlockMin != null) window._avgBlockMin = p.avgBlockMin;
 
   // ── ТИКЕР: мемпул TX ──────────────────────────────────────
   const mpCount = p.mempool?.count ?? null;
@@ -5833,25 +5835,16 @@ function _rtApplyTicker(p) {
                         mc.level === 'medium' ? 'var(--a)' : '#ff5555';
   }
 
-  // ── Все сердечки страницы — по congestion с учётом TX-count, размера мемпула И времени блока ──
-  // BUG FIX: сердце синее ТОЛЬКО если mpCount < 30000 И vsize < 100 МБ И fee < 20 И блоки норм
-  const congestion = p.congestion || 'low';
-  // Переопределяем heartLevel локально с учётом mpCount и vsize
-  const _mpCount = p.mempool?.count ?? mpCount ?? 0;
-  const _mpVsizeMb = p.mempool?.vsize ? p.mempool.vsize / 1_000_000 : (mpVsize ? mpVsize / 1_000_000 : 0);
-  const _feeRate = p.fees?.fastest ?? p.feeRate ?? 0;
-  // Среднее время блока: медленные блоки (>15 мин) = TX копятся, нагрузка растёт
-  const _blockMin = window._avgBlockMin || 10;
-  const _blockSignal = _blockMin > 20 ? 'critical' : _blockMin > 15 ? 'high' : _blockMin > 12 ? 'medium' : 'low';
-  // Комбинируем: если хотя бы один сигнал говорит о нагрузке — повышаем уровень
-  let heartLevel;
-  if (congestion === 'critical' || congestion === 'extreme' || _mpCount > 80000 || _mpVsizeMb > 300 || _feeRate > 100 || _blockSignal === 'critical') {
-    heartLevel = 'busy';
-  } else if (congestion === 'high' || congestion === 'medium' || _mpCount > 24000 || _mpVsizeMb > 100 || _feeRate > 20 || _blockSignal === 'high' || _blockSignal === 'medium') {
-    heartLevel = 'mid';
-  } else {
-    heartLevel = 'calm';
-  }
+  // ── v14.2: heartLevel и blockIcon приходят прямо с сервера ──
+  // Сервер уже посчитал все 3 сигнала (fee + мемпул + время блоков)
+  // Фронтенд просто применяет — никаких дублирующих вычислений
+  const heartLevel = p.heartLevel || (
+    p.congestion === 'critical' || p.congestion === 'extreme' ? 'busy' :
+    p.congestion === 'high' || p.congestion === 'medium' ? 'mid' : 'calm'
+  );
+
+  // Сохраняем avgBlockMin для других частей страницы
+  if (p.avgBlockMin != null) window._avgBlockMin = p.avgBlockMin;
 
   ['net-pulse-dot','fee-dot','price-tag-dot','modal-heart-dot'].forEach(function(id) {
     const el = document.getElementById(id);
@@ -5860,8 +5853,7 @@ function _rtApplyTicker(p) {
     el.className = 'net-heart ' + heartLevel + (hasSm ? ' sm' : '');
   });
 
-  // ── BLOCK ICON: огонь/вода/звёзды — только по времени блока, НЕ по heartLevel ──
-  // Логика: <8 мин = звёзды (быстро), 8–14 мин = вода (норма), >14 мин = огонь (медленно/перегрузка)
+  // ── BLOCK ICON: сервер говорит 'fast'|'normal'|'slow' ─────
   (function() {
     const fire  = document.getElementById('bi-fire');
     const water = document.getElementById('bi-water');
@@ -5871,23 +5863,20 @@ function _rtApplyTicker(p) {
     if (!fire) return;
     const show = function(el) { if (el) el.style.display = ''; };
     const hide = function(el) { if (el) el.style.display = 'none'; };
-    const avgMin = window._avgBlockMin || 10;
-    let blockLevel;
-    if (avgMin < 8)        blockLevel = 'fast';   // быстрее нормы
-    else if (avgMin <= 14) blockLevel = 'normal'; // норма ~10 мин
-    else                   blockLevel = 'slow';   // медленно, мемпул копится
+    // blockIcon с сервера — источник правды (включает данные реальных блоков)
+    const blockLevel = p.blockIcon || (window._avgBlockMin < 8 ? 'fast' : window._avgBlockMin > 15 ? 'slow' : 'normal');
     if (blockLevel === 'slow') {
       show(fire); hide(water); hide(stars);
       if (svg)  svg.style.filter = 'drop-shadow(0 0 6px rgba(247,100,0,.4))';
-      if (icon) icon.title = 'Блоки медленные — мемпул растёт';
-    } else if (blockLevel === 'normal') {
-      hide(fire); show(water); hide(stars);
-      if (svg)  svg.style.filter = 'drop-shadow(0 0 6px rgba(56,189,248,.3))';
-      if (icon) icon.title = 'Нормальное время блока';
-    } else {
+      if (icon) icon.title = p.avgBlockMin ? `Блоки: ~${p.avgBlockMin} мин — мемпул растёт` : 'Блоки медленные';
+    } else if (blockLevel === 'fast') {
       hide(fire); hide(water); show(stars);
       if (svg)  svg.style.filter = 'drop-shadow(0 0 6px rgba(167,139,250,.3))';
-      if (icon) icon.title = 'Блоки быстрее нормы';
+      if (icon) icon.title = p.avgBlockMin ? `Блоки: ~${p.avgBlockMin} мин — быстрее нормы` : 'Блоки быстрые';
+    } else {
+      hide(fire); show(water); hide(stars);
+      if (svg)  svg.style.filter = 'drop-shadow(0 0 6px rgba(56,189,248,.3))';
+      if (icon) icon.title = p.avgBlockMin ? `Блоки: ~${p.avgBlockMin} мин` : 'Нормальное время блока';
     }
   })();
 
