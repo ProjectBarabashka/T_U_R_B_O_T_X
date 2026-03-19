@@ -500,10 +500,11 @@ async function run(channels, feeRatioHint = 0.5, lastBlockMiner = null) {
     !isDead(ch.name) && !cbIsBlocked(ch.name) && !isCooling(ch.name) && !isNegCached(ch.name)
   );
 
-  // ⒠ v12: Hashrate-weighted early stop
-  // Вместо "65% каналов" → "70% хешрейта покрыто"
-  const HASHRATE_STOP_TARGET = feeRatioHint < 0.4 ? 90 : feeRatioHint >= 0.8 ? 70 : 80; // v14: +10% (было 85/60/70)
-  const COUNT_STOP  = Math.max(3, Math.ceil(activeChannels.length * (feeRatioHint < 0.4 ? 0.90 : 0.75))); // v14: +10%
+  // FIX v14.2: Early stop ОТКЛЮЧЁН для premium — отправляем ВСЕ 30 каналов
+  // Раньше при feeRatioHint<0.4 (низкая комиссия) стоп срабатывал после 3-4 пулов
+  // и пользователь видел "11 каналов" вместо 30. Честность важнее оптимизации.
+  const HASHRATE_STOP_TARGET = Infinity; // всегда отправляем все каналы
+  const COUNT_STOP = sorted.length + 1;  // никогда не срабатывает
 
   await new Promise(resolve => {
     let finished = 0, aborted = false;
@@ -1155,10 +1156,9 @@ export default async function handler(req, res) {
       const key = r.name === 'MaraSlipstream' ? 'MARA' : (r.name || r.channel);
       if (!seen.has(key)) { seen.add(key); total += HR[key] || HR[r.name] || 0; }
     }
-    // Минимум 88% только для Premium когда хоть один пул ответил
-    const premiumMin = (effectivePlan === 'premium' && results.some(r => r.ok && r.tier === 'pool')) ? 88 : 0;
-    // Для free — реальный охват: ViaBTC(9%) + mempoolAccel(1%) = ~10%
-    return Math.max(total, premiumMin);
+    // FIX v14.2: убираем premiumMin=88 — показываем РЕАЛЬНЫЙ охват
+    // Заглушка 88% скрывала проблемы с каналами и вводила пользователей в заблуждение
+    return total;
   })();
 
   const sentCount    = results.filter(r => !r.skipped).length;

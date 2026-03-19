@@ -30,7 +30,7 @@
 
 export const config = { maxDuration: 35 };
 
-import { CORS, ft, getIp, sj, sleep, makeRl } from './_shared.js';
+import { CORS, ft, getIp, sj, sleep, makeRl, checkPremiumAuth } from './_shared.js';
 
 // ─── УТИЛИТЫ — из _shared.js ──────────────────────────────────
 
@@ -256,7 +256,8 @@ export default async function handler(req, res) {
 
   const secret = process.env.PREMIUM_SECRET;
   const token  = req.headers['x-turbotx-token'] || req.body?.token;
-  if (secret && token !== secret)
+  // v14.1 FIX: принимаем и старый сырой секрет (backward compat) и HMAC токен
+  if (!checkPremiumAuth(token, secret))
     return res.status(401).json({ ok:false, error:'Premium token required' });
 
   const { txid, wave=1, startedAt, waveIntervalMs } = req.body || {};
