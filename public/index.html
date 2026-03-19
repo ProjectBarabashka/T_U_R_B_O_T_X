@@ -844,6 +844,9 @@ details { transition: all .2s; }
 details[open] { border-color: rgba(247,147,26,.18) !important; }
 details[open] summary { color: var(--a) !important; }
 input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shadow: 0 0 0 3px rgba(247,147,26,.08), 0 0 20px rgba(247,147,26,.06) !important; outline: none; }
+#txid { border: 1.5px solid rgba(247,147,26,.25) !important; background: rgba(247,147,26,.03) !important; font-size: .85rem !important; padding: 16px 16px 16px 40px !important; border-radius: 10px !important; letter-spacing: .4px !important; transition: border-color .2s, box-shadow .2s, background .2s !important; }
+#txid:focus { border-color: rgba(247,147,26,.6) !important; background: rgba(247,147,26,.06) !important; box-shadow: 0 0 0 4px rgba(247,147,26,.1), 0 0 28px rgba(247,147,26,.1) !important; }
+#txid::placeholder { color: rgba(255,255,255,.3) !important; font-size: .75rem !important; }
 .sh { font-family: var(--mono); font-size: .62rem; letter-spacing: 2.5px; color: var(--m); text-transform: uppercase; margin-bottom: 16px; margin-top: 8px; display: flex; align-items: center; gap: 8px; }
 .sh::after { content: ''; flex: 1; height: 1px; background: linear-gradient(90deg, rgba(255,255,255,.06), transparent); }
 .guarantee-block { border-radius: var(--r2); box-shadow: var(--shadow), 0 0 30px rgba(0,232,122,.04); }
@@ -1479,26 +1482,32 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
 
   <!-- ── ПАНЕЛЬ: УСКОРЕНИЕ ─────────────────────────── -->
   <div class="upanel active" id="upanel-acc">
-    <div style="display:flex;align-items:center;gap:10px;padding-bottom:14px;margin-bottom:18px;border-bottom:1px solid var(--b2)">
+    <div style="display:flex;align-items:center;gap:10px;padding-bottom:14px;margin-bottom:14px;border-bottom:1px solid var(--b2)">
       <span style="font-size:1.2rem">⚡</span>
       <span style="font-weight:700;font-size:.92rem">Ускорить транзакцию</span>
     </div>
-    <div style="font-family:var(--mono);font-size:.7rem;color:var(--m);margin-bottom:18px;margin-top:-10px">Вставьте TXID из кошелька — мы займёмся остальным</div>
 
   <!-- СЧЁТЧИК БЕСПЛАТНЫХ УСКОРЕНИЙ -->
-  <div id="free-limit-bar" style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:7px 12px;border-radius:8px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06)">
-    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="2" style="flex-shrink:0"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-    <span style="font-family:var(--mono);font-size:.6rem;color:var(--m)">Бесплатных ускорений сегодня:</span>
-    <span id="free-left-num" class="flb-count" style="opacity:.3;animation:skeletonPulse 1.6s ease-in-out infinite;font-size:.72rem">—</span>
-    <span style="font-family:var(--mono);font-size:.58rem;color:var(--m)">/&nbsp;100</span>
-    <div style="flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;margin-left:4px"><div id="free-bar-fill" class="flb-bar-fill" style="width:100%;height:100%"></div></div>
+  <div id="free-limit-bar" style="display:flex;align-items:center;gap:7px;margin-bottom:10px">
+    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="2.5" style="flex-shrink:0"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    <span style="font-family:var(--mono);font-size:.6rem;color:#fff;font-weight:500;letter-spacing:.3px">Бесплатных ускорений сегодня:</span>
+    <span id="free-left-num" class="flb-count" style="opacity:.3;animation:skeletonPulse 1.6s ease-in-out infinite;font-size:.68rem;color:#fff;font-weight:700">—</span>
+    <span style="font-family:var(--mono);font-size:.6rem;color:rgba(255,255,255,.4)">/&nbsp;100</span>
+    <span id="reset-timer-wrap" style="margin-left:auto;font-family:var(--mono);font-size:.56rem;color:rgba(255,255,255,.28)"></span>
   </div>
   <div id="limit-reached-msg" style="display:none;font-family:var(--mono);font-size:.65rem;color:var(--err);margin-bottom:10px;padding:7px 12px;border-radius:8px;background:rgba(255,51,85,.06);border:1px solid rgba(255,51,85,.18)">⚠ Дневной лимит исчерпан. Сброс через: <span id="reset-countdown" style="font-weight:700">--:--:--</span></div>
-  <div id="reset-timer-wrap" style="display:none"></div>
 
-    <div class="fg">
-    <label>Transaction ID (TXID)</label>
-    <div id="single-mode"><input type="text" id="txid" placeholder="a1b2c3d4e5f6... (64 hex символа)" maxlength="64" oninput="onTxidDiag(this.value)"></div>
+    <div style="font-family:var(--mono);font-size:.7rem;color:var(--m);margin-bottom:16px">Вставьте TXID из кошелька — мы займёмся остальным</div>
+
+    <div class="fg" style="margin-bottom:20px">
+    <label style="font-size:.58rem;letter-spacing:2.5px;color:rgba(255,255,255,.5);margin-bottom:10px">Transaction ID (TXID)</label>
+    <div id="single-mode" style="position:relative">
+      <div style="position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none;opacity:.4">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f7931a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+      </div>
+      <input type="text" id="txid" placeholder="Вставьте TXID из кошелька (64 символа)" maxlength="64" oninput="onTxidDiag(this.value)">
+    </div>
+    <div style="margin-top:6px;font-family:var(--mono);font-size:.6rem;color:rgba(255,255,255,.28);display:flex;align-items:center;gap:5px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Найдите TXID в своём кошельке — это 64-символьный хеш транзакции</div>
     <div class="batch-area" id="batch-mode"><textarea class="batch-input" id="batch-txids" data-i18n-ph="ph.batch" placeholder="Вставьте по одному TXID на строку&#10;a1b2c3...&#10;9f8e7d...&#10;4c5d6e..." oninput="onBatchInput()"></textarea><div class="batch-count" id="batch-count">0 транзакций</div></div>
     <div class="batch-toggle" id="batch-toggle" onclick="toggleBatch()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> Пакетное ускорение (до 20 TX) <span style="margin-left:6px;font-family:var(--mono);font-size:.56rem;background:rgba(247,147,26,.15);border:1px solid rgba(247,147,26,.35);border-radius:4px;padding:1px 6px;color:var(--a);letter-spacing:.5px">PREMIUM</span></div>
   </div>
@@ -2993,7 +3002,24 @@ function _applyFreeUI(used) {
   const limitMsg = document.getElementById('limit-reached-msg');
   if (limitMsg) limitMsg.style.display = empty ? 'flex' : 'none';
   const resetWrap = document.getElementById('reset-timer-wrap');
-  if (resetWrap) resetWrap.style.display = 'none'; // таймер теперь внутри limit-reached-msg
+  if (resetWrap) {
+    resetWrap.style.display = '';
+    if (!resetWrap._timerInit) {
+      resetWrap._timerInit = true;
+      function _updateInlineTimer() {
+        const now = new Date();
+        const todayReset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(), 21, 0, 0));
+        const next = now < todayReset ? todayReset : new Date(todayReset.getTime() + 86400000);
+        const diff = next - now;
+        const h = Math.floor(diff / 3600000);
+        const m = Math.floor((diff % 3600000) / 60000);
+        const s = Math.floor((diff % 60000) / 1000);
+        resetWrap.textContent = 'сброс ' + String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(s).padStart(2,'0');
+      }
+      _updateInlineTimer();
+      setInterval(_updateInlineTimer, 1000);
+    }
+  }
 }
 
 async function updateFreeUI(forceUsed) {
