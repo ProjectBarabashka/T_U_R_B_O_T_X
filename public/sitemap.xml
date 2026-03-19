@@ -3,23 +3,89 @@
         xmlns:xhtml="http://www.w3.org/1999/xhtml"
         xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
 
+  <!-- ══ ГЛАВНАЯ ══ -->
   <url>
     <loc>https://acelerat.vercel.app/</loc>
-    <lastmod>2026-03-07</lastmod>
+    <lastmod>2026-03-20</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
-
-    <!-- hreflang — говорим Google: это оригинал для всех регионов -->
     <xhtml:link rel="alternate" hreflang="ru"        href="https://acelerat.vercel.app/"/>
     <xhtml:link rel="alternate" hreflang="en"        href="https://acelerat.vercel.app/"/>
     <xhtml:link rel="alternate" hreflang="x-default" href="https://acelerat.vercel.app/"/>
-
-    <!-- image sitemap — помогает попасть в Google Images -->
     <image:image>
       <image:loc>https://acelerat.vercel.app/og-image.png</image:loc>
-      <image:title>TurboTX — Bitcoin Transaction Accelerator</image:title>
-      <image:caption>Лучший бесплатный ускоритель Bitcoin транзакций. Rebroadcast в 15+ майнинг-пулов.</image:caption>
+      <image:title>TurboTX — Ускоритель Bitcoin транзакций | Турботх | Турбоикс | BTC Accelerator</image:title>
+      <image:caption>TurboTX (турботх, турбоикс) — лучший бесплатный ускоритель Bitcoin транзакций 2026. 30 каналов, ~88% хешрейта. Ускорить БТК, бтк транзакцию, мемпул биткоин онлайн бесплатно. Лучше ViaBTC accelerator и AntPool accelerator.</image:caption>
     </image:image>
+  </url>
+
+  <!-- ══ API DOCS ══ -->
+  <url>
+    <loc>https://acelerat.vercel.app/api-docs</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+    <xhtml:link rel="alternate" hreflang="ru"        href="https://acelerat.vercel.app/api-docs"/>
+    <xhtml:link rel="alternate" hreflang="en"        href="https://acelerat.vercel.app/api-docs"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://acelerat.vercel.app/api-docs"/>
+  </url>
+
+  <!-- ══ ЯКОРНЫЕ РАЗДЕЛЫ ══ -->
+
+  <!-- Ускорение транзакции: "ускорить бтк", "ускоритель биткоин", "btc accelerator" -->
+  <url>
+    <loc>https://acelerat.vercel.app/#accelerate</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+  </url>
+
+  <!-- CPFP: "cpfp биткоин", "child pays for parent", "протолкнуть биткоин" -->
+  <url>
+    <loc>https://acelerat.vercel.app/#cpfp</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- RBF: "rbf биткоин", "replace by fee bitcoin", "bump fee btc" -->
+  <url>
+    <loc>https://acelerat.vercel.app/#rbf</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Smart Advisor: "bitcoin advisor", "bitcoin fee calculator" -->
+  <url>
+    <loc>https://acelerat.vercel.app/#advisor</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.75</priority>
+  </url>
+
+  <!-- Статус TX: "статус транзакции биткоин", "bitcoin tx status" -->
+  <url>
+    <loc>https://acelerat.vercel.app/#status</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.85</priority>
+  </url>
+
+  <!-- Пулы: "майнинг пулы биткоин", "bitcoin mining pools" -->
+  <url>
+    <loc>https://acelerat.vercel.app/#pools</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Telegram: "turbotx telegram", "турботх телеграм" -->
+  <url>
+    <loc>https://t.me/Sup_TurboTX</loc>
+    <lastmod>2026-03-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
   </url>
 
 </urlset>
