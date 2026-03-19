@@ -4211,9 +4211,8 @@ async function go() {
             if (!seen.has(key)) { seen.add(key); hrReach += HR_TABLE[key] || 0; }
           }
         }
-        // Если Premium и хоть что-то отправилось — минимум 88%
-        // Для Free — реальный охват из results (~10%)
-        if (hrReach === 0 && plan === 'premium' && okCnt > 0) hrReach = 88;
+        // FIX v14.2: убрана заглушка 88% — показываем РЕАЛЬНЫЙ охват из results
+        // hrReach уже посчитан выше из реальных ok-ответов пулов
 
         const summaryEl = document.createElement('div');
         summaryEl.style.cssText = 'margin-top:10px;display:flex;flex-direction:column;gap:5px';
@@ -4226,9 +4225,9 @@ async function go() {
         if (hrReach > 0) {
           const hrRow = document.createElement('div');
           hrRow.style.cssText = 'padding:5px 8px;border-radius:5px;background:rgba(0,232,122,.07);border:1px solid rgba(0,232,122,.15);font-family:var(--mono);font-size:.6rem;color:var(--g)';
-          const realHr = (plan === 'premium') ? (data.summary?.hashrateReach || hrReach) : hrReach;
+          const realHr = data.summary?.hashrateReach || hrReach;
           hrRow.innerHTML = plan === 'free'
-            ? '⛏ ~' + realHr + '% хешрейта · ViaBTC + mempool.space <span style="color:var(--m);margin-left:4px">· Premium → ~88%</span>'
+            ? '⛏ ~' + realHr + '% хешрейта · ViaBTC + mempool.space <span style="color:var(--m);margin-left:4px">· Premium → больше пулов</span>'
             : '⛏ ~' + realHr + '% хешрейта сети Bitcoin охвачено';
           summaryEl.appendChild(hrRow);
         }
@@ -4297,6 +4296,7 @@ async function go() {
         stopPremiumRepeat();
         startWaveCountdown('wave-panel-' + _apiStatusId_local);
         // 10 волн: 15/15/30/60/120/120/120/120/180/180 мин (BASE_INTERVALS из repeat.js)
+        // Кумулятивные минуты для setTimeout: волна 2 через 15, волна 3 через 30, ...
         const _WAVE_MINS = [15, 30, 60, 120, 240, 360, 480, 600, 780, 960];
         const _waveTimers = [];
         _WAVE_MINS.forEach(function(cumMinutes, i) {
@@ -4421,7 +4421,9 @@ function stopPremiumRepeat() {
 }
 
 // ── LIVE WAVE COUNTDOWN ────────────────────────────────────────
-const WAVE_SCHEDULE = [0, 15, 30, 90, 150, 270, 390, 510, 630, 780, 960]; // суммарные минуты от старта (10 волн)
+// 10 волн: BASE_INTERVALS из repeat.js: 15/15/30/60/120/120/120/120/180/180 мин
+// Кумулятивно от старта: волна 1 = 0 (мгновенно), волна 2 = +15, волна 3 = +30, ...
+const WAVE_SCHEDULE = [0, 15, 30, 60, 120, 240, 360, 480, 600, 780]; // 10 волн, последняя через 780 мин
 let _waveTimerInt = null;
 let _waveStartTs  = 0;
 let _wavePanelId  = null;
