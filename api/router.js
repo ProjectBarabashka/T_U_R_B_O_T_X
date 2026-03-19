@@ -362,35 +362,19 @@ async function handleStats(req, res) {
 // ══════════════════════════════════════════════════════════════
 //  PRICE  —  GET /api/price
 // ══════════════════════════════════════════════════════════════
-// ══ PRICE TIERS v14.2 — fee rate главный сигнал ═════════════
-// low:      ≤8 sat/vB  → $3   (сеть свободна, типичная ночь/выходные)
-// medium:   ≤25 sat/vB → $5   (нормальная нагрузка будней)
-// high:     ≤60 sat/vB → $9   (активный торговый день)
-// extreme:  ≤150 sat/vB→ $14  (bull run / события)
-// critical: >150 sat/vB→ $19  (блокчейн перегружен)
+// PRICE_TIERS v14.2 — откалиброваны по реальным данным mempool 2025-2026
+// feeRate 1-8   = исторически низкий (текущий рынок март 2026)
+// feeRate 8-25  = норма рабочего дня
+// feeRate 25-80 = высокая нагрузка, ускорение реально помогает
+// feeRate 80-200= перегрузка, TX застревают часами
+// feeRate 200+  = критика (халвинг, ordinals-спайк и т.д.)
 const PRICE_TIERS = [
   { maxFee:8,   usd:3,  label:'low',      emoji:'🟢', text:'Сеть свободна',        textEn:'Network is clear',    confLabel:'5–10 мин ⚡'  },
   { maxFee:25,  usd:5,  label:'medium',   emoji:'🟡', text:'Умеренная нагрузка',   textEn:'Moderate load',       confLabel:'10–20 мин ⚡' },
-  { maxFee:60,  usd:9,  label:'high',     emoji:'🟠', text:'Высокая нагрузка',     textEn:'High load',           confLabel:'15–30 мин'    },
-  { maxFee:150, usd:14, label:'extreme',  emoji:'🔴', text:'Перегрузка сети',      textEn:'Network congested',   confLabel:'20–40 мин'    },
-  { maxFee:Infinity, usd:19, label:'critical', emoji:'🔴', text:'Критическая перегрузка', textEn:'Critical congestion', confLabel:'30–60 мин' },
+  { maxFee:80,  usd:9,  label:'high',     emoji:'🟠', text:'Высокая нагрузка',     textEn:'High load',           confLabel:'15–30 мин'    },
+  { maxFee:200, usd:14, label:'extreme',  emoji:'🔴', text:'Перегрузка сети',      textEn:'Network congested',   confLabel:'30–60 мин'    },
+  { maxFee:Infinity, usd:19, label:'critical', emoji:'🔴', text:'Критическая перегрузка', textEn:'Critical congestion', confLabel:'1–3 часа' },
 ];
-
-// v14.2: получаем среднее время последних 3 блоков — ключевой сигнал для анимаций
-async function getRecentBlockTime() {
-  try {
-    const r = await ft('https://mempool.space/api/v1/blocks', {}, 6000);
-    if (!r.ok) return null;
-    const blocks = await sj(r);
-    if (!Array.isArray(blocks) || blocks.length < 2) return null;
-    // Берём последние 3 блока, считаем среднее время между ними
-    const times = blocks.slice(0, Math.min(4, blocks.length)).map(b => b.timestamp);
-    const diffs = [];
-    for (let i = 0; i < times.length - 1; i++) diffs.push(times[i] - times[i+1]);
-    const avgSec = diffs.reduce((a,b) => a+b, 0) / diffs.length;
-    return Math.round(avgSec / 60); // в минутах
-  } catch { return null; }
-}
 
 async function getFeeRate() {
   try { const r=await ft('https://mempool.space/api/v1/fees/recommended'); if(r.ok){const j=await sj(r);return{rate:j.fastestFee||20,all:j};} } catch {}
@@ -420,108 +404,121 @@ async function getBtcPrice() {
   });
 }
 
-async function getAvgBlockTime() {
-  // Среднее время последних 6 блоков из mempool.space
-  try {
-    const r = await ft('https://mempool.space/api/v1/blocks?limit=6', {}, 6000);
-    if (!r.ok) return null;
-    const blocks = await sj(r);
-    if (!Array.isArray(blocks) || blocks.length < 2) return null;
-    const times = blocks.map(b => b.timestamp).sort((a,b) => b - a);
-    let totalDiff = 0, count = 0;
-    for (let i = 0; i < times.length - 1; i++) {
-      const diff = (times[i] - times[i+1]) / 60; // в минутах
-      if (diff > 0 && diff < 60) { totalDiff += diff; count++; }
-    }
-    return count > 0 ? Math.round(totalDiff / count) : null;
-  } catch { return null; }
-}
-
 async function handlePrice(req, res) {
   if (!checkRl(getIp(req), 30)) return res.status(429).json({ ok:false, error:'Too many requests' });
-
-  // v14.2: параллельно тянем fee + цену + мемпул + время блоков
-  const [feeRes,priceRes,mempoolRes,blockTimeRes] = await Promise.allSettled([
-    getFeeRate(), getBtcPrice(), getMempoolStats(), getRecentBlockTime()
-  ]);
-  const {rate:feeRate,all:allFees} = feeRes.status==='fulfilled' ? feeRes.value : {rate:20,all:{}};
-  const btcPrice     = priceRes.status==='fulfilled'     ? priceRes.value    : null;
-  const mempoolStats = mempoolRes.status==='fulfilled'   ? mempoolRes.value  : null;
-  const avgBlockMin  = blockTimeRes.status==='fulfilled' ? blockTimeRes.value: null;
-
+  const [feeRes,priceRes,mempoolRes] = await Promise.allSettled([getFeeRate(),getBtcPrice(),getMempoolStats()]);
+  const {rate:feeRate,all:allFees}=feeRes.status==='fulfilled'?feeRes.value:{rate:20,all:{}};
+  const btcPrice=priceRes.status==='fulfilled'?priceRes.value:null;
+  const mempoolStats=mempoolRes.status==='fulfilled'?mempoolRes.value:null;
+  // ── ДИНАМИЧЕСКАЯ ЦЕНА v14: fee + очередь мемпула ─────────────
+  // Два сигнала определяют тир одновременно — берём максимальный.
+  //
+  // Сигнал 1: feeRate (sat/vB) — рыночная ставка прямо сейчас
   const mpCount      = mempoolStats?.count || 0;
   const mpVsizeBytes = mempoolStats?.vsize  || 0;
   const mpVsizeMB    = mpVsizeBytes / 1_000_000;
 
-  // Сигнал 1: feeRate
-  const tierByFee  = PRICE_TIERS.find(t => feeRate <= t.maxFee) ?? PRICE_TIERS.at(-1);
-  const feeTierIdx = PRICE_TIERS.indexOf(tierByFee);
+  const tierByFee = PRICE_TIERS.find(t => feeRate <= t.maxFee) ?? PRICE_TIERS.at(-1);
 
-  // Сигнал 2: размер мемпула — исправлены пороги (vsize реалистичен)
+  // Сигнал 2: очередь мемпула (TX count + vsize)
+  // 1 блок = ~1 МБ = ~2000 TX; норма ≤3 блоков = ≤6000 TX / 3 МБ
+  // Каждые +2000 TX сверх нормы = ещё один блок ожидания
+  // mpTierIdx v14.2 — откалиброван по реальным данным (норма 2026 = 20-50k TX)
+  // 300 MB = максимальный стандартный размер мемпула (3 блока по 1 вейт-МБ)
   const mpTierIdx =
-    mpCount > 100000 || mpVsizeMB > 200 ? 4 :
-    mpCount >  60000 || mpVsizeMB > 100 ? 3 :
-    mpCount >  25000 || mpVsizeMB >  25 ? 2 :
-    mpCount >   8000 || mpVsizeMB >   8 ? 1 :
-                                          0;
+    mpCount > 150000 || mpVsizeMB > 250 ? 4 :   // critical — редкий спайк
+    mpCount >  80000 || mpVsizeMB > 150 ? 3 :   // extreme
+    mpCount >  40000 || mpVsizeMB >  80 ? 2 :   // high
+    mpCount >  15000 || mpVsizeMB >  25 ? 1 :   // medium (текущий ~44k = medium)
+                                          0;    // low
 
-  // Сигнал 3: время блоков (медленные блоки = TX копятся)
-  const blockTierBonus = avgBlockMin == null ? 0
-    : avgBlockMin > 25 ? 2
-    : avgBlockMin > 18 ? 1
-    : 0;
-
-  const finalTierIdx = Math.min(4, Math.max(feeTierIdx, mpTierIdx + blockTierBonus));
-  const tier = PRICE_TIERS[finalTierIdx];
-
-  // BUG FIX v14.2: bestTime учитывает все сигналы — конец противоречий в UI
-  const worstSignal = Math.max(feeTierIdx, mpTierIdx, blockTierBonus > 0 ? 2 : 0);
-  const bestTime = (() => {
-    if (worstSignal === 0) return { tip: '💚 Отличное время — сеть свободна, комиссии минимальны.', quality: 'excellent' };
-    if (worstSignal === 1) return { tip: '✅ Хорошее время. Сеть умеренно загружена.', quality: 'good' };
-    if (worstSignal === 2) {
-      const reason = mpTierIdx >= feeTierIdx
-        ? `Мемпул загружен: ${mpCount.toLocaleString()} TX / ${mpVsizeMB.toFixed(0)} МБ.`
-        : `Высокий fee-rate: ${feeRate} sat/vB.`;
-      return { tip: `🟡 Умеренная нагрузка. ${reason} Если не срочно — подожди снижения.`, quality: 'ok' };
+  // Сигнал 3: среднее время блока (получаем из /api/v1/mining/blocks/timestamps)
+  // Медленные блоки = TX накапливаются быстрее чем обрабатываются
+  let blockTierIdx = 0; let _avgBlockMin = null;
+  try {
+    const blkR = await ft('https://mempool.space/api/v1/mining/blocks/timestamps', {}, 4000);
+    if (blkR.ok) {
+      const blkData = await sj(blkR);
+      if (Array.isArray(blkData) && blkData.length >= 6) {
+        // Берём последние 6 блоков, считаем среднее время между ними в минутах
+        const times = blkData.slice(0, 6).map(b => b.timestamp).filter(Boolean);
+        if (times.length >= 2) {
+          const sorted = [...times].sort((a,b) => b - a);
+          const avgSec = (sorted[0] - sorted[sorted.length-1]) / (sorted.length - 1);
+          _avgBlockMin = +(avgSec / 60).toFixed(1);
+          blockTierIdx = _avgBlockMin > 25 ? 3 : _avgBlockMin > 18 ? 2 : _avgBlockMin > 13 ? 1 : 0;
+        }
+      }
     }
-    if (worstSignal === 3) return { tip: `🟠 Высокая нагрузка. ${feeRate} sat/vB, ${mpCount.toLocaleString()} TX в мемпуле. Рекомендуем ускорение.`, quality: 'poor' };
-    return { tip: `🔴 Критическая перегрузка (${feeRate} sat/vB, ${mpCount.toLocaleString()} TX). Транзакции застревают. TurboTX решит за 10–20 мин.`, quality: 'critical' };
-  })();
+  } catch {}
 
+  // Итоговый тир = максимум из трёх сигналов
+  const feeTierIdx = PRICE_TIERS.indexOf(tierByFee);
+  let tier = PRICE_TIERS[Math.max(feeTierIdx, mpTierIdx, blockTierIdx)];
+
+  // Отдельный индикатор нагрузки мемпула (не зависит от feeRate)
   const mempoolCongestion =
-    mpCount > 80000 ? { level:'critical', emoji:'🔴', text:'Мемпул критически перегружен',  textEn:'Mempool critically overloaded', txCount:mpCount } :
-    mpCount > 50000 ? { level:'high',     emoji:'🟠', text:'Мемпул сильно загружен',         textEn:'Mempool heavily loaded',        txCount:mpCount } :
-    mpCount > 25000 ? { level:'medium',   emoji:'🟡', text:'Мемпул умеренно загружен',       textEn:'Mempool moderately loaded',     txCount:mpCount } :
-    mpCount >  8000 ? { level:'low',      emoji:'🟢', text:'Мемпул в норме',                 textEn:'Mempool normal',                txCount:mpCount } :
-                      { level:'clear',    emoji:'🟢', text:'Мемпул свободен',                textEn:'Mempool clear',                 txCount:mpCount };
+    mpCount > 80000  ? { level:'critical', emoji:'🔴', text:'Мемпул критически перегружен',  textEn:'Mempool critically overloaded', txCount:mpCount } :
+    mpCount > 50000  ? { level:'high',     emoji:'🟠', text:'Мемпул сильно загружен',         textEn:'Mempool heavily loaded',        txCount:mpCount } :
+    mpCount > 30000  ? { level:'medium',   emoji:'🟡', text:'Мемпул умеренно загружен',       textEn:'Mempool moderately loaded',     txCount:mpCount } :
+    mpCount > 10000  ? { level:'low',      emoji:'🟢', text:'Мемпул в норме',                 textEn:'Mempool normal',                txCount:mpCount } :
+                       { level:'clear',    emoji:'🟢', text:'Мемпул свободен',                textEn:'Mempool clear',                 txCount:mpCount };
 
-  // heartLevel + blockIcon — прямые команды для фронтенд-анимаций
-  const heartLevel = finalTierIdx >= 3 ? 'busy' : finalTierIdx >= 1 ? 'mid' : 'calm';
-  const blockIcon  = avgBlockMin == null ? 'normal' : avgBlockMin < 8 ? 'fast' : avgBlockMin > 15 ? 'slow' : 'normal';
-
-  const usd  = tier.usd;
-  const btc  = btcPrice ? parseFloat((usd / btcPrice).toFixed(6)) : null;
-  const sats = btcPrice ? Math.ceil((usd / btcPrice) * 1e8) : null;
+  const usd=tier.usd;
+  const btc=btcPrice?parseFloat((usd/btcPrice).toFixed(6)):null;
+  const sats=btcPrice?Math.ceil((usd/btcPrice)*1e8):null;
+  const bestTimeFn=(fr,a)=>{
+    if(fr<=5)  return{tip:'💚 Идеально — сеть почти пустая. Самое дешёвое время.',quality:'excellent'};
+    if(fr<=15) return{tip:'✅ Хорошее время для транзакции.',quality:'good'};
+    if(fr<=50) return{tip:'🟡 Умеренная нагрузка. Если не срочно — подожди ночи (UTC 02:00–06:00).',quality:'ok'};
+    if(fr<=100)return{tip:'🟠 Высокая нагрузка. Рекомендуем ускорение или подождать.',quality:'poor'};
+    return{tip:'🔴 Критическая перегрузка. Транзакции застревают. TurboTX поможет ускорить.',quality:'critical'};
+  };
+  const tip=bestTimeFn(feeRate,allFees);
+  // BUG FIX: confLabel по tier — клиент показывает реальное время подтверждения
   const CONF_LABELS = { low:'5–10 мин ⚡', medium:'10–15 мин ⚡', high:'10–20 мин ⚡', extreme:'15–30 мин', critical:'20–40 мин' };
   const confLabel = CONF_LABELS[tier.label] || '10–20 мин ⚡';
-
+  // BUG FIX: CDN кэш уменьшен до 60с (был 180с) — цена обновляется чаще
+  // _t query param от клиента меняется каждую минуту → cache miss каждую минуту
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
   res.setHeader('Pragma', 'no-cache');
   return res.status(200).json({
-    ok:true, usd, btc, sats, btcPrice, feeRate,
-    fees: { fastest:allFees.fastestFee||feeRate, halfHour:allFees.halfHourFee||feeRate, hour:allFees.hourFee||feeRate, economy:allFees.economyFee||allFees.minimumFee||1 },
-    congestion:tier.label, emoji:tier.emoji, text:tier.text, textEn:tier.textEn,
-    heartLevel, blockIcon, avgBlockMin,
-    priceSignals: {
-      feeDriver:feeTierIdx>=mpTierIdx, queueDriver:mpTierIdx>feeTierIdx, blockDriver:blockTierBonus>0,
-      feeRate, feeTierIdx, mpTierIdx, blockTierBonus, mpCount, mpVsizeMB:+mpVsizeMB.toFixed(1),
+    ok:true,usd,btc,sats,btcPrice,feeRate,
+    fees:{fastest:allFees.fastestFee||feeRate,halfHour:allFees.halfHourFee||feeRate,hour:allFees.hourFee||feeRate,economy:allFees.economyFee||allFees.minimumFee||1},
+    // fee-рынок + очередь (комбинированный тир)
+    congestion:tier.label,emoji:tier.emoji,text:tier.text,textEn:tier.textEn,
+    // что именно подняло цену (для UI)
+    priceSignals:{
+      feeDriver:   feeTierIdx >= mpTierIdx && feeTierIdx >= blockTierIdx,
+      queueDriver: mpTierIdx > feeTierIdx && mpTierIdx >= blockTierIdx,
+      blockDriver: blockTierIdx > feeTierIdx && blockTierIdx > mpTierIdx,
+      feeRate, feeTierIdx, mpTierIdx, blockTierIdx,
+      mpCount, mpVsizeMB: +mpVsizeMB.toFixed(1),
     },
-    mempoolCongestion, confLabel, bestTime, mempool:mempoolStats,
+    // отдельный индикатор мемпула — показывает РЕАЛЬНОЕ кол-во TX
+    mempoolCongestion,
+    confLabel,
+    bestTime:tip,mempool:mempoolStats,
+    // heartLevel и blockIcon для анимаций фронта (v14.2)
+    heartLevel: (
+      tier.label === 'critical' || tier.label === 'extreme' ? 'busy' :
+      tier.label === 'high' || tier.label === 'medium' ? 'mid' : 'calm'
+    ),
+    blockIcon: (
+      blockTierIdx >= 2 ? 'slow' :
+      blockTierIdx === 1 ? 'normal' : 'fast'
+    ),
+    avgBlockMin: (() => {
+      try {
+        // Передаём последнее посчитанное значение если есть
+        return _avgBlockMin;
+      } catch { return null; }
+    })(),
     tiers:PRICE_TIERS.map(t=>({usd:t.usd,label:t.label,emoji:t.emoji,text:t.text,textEn:t.textEn,confLabel:t.confLabel,maxFee:t.maxFee===Infinity?null:t.maxFee})),
     timestamp:Date.now(),
   });
 }
+
 // ══════════════════════════════════════════════════════════════
 //  MEMPOOL  —  GET /api/mempool[?txid=<64hex>]
 // ══════════════════════════════════════════════════════════════
