@@ -4171,24 +4171,27 @@ async function go() {
           const _rbEl = document.getElementById('rb');
           if (_rbEl) {
             updateHistoryExtra(txid, { html: _rbEl.innerHTML || null });
-            // Скрываем зелёный блок — данные теперь в истории
-            setTimeout(() => {
-              _rbEl.style.transition = 'opacity .4s';
-              _rbEl.style.opacity = '0';
-              setTimeout(() => { _rbEl.style.display = 'none'; _rbEl.style.opacity = ''; _rbEl.style.transition = ''; }, 400);
-            }, 1800);
           }
         } catch(_) {}
       }
     }
 
-    // Сохраняем финальный html после всех изменений DOM
-    // (вызывается в обоих путях — основном и fallback)
+    // Сохраняем финальный html и скрываем зелёный блок
     setTimeout(function() {
       try {
         const _rbEl = document.getElementById('rb');
         if (_rbEl && _rbEl.innerHTML.trim()) {
           updateHistoryExtra(txid, { html: _rbEl.innerHTML });
+          // Скрываем rb — данные теперь в истории
+          setTimeout(function() {
+            _rbEl.style.transition = 'opacity .5s';
+            _rbEl.style.opacity = '0';
+            setTimeout(function() {
+              _rbEl.style.display = 'none';
+              _rbEl.style.opacity = '';
+              _rbEl.style.transition = '';
+            }, 500);
+          }, 1500);
         }
       } catch(_) {}
     }, 100);
@@ -6686,6 +6689,43 @@ async function onTxidDiag(v) {
   }
 }
 
+
+// ── РАСКРЫТИЕ ДЕТАЛЕЙ В ИСТОРИИ ──────────────────────────────
+function toggleHistDetail(btn) {
+  const wrap = btn.parentElement;
+  const detail = wrap.querySelector('.hist-detail-inner');
+  if (!detail) return;
+  const isOpen = detail.style.display === 'block';
+  if (isOpen) {
+    detail.style.display = 'none';
+    btn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg> Подробности';
+    return;
+  }
+  // Первое открытие — вставляем html из истории
+  if (!detail.dataset.loaded) {
+    try {
+      const txid = detail.dataset.txid;
+      const h = JSON.parse(localStorage.getItem('tx_history') || '[]');
+      const entry = h.find(function(x) { return sanitizeTxid(x.txid) === txid; });
+      if (entry && entry.html) {
+        detail.innerHTML = entry.html +
+          '<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.05);font-size:.55rem;color:var(--m);display:flex;align-items:center;gap:5px">' +
+          '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
+          ' Сохранено ' + new Date(entry.ts).toLocaleString('ru', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) + '</div>';
+        // Скрываем лишние кнопки внутри
+        detail.querySelectorAll('button.pbtn, button.acc-btn, #push-prompt').forEach(function(el) { el.style.display = 'none'; });
+        detail.dataset.loaded = '1';
+      } else {
+        detail.innerHTML = '<span style="color:var(--m);font-size:.6rem">Детали не сохранились — ускорите транзакцию снова</span>';
+      }
+    } catch(e) {
+      detail.innerHTML = '<span style="color:var(--err)">Ошибка загрузки</span>';
+    }
+  }
+  detail.style.display = 'block';
+  btn.innerHTML = '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg> Свернуть';
+}
+
 // ── ИСТОРИЯ УСКОРЕНИЙ ─────────────────────────────────────────
 function saveHistory(txid, plan, extra) {
   try {
@@ -6930,29 +6970,7 @@ function _doRenderHistory(page) {
           ${accelHTML}
         </div>
         ${infoLine}
-        ${item.html ? `
-        <div style="margin-top:8px">
-          <button
-            onclick="(function(el,btn){
-              const d=el.nextElementSibling;
-              const open=d.style.display==='block';
-              d.style.display=open?'none':'block';
-              btn.innerHTML=open
-                ?'<svg width=\'10\' height=\'10\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2.5\'><polyline points=\'6 9 12 15 18 9\'/></svg> Подробности'
-                :'<svg width=\'10\' height=\'10\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2.5\'><polyline points=\'18 15 12 9 6 15\'/></svg> Свернуть';
-            })(this,this)"
-            style="font-family:var(--mono);font-size:.56rem;color:var(--m);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:4px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .15s"
-            onmouseover="this.style.color='var(--t)';this.style.borderColor='rgba(255,255,255,.2)'"
-            onmouseout="this.style.color='var(--m)';this.style.borderColor='rgba(255,255,255,.08)'"
-          ><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg> Подробности</button>
-          <div class="hist-detail-inner" style="display:none;margin-top:10px;background:rgba(0,232,122,.025);border:1px solid rgba(0,232,122,.1);border-radius:8px;padding:14px 16px;font-family:var(--mono);font-size:.68rem;animation:fadeup .2s ease;overflow:hidden">
-            ${item.html}
-            <div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.05);font-size:.55rem;color:var(--m);display:flex;align-items:center;gap:5px">
-              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              Сохранено ${new Date(item.ts).toLocaleString('ru',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}
-            </div>
-          </div>
-        </div>` : ''}
+        ${item.html ? '<div style="margin-top:8px"><button class="hist-expand-btn" data-txid="' + safeTxid + '" onclick="toggleHistDetail(this)" style="font-family:var(--mono);font-size:.56rem;color:var(--m);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:4px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .15s" onmouseover="this.style.color=\'var(--t)\';this.style.borderColor=\'rgba(255,255,255,.2)\'" onmouseout="this.style.color=\'var(--m)\';this.style.borderColor=\'rgba(255,255,255,.08)\'"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg> Подробности</button><div class="hist-detail-inner" data-txid="' + safeTxid + '" style="display:none;margin-top:10px;background:rgba(0,232,122,.025);border:1px solid rgba(0,232,122,.1);border-radius:8px;padding:14px 16px;font-family:var(--mono);font-size:.68rem;overflow:hidden"></div></div>' : ''}
       </div>`;
     }).join('');
 
