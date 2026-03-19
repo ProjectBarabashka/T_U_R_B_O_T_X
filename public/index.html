@@ -4173,7 +4173,8 @@ async function go() {
             if (!seen.has(key)) { seen.add(key); hrReach += HR_TABLE[key] || 0; }
           }
         }
-        // Если Premium и хоть что-то отправилось — показываем минимум суммарный охват каналов
+        // Если Premium и хоть что-то отправилось — минимум 88%
+        // Для Free — реальный охват из results (~10%)
         if (hrReach === 0 && plan === 'premium' && okCnt > 0) hrReach = 88;
 
         const summaryEl = document.createElement('div');
@@ -4187,7 +4188,10 @@ async function go() {
         if (hrReach > 0) {
           const hrRow = document.createElement('div');
           hrRow.style.cssText = 'padding:5px 8px;border-radius:5px;background:rgba(0,232,122,.07);border:1px solid rgba(0,232,122,.15);font-family:var(--mono);font-size:.6rem;color:var(--g)';
-          hrRow.innerHTML = '⛏ ~' + hrReach + '% хешрейта сети Bitcoin охвачено';
+          const realHr = (plan === 'premium') ? (data.summary?.hashrateReach || hrReach) : hrReach;
+          hrRow.innerHTML = plan === 'free'
+            ? '⛏ ~' + realHr + '% хешрейта · ViaBTC + mempool.space <span style="color:var(--m);margin-left:4px">· Premium → ~88%</span>'
+            : '⛏ ~' + realHr + '% хешрейта сети Bitcoin охвачено';
           summaryEl.appendChild(hrRow);
         }
 
@@ -6829,7 +6833,13 @@ function toggleHistDetail(btn) {
       const h = JSON.parse(localStorage.getItem('tx_history') || '[]');
       const entry = h.find(function(x) { return sanitizeTxid(x.txid) === txid; });
       if (entry && entry.html) {
-        detail.innerHTML = entry.html +
+        // Клонируем wave-panel-global если он принадлежит этому txid
+        let waveHtml = '';
+        const wpGlobal = document.getElementById('wave-panel-global');
+        if (wpGlobal && wpGlobal.innerHTML.trim()) {
+          waveHtml = '<div style="margin-top:10px">' + wpGlobal.innerHTML + '</div>';
+        }
+        detail.innerHTML = entry.html + waveHtml +
           '<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.05);font-size:.55rem;color:var(--m);display:flex;align-items:center;gap:5px">' +
           '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
           ' Сохранено ' + new Date(entry.ts).toLocaleString('ru', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) + '</div>';
