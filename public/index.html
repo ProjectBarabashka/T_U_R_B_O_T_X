@@ -1582,7 +1582,9 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
       <div style="position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none;opacity:.4">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f7931a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
       </div>
-      <input type="text" id="txid" placeholder="Вставьте TXID из кошелька (64 символа)" maxlength="64" oninput="onTxidDiag(this.value)">
+      <input type="text" name="username" style="display:none;position:absolute;left:-9999px" tabindex="-1" aria-hidden="true" autocomplete="username">
+      <input type="password" name="password" style="display:none;position:absolute;left:-9999px" tabindex="-1" aria-hidden="true" autocomplete="current-password">
+      <input type="text" id="txid" placeholder="Вставьте TXID из кошелька (64 символа)" maxlength="64" oninput="onTxidDiag(this.value)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" data-lpignore="true">
     </div>
     <div style="margin-top:6px;font-family:var(--mono);font-size:.6rem;color:rgba(255,255,255,.28);display:flex;align-items:center;gap:5px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Найдите TXID в своём кошельке — это 64-символьный хеш транзакции</div>
     <div class="batch-area" id="batch-mode"><textarea class="batch-input" id="batch-txids" data-i18n-ph="ph.batch" placeholder="Вставьте по одному TXID на строку&#10;a1b2c3...&#10;9f8e7d...&#10;4c5d6e..." oninput="onBatchInput()"></textarea><div class="batch-count" id="batch-count">0 транзакций</div></div>
@@ -1643,7 +1645,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
 
   <div class="fg" style="margin-top:20px">
     <label>TXID транзакции для замены комиссии</label>
-    <input type="text" id="rbf-txid" placeholder="a1b2c3d4... (64 hex символа)" maxlength="64"
+    <input type="text" id="rbf-txid" placeholder="a1b2c3d4... (64 hex символа)" maxlength="64" autocomplete="off" data-lpignore="true" data-form-type="other"
       oninput="rbfOnInput()" style="width:100%;box-sizing:border-box">
   </div>
 
@@ -1721,7 +1723,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
 
     <div class="fg" style="margin-top:12px">
       <label>TXID родительской транзакции</label>
-      <input type="text" id="cpfp-parent" placeholder="a1b2c3d4... (64 hex символа)" maxlength="64" oninput="onCpfpInput()" style="font-family:var(--mono);font-size:.72rem">
+      <input type="text" id="cpfp-parent" placeholder="a1b2c3d4... (64 hex символа)" maxlength="64" oninput="onCpfpInput()" autocomplete="off" data-lpignore="true" data-form-type="other" style="font-family:var(--mono);font-size:.72rem">
     </div>
 
     <div style="margin:12px 0 4px;display:none" id="cpfp-target-wrap">
@@ -1772,14 +1774,14 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
       Проверить статус TX
     </span></div>
     <div class="card-sub">Проверка подтверждений в реальном времени через mempool.space</div>
-    <div class="fg"><label>TXID</label><input type="text" id="stxid" placeholder="a1b2c3d4... (64 hex символа)" maxlength="64"></div><button class="chk-btn" onclick="chk()"><span style="display:inline-flex;align-items:center;gap:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>ПРОВЕРИТЬ СТАТУС</span></button><div class="status-res" id="sr"></div>
+    <div class="fg"><label>TXID</label><input type="text" id="stxid" placeholder="a1b2c3d4... (64 hex символа)" maxlength="64" autocomplete="off" data-lpignore="true" data-form-type="other"></div><button class="chk-btn" onclick="chk()"><span style="display:inline-flex;align-items:center;gap:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>ПРОВЕРИТЬ СТАТУС</span></button><div class="status-res" id="sr"></div>
   </div>
 
   <!-- ── ПАНЕЛЬ: SMART ADVISOR ─────────────────────── -->
   <div class="upanel" id="upanel-adv">
       <p style="font-size:.8rem;color:var(--m);margin-bottom:16px">Вставьте TXID — Advisor мгновенно скажет <strong style="color:var(--t)">что конкретно делать</strong> с вашей транзакцией прямо сейчас</p>
   <div style="display:flex;gap:8px;margin-bottom:14px">
-    <input type="text" id="adv-txid" placeholder="TXID транзакции (64 символа hex)" maxlength="64"
+    <input type="text" id="adv-txid" placeholder="TXID транзакции (64 символа hex)" maxlength="64" autocomplete="off" data-lpignore="true" data-form-type="other"
       style="flex:1;background:var(--b);border:1px solid var(--b2);border-radius:var(--r);padding:11px 14px;color:var(--t);font-family:var(--mono);font-size:.75rem;outline:none;transition:border-color .2s"
       oninput="this.value=this.value.trim()" onfocus="this.style.borderColor='rgba(124,92,252,.4)'" onblur="this.style.borderColor='var(--b2)'">
     <button onclick="runAdvisor()" style="padding:11px 18px;background:rgba(124,92,252,.15);border:1px solid rgba(124,92,252,.3);border-radius:var(--r);color:var(--accent2);font-family:var(--mono);font-size:.72rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s"
@@ -7072,13 +7074,11 @@ if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', function() {
     renderHistory();
     _startHistoryConfPolling();
-    setTimeout(restoreLastResult, 300); // восстанавливаем результат после F5
-  });
+    });
 } else {
   // DOM уже готов (скрипт выполняется после парсинга)
   renderHistory();
   _startHistoryConfPolling();
-  setTimeout(restoreLastResult, 300); // восстанавливаем результат после F5
 }
 
 // ── LN RESTORE AFTER F5 ───────────────────────────────────────
