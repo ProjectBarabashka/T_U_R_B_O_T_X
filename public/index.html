@@ -1613,6 +1613,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
 
   <div class="prog-wrap" id="pw"><div class="prog-bar"><div class="prog-fill" id="pf"></div></div><div class="steps-list" id="sl"></div></div>
   <div class="res-box" id="rb"></div>
+  <div id="wave-panel-global" style="margin-top:12px"></div>
 
   <!-- ИСТОРИЯ УСКОРЕНИЙ -->
   <div id="history-block" style="display:none;margin-top:16px">
@@ -3387,13 +3388,14 @@ if (document.readyState === 'loading') {
 }
 
 setInterval(async () => {
+  if (!_fbReady) return;
   const v = await getGlobalUsed();
   _applyFreeUI(v);
-}, 5000);
+}, 60000);
 
-setInterval(syncGlobalQueue, 15000);
-setInterval(syncGlobalFeed, 20000);
-setInterval(syncCounterFromFirebase, 30000);
+setInterval(function() { if (_fbReady) syncGlobalQueue(); }, 30000);
+setInterval(function() { if (_fbReady) syncGlobalFeed();   }, 40000);
+setInterval(function() { if (_fbReady) syncCounterFromFirebase(); }, 90000);
 
 // ── FIREBASE SSE ──────────────────────────────────────────────
 function _makeSSE(url, onPut, onPatch) {
@@ -4043,9 +4045,11 @@ async function go() {
 
         const byName = {};
         data.results.forEach(function(ch) {
-          // Индексируем по обоим полям — channel и name (могут совпадать, но на всякий случай)
-          if (ch.channel) byName[ch.channel] = ch;
-          if (ch.name && ch.name !== ch.channel) byName[ch.name] = ch;
+          // Индексируем по обоим полям — channel и name
+          // ok приводим к строгому boolean чтобы избежать undefined/null
+          const entry = Object.assign({}, ch, { ok: !!ch.ok });
+          if (ch.channel) byName[ch.channel] = entry;
+          if (ch.name)    byName[ch.name]    = entry;
         });
 
         if (plan === 'premium') {
@@ -4216,20 +4220,31 @@ async function go() {
         startWaveCountdown('wave-panel-' + _apiStatusId_local);
         // 10 волн: 15/15/30/60/120/120/120/120/180/180 мин (BASE_INTERVALS из repeat.js)
         const _WAVE_MINS = [15, 30, 60, 120, 240, 360, 480, 600, 780, 960];
+        const _waveTimers = [];
         _WAVE_MINS.forEach(function(cumMinutes, i) {
-          setTimeout(async function() {
+          const tid = setTimeout(async function() {
+            // Берём токен в момент выполнения — к этому времени он точно установлен
+            const token = _PREM_TOKEN || localStorage.getItem('turbotx_prem_token') || '';
+            if (!token) return; // без токена не шлём
             try {
               const rr = await fetch('/api/repeat', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-TurboTX-Token': _PREM_TOKEN },
+                headers: { 'Content-Type': 'application/json', 'X-TurboTX-Token': token },
                 body: JSON.stringify({ txid: txid, wave: i + 1 }),
               });
               const rd = await rr.json();
-              if (rd.confirmed) { stopPremiumRepeat(); stopWaveCountdown(); return; }
+              if (rd.confirmed) {
+                stopPremiumRepeat(); stopWaveCountdown();
+                _waveTimers.forEach(function(t){ clearTimeout(t); });
+                return;
+              }
+              // Обновляем список волн в панели
+              _renderWaveList();
             } catch(_) {
               premiumBroadcast(txid);
             }
           }, cumMinutes * 60000);
+          _waveTimers.push(tid);
         });
       }
 
@@ -4310,7 +4325,8 @@ let _wavePanelId  = null;
 function startWaveCountdown(panelContainerId) {
   _waveStartTs = Date.now();
   _wavePanelId = panelContainerId;
-  const el = document.getElementById(panelContainerId);
+  // Всегда рендерим в глобальный контейнер — он НЕ скрывается вместе с rb
+  const el = document.getElementById('wave-panel-global');
   if (!el) return;
 
   const html = `
@@ -4372,6 +4388,9 @@ function _tickWave() {
 
 function stopWaveCountdown() {
   if (_waveTimerInt) { clearInterval(_waveTimerInt); _waveTimerInt = null; }
+  // Убираем панель из глобального контейнера
+  const g = document.getElementById('wave-panel-global');
+  if (g) g.innerHTML = '';
 }
 
 async function getCurrentHeight() {
@@ -5754,7 +5773,7 @@ async function _tgNotify(paidStr, method, txShort) {
   try {
     await fetch('/api/notify', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-TurboTX-Token': _PREM_TOKEN || '' },
       body: JSON.stringify({ paidStr, method, txShort, type: 'payment' })
     });
     return;
