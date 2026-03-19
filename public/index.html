@@ -2894,35 +2894,42 @@ async function fetchLiveStats() {
           el.textContent = '~' + avgMin + ' мин';
           el.title = 'Среднее время между блоками (последние ' + count + ' блоков)';
           if (iconEl) {
-            // Цвет цифры по avgMin
-            if (avgMin < 8)        el.style.color = 'var(--g)';
-            else if (avgMin <= 14) el.style.color = 'var(--a)';
-            else                   el.style.color = '#ff4455';
+            // Цвет цифры устанавливается внутри блока анимации ниже
           }
         }
         // Немедленно обновляем иконку блока по новому avgMin
         // (не ждём следующего _rtApplyTicker)
         (function() {
-          const fire  = document.getElementById('bi-fire');
-          const water = document.getElementById('bi-water');
-          const stars = document.getElementById('bi-stars');
-          const svg   = document.getElementById('block-anim-svg');
-          const icon  = document.getElementById('block-icon');
+          const fire      = document.getElementById('bi-fire');
+          const water     = document.getElementById('bi-water');
+          const stars     = document.getElementById('bi-stars');
+          const explosion = document.getElementById('bi-explosion');
+          const svg       = document.getElementById('block-anim-svg');
+          const icon      = document.getElementById('block-icon');
           if (!fire) return;
           const show = function(el2) { if (el2) el2.style.display = ''; };
           const hide = function(el2) { if (el2) el2.style.display = 'none'; };
-          if (avgMin < 8) {
-            hide(fire); hide(water); show(stars);
-            if (svg)  svg.style.filter = 'drop-shadow(0 0 6px rgba(167,139,250,.3))';
-            if (icon) icon.title = 'Блоки быстрее нормы (~' + avgMin + ' мин)';
-          } else if (avgMin <= 14) {
-            hide(fire); show(water); hide(stars);
-            if (svg)  svg.style.filter = 'drop-shadow(0 0 6px rgba(56,189,248,.3))';
-            if (icon) icon.title = 'Нормальное время блока (~' + avgMin + ' мин)';
+          // вода(≤14) → огонь(14-18) → взрыв(18-22) → звёзды(>22)
+          if (avgMin > 22) {
+            hide(fire); hide(water); show(stars); hide(explosion);
+            if (svg)  svg.style.filter = 'drop-shadow(0 0 8px rgba(167,139,250,.5))';
+            if (icon) icon.title = '🌌 Блоки: ~' + avgMin + ' мин — критически медленно';
+            if (el)   el.style.color = '#c084fc';
+          } else if (avgMin > 18) {
+            hide(fire); hide(water); hide(stars); show(explosion);
+            if (svg)  svg.style.filter = 'drop-shadow(0 0 10px rgba(255,50,0,.6))';
+            if (icon) icon.title = '💥 Сильное торможение (~' + avgMin + ' мин)';
+            if (el)   el.style.color = '#ff3355';
+          } else if (avgMin > 14) {
+            show(fire); hide(water); hide(stars); hide(explosion);
+            if (svg)  svg.style.filter = 'drop-shadow(0 0 6px rgba(247,100,0,.45))';
+            if (icon) icon.title = '🔥 Блоки медленнее нормы (~' + avgMin + ' мин)';
+            if (el)   el.style.color = '#ff7a00';
           } else {
-            show(fire); hide(water); hide(stars);
-            if (svg)  svg.style.filter = 'drop-shadow(0 0 6px rgba(247,100,0,.4))';
-            if (icon) icon.title = 'Блоки медленные (~' + avgMin + ' мин)';
+            hide(fire); show(water); hide(stars); hide(explosion);
+            if (svg)  svg.style.filter = 'drop-shadow(0 0 6px rgba(56,189,248,.35))';
+            if (icon) icon.title = '💧 Нормальное время блока (~' + avgMin + ' мин)';
+            if (el)   el.style.color = 'var(--a)';
           }
         })();
       }
@@ -5994,28 +6001,39 @@ function _rtApplyTicker(p) {
 
   // ── BLOCK ICON: сервер говорит 'fast'|'normal'|'slow' ─────
   (function() {
-    const fire  = document.getElementById('bi-fire');
-    const water = document.getElementById('bi-water');
-    const stars = document.getElementById('bi-stars');
-    const svg   = document.getElementById('block-anim-svg');
-    const icon  = document.getElementById('block-icon');
+    const fire      = document.getElementById('bi-fire');
+    const water     = document.getElementById('bi-water');
+    const stars     = document.getElementById('bi-stars');
+    const explosion = document.getElementById('bi-explosion');
+    const svg       = document.getElementById('block-anim-svg');
+    const icon      = document.getElementById('block-icon');
+    const numEl     = document.getElementById('avg-time');
     if (!fire) return;
     const show = function(el) { if (el) el.style.display = ''; };
     const hide = function(el) { if (el) el.style.display = 'none'; };
-    // blockIcon с сервера — источник правды (включает данные реальных блоков)
-    const blockLevel = p.blockIcon || (window._avgBlockMin < 8 ? 'fast' : window._avgBlockMin > 15 ? 'slow' : 'normal');
-    if (blockLevel === 'slow') {
-      show(fire); hide(water); hide(stars);
-      if (svg)  svg.style.filter = 'drop-shadow(0 0 6px rgba(247,100,0,.4))';
-      if (icon) icon.title = p.avgBlockMin ? `Блоки: ~${p.avgBlockMin} мин — мемпул растёт` : 'Блоки медленные';
-    } else if (blockLevel === 'fast') {
-      hide(fire); hide(water); show(stars);
-      if (svg)  svg.style.filter = 'drop-shadow(0 0 6px rgba(167,139,250,.3))';
-      if (icon) icon.title = p.avgBlockMin ? `Блоки: ~${p.avgBlockMin} мин — быстрее нормы` : 'Блоки быстрые';
+    // вода(≤14) → огонь(14-18) → взрыв(18-22) → звёзды(>22)
+    const avg = window._avgBlockMin;
+    const blockLevel = p.blockIcon || (avg > 22 ? 'fast' : avg > 18 ? 'explosion' : avg > 14 ? 'slow' : 'normal');
+    if (blockLevel === 'fast') {
+      hide(fire); hide(water); show(stars); hide(explosion);
+      if (svg)   svg.style.filter = 'drop-shadow(0 0 8px rgba(167,139,250,.5))';
+      if (icon)  icon.title = p.avgBlockMin ? `🌌 Блоки: ~${p.avgBlockMin} мин — критически медленно` : 'Критически медленные блоки';
+      if (numEl) numEl.style.color = '#c084fc';
+    } else if (blockLevel === 'explosion') {
+      hide(fire); hide(water); hide(stars); show(explosion);
+      if (svg)   svg.style.filter = 'drop-shadow(0 0 10px rgba(255,50,0,.6))';
+      if (icon)  icon.title = p.avgBlockMin ? `💥 Блоки: ~${p.avgBlockMin} мин — сильное торможение` : 'Взрывная перегрузка';
+      if (numEl) numEl.style.color = '#ff3355';
+    } else if (blockLevel === 'slow') {
+      show(fire); hide(water); hide(stars); hide(explosion);
+      if (svg)   svg.style.filter = 'drop-shadow(0 0 6px rgba(247,100,0,.45))';
+      if (icon)  icon.title = p.avgBlockMin ? `🔥 Блоки: ~${p.avgBlockMin} мин — медленнее нормы` : 'Блоки медленные';
+      if (numEl) numEl.style.color = '#ff7a00';
     } else {
-      hide(fire); show(water); hide(stars);
-      if (svg)  svg.style.filter = 'drop-shadow(0 0 6px rgba(56,189,248,.3))';
-      if (icon) icon.title = p.avgBlockMin ? `Блоки: ~${p.avgBlockMin} мин` : 'Нормальное время блока';
+      hide(fire); show(water); hide(stars); hide(explosion);
+      if (svg)   svg.style.filter = 'drop-shadow(0 0 6px rgba(56,189,248,.35))';
+      if (icon)  icon.title = p.avgBlockMin ? `💧 Блоки: ~${p.avgBlockMin} мин` : 'Нормальное время блока';
+      if (numEl) numEl.style.color = 'var(--a)';
     }
   })();
 
