@@ -1129,6 +1129,12 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
 @keyframes biStarRay   { 0%,100%{opacity:.4;transform:scaleX(1)} 50%{opacity:.8;transform:scaleX(1.25)} }
 @keyframes biStarSmall { 0%,100%{transform:scale(1);opacity:.7} 40%{transform:scale(1.3);opacity:1} 70%{transform:scale(.8);opacity:.4} }
 @keyframes biDust      { 0%,100%{opacity:.4;transform:scale(1)} 50%{opacity:.9;transform:scale(1.5)} }
+
+/* ── История: развёрнутый блок деталей ── */
+.hist-detail-inner .pbtn,
+.hist-detail-inner .acc-btn,
+.hist-detail-inner #push-prompt { display: none !important; }
+.hist-detail-inner .res-box { display: block !important; background: transparent !important; border: none !important; padding: 0 !important; margin: 0 !important; animation: none !important; }
 </style>
 <style>
 /* ── Tab bar ───────────────────────────────────────── */
@@ -4046,8 +4052,6 @@ async function go() {
         }
         // Если Premium и хоть что-то отправилось — показываем минимум суммарный охват каналов
         if (hrReach === 0 && plan === 'premium' && okCnt > 0) hrReach = 88;
-        // FREE: показываем реальный охват (только ViaBTC=9% + mempoolAccel=1% из пулов + 3 ноды без HR)
-        // Если клиент не получил hrReach от сервера — считаем сами из results
 
         const summaryEl = document.createElement('div');
         summaryEl.style.cssText = 'margin-top:10px;display:flex;flex-direction:column;gap:5px';
@@ -4060,9 +4064,7 @@ async function go() {
         if (hrReach > 0) {
           const hrRow = document.createElement('div');
           hrRow.style.cssText = 'padding:5px 8px;border-radius:5px;background:rgba(0,232,122,.07);border:1px solid rgba(0,232,122,.15);font-family:var(--mono);font-size:.6rem;color:var(--g)';
-          hrRow.innerHTML = plan === 'free'
-            ? '⛏ ~' + hrReach + '% хешрейта · ' + (hrReach > 0 ? 'ViaBTC + mempool.space ускорители' : '3 ноды отправлены') + ' <span style="color:var(--m);margin-left:4px">· Premium → ~88%</span>'
-            : '⛏ ~' + hrReach + '% хешрейта сети Bitcoin охвачено';
+          hrRow.innerHTML = '⛏ ~' + hrReach + '% хешрейта сети Bitcoin охвачено';
           summaryEl.appendChild(hrRow);
         }
 
@@ -4167,7 +4169,15 @@ async function go() {
         // Сохраняем fallback html тоже
         try {
           const _rbEl = document.getElementById('rb');
-          updateHistoryExtra(txid, { html: _rbEl ? _rbEl.innerHTML : null });
+          if (_rbEl) {
+            updateHistoryExtra(txid, { html: _rbEl.innerHTML || null });
+            // Скрываем зелёный блок — данные теперь в истории
+            setTimeout(() => {
+              _rbEl.style.transition = 'opacity .4s';
+              _rbEl.style.opacity = '0';
+              setTimeout(() => { _rbEl.style.display = 'none'; _rbEl.style.opacity = ''; _rbEl.style.transition = ''; }, 400);
+            }, 1800);
+          }
         } catch(_) {}
       }
     }
@@ -6715,8 +6725,10 @@ function updateHistoryExtra(txid, extra) {
     if (extra.hrReach  != null) h[idx].hrReach  = extra.hrReach;
     if (extra.channels != null) h[idx].channels = extra.channels;
     if (extra.rbf      != null) h[idx].rbf      = extra.rbf;
-    if (extra.html     != null) h[idx].html     = extra.html;
+    if (extra.html     != null) { h[idx].html = extra.html; }
     localStorage.setItem('tx_history', JSON.stringify(h));
+    // Если обновили html — перерисовываем историю чтобы появилась кнопка «Подробности»
+    if (extra.html != null) renderHistory();
   } catch(e) {}
 }
 
@@ -6918,6 +6930,29 @@ function _doRenderHistory(page) {
           ${accelHTML}
         </div>
         ${infoLine}
+        ${item.html ? `
+        <div style="margin-top:8px">
+          <button
+            onclick="(function(el,btn){
+              const d=el.nextElementSibling;
+              const open=d.style.display==='block';
+              d.style.display=open?'none':'block';
+              btn.innerHTML=open
+                ?'<svg width=\'10\' height=\'10\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2.5\'><polyline points=\'6 9 12 15 18 9\'/></svg> Подробности'
+                :'<svg width=\'10\' height=\'10\' viewBox=\'0 0 24 24\' fill=\'none\' stroke=\'currentColor\' stroke-width=\'2.5\'><polyline points=\'18 15 12 9 6 15\'/></svg> Свернуть';
+            })(this,this)"
+            style="font-family:var(--mono);font-size:.56rem;color:var(--m);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:4px 10px;cursor:pointer;display:inline-flex;align-items:center;gap:5px;transition:all .15s"
+            onmouseover="this.style.color='var(--t)';this.style.borderColor='rgba(255,255,255,.2)'"
+            onmouseout="this.style.color='var(--m)';this.style.borderColor='rgba(255,255,255,.08)'"
+          ><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg> Подробности</button>
+          <div class="hist-detail-inner" style="display:none;margin-top:10px;background:rgba(0,232,122,.025);border:1px solid rgba(0,232,122,.1);border-radius:8px;padding:14px 16px;font-family:var(--mono);font-size:.68rem;animation:fadeup .2s ease;overflow:hidden">
+            ${item.html}
+            <div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.05);font-size:.55rem;color:var(--m);display:flex;align-items:center;gap:5px">
+              <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              Сохранено ${new Date(item.ts).toLocaleString('ru',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}
+            </div>
+          </div>
+        </div>` : ''}
       </div>`;
     }).join('');
 
