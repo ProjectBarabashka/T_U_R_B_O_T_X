@@ -194,8 +194,6 @@ input[type=text], input[type=email], textarea {
   .pi:hover { border-color: rgba(247,147,26,.2); background: rgba(247,147,26,.03); }
   .review-card:hover { border-color: rgba(255,255,255,.1); transform: translateY(-2px); }
   .nav-link:hover { color: var(--t); background: rgba(255,255,255,.04); }
-  .hero-cta:hover { color: var(--a); border-color: rgba(247,147,26,.3); }
-  .hero-cta:hover svg { transform: translateY(2px); }
 }
 @media (hover: none) {
   .plan-card:hover { transform: none !important; }
@@ -351,10 +349,11 @@ h1{ font-family:var(--display); font-size:clamp(2.4rem,7vw,4.4rem); font-weight:
 h1 span{ background:linear-gradient(110deg,var(--a) 0%,var(--a2) 50%,var(--a3) 100%); background-size:200% auto; -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; animation:shimmer 4s linear infinite }
 @keyframes shimmer{ 0%{background-position:0% center} 100%{background-position:200% center} }
 .hero p{ color:var(--m2); font-size:.95rem; max-width:440px; margin:0 auto 44px; line-height:1.75; font-weight:300 }
-.hero-cta{ display:inline-flex; align-items:center; gap:8px; font-family:var(--mono); font-size:.62rem; letter-spacing:2px; color:var(--m); text-transform:uppercase; cursor:pointer; transition:color .2s; border:1px solid var(--b2); padding:9px 18px; border-radius:30px; margin-top:8px }
-.hero-cta:hover{color:var(--a); border-color:rgba(247,147,26,.3)}
-.hero-cta svg{transition:transform .2s}
-.hero-cta:hover svg{transform:translateY(2px)}
+.hero-cta{ display:inline-flex; align-items:center; gap:10px; font-family:var(--mono); font-size:.75rem; font-weight:800; letter-spacing:2.5px; color:#000; text-transform:uppercase; cursor:pointer; background:linear-gradient(110deg,var(--a) 0%,var(--a2) 100%); border:none; padding:15px 32px; border-radius:50px; margin-top:8px; transition:transform .2s,box-shadow .2s; box-shadow:0 4px 24px rgba(247,147,26,.4); animation:heroCtaPulse 2.5s ease-in-out infinite; position:relative }
+.hero-cta:hover{ color:#000; transform:translateY(-3px) scale(1.03); box-shadow:0 10px 36px rgba(247,147,26,.55) }
+.hero-cta svg{ transition:transform .2s }
+.hero-cta:hover svg{ transform:translateY(3px) }
+@keyframes heroCtaPulse{ 0%,100%{ box-shadow:0 4px 24px rgba(247,147,26,.4),0 0 0 0 rgba(247,147,26,0) } 50%{ box-shadow:0 6px 30px rgba(247,147,26,.5),0 0 0 8px rgba(247,147,26,.1) } }
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:36px}
 .stat-card{ background:var(--s); border:1px solid rgba(255,255,255,.06); border-radius:14px; padding:20px 16px 18px; text-align:center; position:relative; overflow:hidden; transition:border-color .2s,background .2s,transform .18s; cursor:pointer; display:flex; flex-direction:column; align-items:center; }
 .stat-card::before{ content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(255,255,255,.02),transparent); pointer-events:none; }
@@ -378,11 +377,13 @@ input::placeholder{color:rgba(255,255,255,.22)}
 .po-title{ font-size:.85rem; font-weight:600; font-family:var(--display) }
 .po-desc{ font-size:.65rem; color:var(--m2); font-family:var(--mono) }
 .po-price{ font-size:.72rem; color:var(--a); font-family:var(--mono); margin-top:3px }
-.acc-btn{ width:100%; padding:17px; margin-top:10px; background:linear-gradient(110deg,#ff9520 0%,var(--a2) 100%); border:none; border-radius:var(--r); color:#000; font-family:var(--mono); font-size:.76rem; font-weight:800; letter-spacing:3px; cursor:pointer; text-transform:uppercase; transition:all .22s; position:relative; overflow:hidden; box-shadow:0 6px 28px rgba(247,147,26,.28),inset 0 1px 0 rgba(255,255,255,.2) }
-.acc-btn::after{ content:''; position:absolute; inset:0; background:linear-gradient(180deg,rgba(255,255,255,.12) 0%,transparent 50%); pointer-events:none }
-.acc-btn:hover:not(:disabled){ transform:translateY(-3px); box-shadow:0 12px 40px rgba(247,147,26,.42),inset 0 1px 0 rgba(255,255,255,.2) }
-.acc-btn:active:not(:disabled){transform:translateY(-1px)}
-.acc-btn:disabled{opacity:.25;cursor:not-allowed;transform:none;box-shadow:none}
+.acc-btn{ width:100%; padding:18px; margin-top:14px; background:linear-gradient(110deg,#ff9520 0%,#ff6b35 100%); border:none; border-radius:var(--r); color:#000; font-family:var(--mono); font-size:.8rem; font-weight:800; letter-spacing:3px; cursor:pointer; text-transform:uppercase; transition:transform .2s,box-shadow .2s; position:relative; overflow:hidden; box-shadow:0 4px 28px rgba(247,147,26,.35),inset 0 1px 0 rgba(255,255,255,.25); animation:accGlow 2.8s ease-in-out infinite }
+.acc-btn::after{ content:''; position:absolute; inset:0; background:linear-gradient(180deg,rgba(255,255,255,.15) 0%,transparent 50%); pointer-events:none; z-index:0 }
+.acc-btn > span{ position:relative; z-index:1 }
+.acc-btn:hover:not(:disabled){ transform:translateY(-3px); box-shadow:0 12px 40px rgba(247,147,26,.5),inset 0 1px 0 rgba(255,255,255,.25) }
+.acc-btn:active:not(:disabled){ transform:translateY(-1px) }
+.acc-btn:disabled{ opacity:.3; cursor:not-allowed; transform:none; box-shadow:none; animation:none }
+@keyframes accGlow{ 0%,100%{ box-shadow:0 4px 28px rgba(247,147,26,.35),inset 0 1px 0 rgba(255,255,255,.25) } 50%{ box-shadow:0 6px 36px rgba(247,147,26,.55),0 0 0 5px rgba(247,147,26,.1),inset 0 1px 0 rgba(255,255,255,.25) } }
 .prog-wrap{display:none;margin-top:22px}
 .prog-bar{height:2px;background:rgba(255,255,255,.05);border-radius:4px;overflow:hidden;margin-bottom:16px}
 .prog-fill{ height:100%; background:linear-gradient(90deg,var(--a),var(--a2)); width:0%; transition:width .4s cubic-bezier(.4,0,.2,1); box-shadow:0 0 10px rgba(247,147,26,.5) }
@@ -480,8 +481,7 @@ footer{ border-top:1px solid rgba(255,255,255,.04); padding:36px 0; text-align:c
 footer a{color:var(--m);text-decoration:none;transition:color .15s}
 footer a:hover{color:var(--a)}
 .fl2{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin-top:14px}
-.free-limit-bar{ background:rgba(247,147,26,.035); border:1px solid rgba(247,147,26,.15); border-radius:var(--r); padding:12px 16px; margin-bottom:18px; display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap }
-.flb-count{ font-family:var(--mono); font-size:1.05rem; font-weight:700; color:var(--a) }
+.flb-count{ font-family:var(--mono); font-size:1rem; font-weight:700; color:var(--a) }
 .flb-count.low{color:var(--err)}
 .flb-bar-wrap{ width:100%; height:2px; background:rgba(255,255,255,.06); border-radius:4px; overflow:hidden; margin-top:8px }
 .flb-bar-fill{ height:100%; background:linear-gradient(90deg,var(--a),var(--a2)); border-radius:4px; transition:width .5s; box-shadow:0 0 6px rgba(247,147,26,.4) }
@@ -525,7 +525,6 @@ footer a:hover{color:var(--a)}
   nav{padding:0 18px}
   .logo-tag{display:none}
   .nav-link:not([href*="t.me"]):nth-child(n+5){display:none}
-  .free-limit-bar{flex-direction:column;align-items:flex-start;gap:8px}
   .batch-toggle{width:100%;justify-content:center}
   .rating-summary{flex-wrap:wrap;gap:8px}
 }
@@ -542,7 +541,7 @@ footer a:hover{color:var(--a)}
   h1{font-size:clamp(1.7rem,9vw,2.4rem);letter-spacing:-1px}
   .hero p{font-size:.8rem;margin-bottom:18px}
   .hero-label{font-size:.52rem;padding:5px 12px}
-  .hero-cta{font-size:.58rem;padding:8px 14px;flex-wrap:wrap;gap:8px}
+  .hero-cta{font-size:.68rem;padding:13px 24px;gap:8px}
   .mempool-ticker{gap:8px;padding:8px 12px;font-size:.55rem}
   .ticker-sep{display:none}
   #mempool-bar{ flex-wrap:nowrap!important; overflow-x:auto; -webkit-overflow-scrolling:touch; justify-content:flex-start; gap:10px; padding:8px 12px; font-size:.58rem; scrollbar-width:none; -ms-overflow-style:none }
@@ -555,11 +554,10 @@ footer a:hover{color:var(--a)}
   .card{padding:16px 14px;border-radius:12px}
   .card-title{font-size:.92rem}
   .card-sub{font-size:.66rem;margin-bottom:14px}
-  .acc-btn{padding:15px 14px;font-size:.7rem;letter-spacing:2px;min-height:52px}
+  .acc-btn{padding:16px 14px;font-size:.74rem;letter-spacing:2px;min-height:54px}
   .step{font-size:.62rem}
   .rr{flex-wrap:wrap;gap:3px}
   .rv{max-width:100%;text-align:left;font-size:.63rem}
-  .free-limit-bar{flex-direction:column;align-items:flex-start;gap:8px}
   .batch-toggle{width:100%;justify-content:center}
   input[type=text]{font-size:16px!important;padding:14px!important;border-radius:12px}
   .plans-grid{grid-template-columns:1fr;gap:10px}
@@ -813,7 +811,6 @@ body { top: 0px !important; }
 details summary::-webkit-details-marker { display: none; }
 details[open] summary svg { transform: rotate(180deg); }
 details summary svg { transition: transform .2s; }
-.acc-btn { padding: 15px; }
 .section-divider { height: 1px; background: linear-gradient(90deg,transparent,rgba(247,147,26,.12),transparent); margin: 8px 0 28px; }
 .pools-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
 .pi { display: flex; align-items: center; gap: 8px; background: rgba(0,0,0,.25); border: 1px solid rgba(255,255,255,.06); border-radius: 8px; padding: 8px 10px; font-family: var(--mono); font-size: .65rem; }
@@ -852,7 +849,6 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
 .guarantee-block { border-radius: var(--r2); box-shadow: var(--shadow), 0 0 30px rgba(0,232,122,.04); }
 .dot.g { animation: blink-g 3s ease-in-out infinite; }
 .nav-link { transition: color .15s, background .15s; }
-.hero-cta { background: rgba(255,255,255,.02); backdrop-filter: blur(10px); }
 .prog-fill { background: linear-gradient(90deg, var(--a), var(--a2), var(--a3)); background-size: 200% auto; animation: shimmer 2s linear infinite; }
 .stat-num { background: linear-gradient(135deg, var(--t), rgba(232,232,240,.7)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
 .live-feed { border-radius: var(--r) !important; }
@@ -1267,7 +1263,10 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
     <span style="font-family:var(--mono);font-size:.58rem;color:var(--m2);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:4px 12px">🛡 Anti-Stuck 72h</span>
     <span style="font-family:var(--mono);font-size:.58rem;color:var(--m2);background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:20px;padding:4px 12px">📦 Batch ×20</span>
   </div>
-  <div class="hero-cta" onclick="document.querySelector('.card').scrollIntoView({behavior:'smooth'})" id="hero-cta-text">Ускорить сейчас <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 2v10M2 7l5 5 5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+  <div class="hero-cta" onclick="document.getElementById('utab-bar').scrollIntoView({behavior:'smooth',block:'start'});setTimeout(()=>document.getElementById('txid')?.focus(),600)" id="hero-cta-text">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+    Ускорить сейчас
+  </div>
 </section>
 
 <!-- MEMPOOL ALERT BAR с анимированными иконками -->
@@ -1485,6 +1484,18 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
       <span style="font-weight:700;font-size:.92rem">Ускорить транзакцию</span>
     </div>
     <div style="font-family:var(--mono);font-size:.7rem;color:var(--m);margin-bottom:18px;margin-top:-10px">Вставьте TXID из кошелька — мы займёмся остальным</div>
+
+  <!-- СЧЁТЧИК БЕСПЛАТНЫХ УСКОРЕНИЙ -->
+  <div id="free-limit-bar" style="display:flex;align-items:center;gap:10px;margin-bottom:12px;padding:7px 12px;border-radius:8px;background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.06)">
+    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="var(--g)" stroke-width="2" style="flex-shrink:0"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    <span style="font-family:var(--mono);font-size:.6rem;color:var(--m)">Бесплатных ускорений сегодня:</span>
+    <span id="free-left-num" class="flb-count" style="opacity:.3;animation:skeletonPulse 1.6s ease-in-out infinite;font-size:.72rem">—</span>
+    <span style="font-family:var(--mono);font-size:.58rem;color:var(--m)">/&nbsp;100</span>
+    <div style="flex:1;height:3px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden;margin-left:4px"><div id="free-bar-fill" class="flb-bar-fill" style="width:100%;height:100%"></div></div>
+  </div>
+  <div id="limit-reached-msg" style="display:none;font-family:var(--mono);font-size:.65rem;color:var(--err);margin-bottom:10px;padding:7px 12px;border-radius:8px;background:rgba(255,51,85,.06);border:1px solid rgba(255,51,85,.18)">⚠ Дневной лимит исчерпан. Сброс через: <span id="reset-countdown" style="font-weight:700">--:--:--</span></div>
+  <div id="reset-timer-wrap" style="display:none"></div>
+
     <div class="fg">
     <label>Transaction ID (TXID)</label>
     <div id="single-mode"><input type="text" id="txid" placeholder="a1b2c3d4e5f6... (64 hex символа)" maxlength="64" oninput="onTxidDiag(this.value)"></div>
@@ -1509,7 +1520,8 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
     </div>
   </div>
 
-  <button class="acc-btn" id="abtn" onclick="go()"><span style="display:inline-flex;align-items:center;gap:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>УСКОРИТЬ ТРАНЗАКЦИЮ</span></button>
+
+  <button class="acc-btn" id="abtn" onclick="go()"><span style="display:inline-flex;align-items:center;gap:10px;padding-left:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>УСКОРИТЬ ТРАНЗАКЦИЮ</span></button>
 
   <div class="prog-wrap" id="pw"><div class="prog-bar"><div class="prog-fill" id="pf"></div></div><div class="steps-list" id="sl"></div></div>
   <div class="res-box" id="rb"></div>
@@ -1950,18 +1962,6 @@ function openTab(tab) {
 </script>
 
 <!-- HOW IT REALLY WORKS -->
-<div style="background:linear-gradient(135deg,rgba(247,147,26,.06) 0%,rgba(124,92,252,.06) 100%);border:1px solid rgba(247,147,26,.2);border-radius:14px;padding:18px 22px;margin-bottom:20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap">
-  <div style="font-family:var(--mono);font-size:.58rem;font-weight:700;color:var(--a);letter-spacing:1px;white-space:nowrap">v14 NEW</div>
-  <div style="display:flex;gap:10px;flex-wrap:wrap">
-    <span style="font-family:var(--mono);font-size:.6rem;color:rgba(255,214,0,.9);background:rgba(255,214,0,.08);padding:4px 10px;border-radius:6px;border:1px solid rgba(255,214,0,.2)">⚡ Lightning Network</span>
-    <span style="font-family:var(--mono);font-size:.6rem;color:var(--m2);background:rgba(0,0,0,.25);padding:4px 10px;border-radius:6px;border:1px solid rgba(247,147,26,.1)">🎯 Last-Block-Miner boost</span>
-    <span style="font-family:var(--mono);font-size:.6rem;color:var(--m2);background:rgba(0,0,0,.25);padding:4px 10px;border-radius:6px;border:1px solid rgba(247,147,26,.1)">🔐 MARA Slipstream</span>
-    <span style="font-family:var(--mono);font-size:.6rem;color:var(--m2);background:rgba(0,0,0,.25);padding:4px 10px;border-radius:6px;border:1px solid rgba(247,147,26,.1)">🧠 Smart Advisor</span>
-    <span style="font-family:var(--mono);font-size:.6rem;color:var(--m2);background:rgba(0,0,0,.25);padding:4px 10px;border-radius:6px;border:1px solid rgba(247,147,26,.1)">⚡ 88% хешрейта</span>
-    <span style="font-family:var(--mono);font-size:.6rem;color:var(--m2);background:rgba(0,0,0,.25);padding:4px 10px;border-radius:6px;border:1px solid rgba(247,147,26,.1)">🛡 Anti-Stuck 72h</span>
-    <span style="font-family:var(--mono);font-size:.6rem;color:var(--m2);background:rgba(0,0,0,.25);padding:4px 10px;border-radius:6px;border:1px solid rgba(247,147,26,.1)">🔁 HEX кэш</span>
-  </div>
-</div>
 <div style="background:var(--s);border:1px solid var(--b);border-radius:16px;padding:24px 26px;margin-bottom:28px">
   <div style="font-family:var(--mono);font-size:.58rem;letter-spacing:2px;color:var(--m);text-transform:uppercase;margin-bottom:16px;display:flex;align-items:center;gap:8px">
     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--a)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
@@ -2982,12 +2982,18 @@ function _applyFreeUI(used) {
   el.style.animation = '';
   el.textContent = left;
   el.className = 'flb-count' + (left <= 10 ? ' low' : '');
-  document.getElementById('free-bar-fill').style.width = (left / FL_MAX * 100) + '%';
-  document.getElementById('free-bar-fill').className = 'flb-bar-fill' + (left <= 10 ? ' low' : '');
+  const barFill = document.getElementById('free-bar-fill');
+  if (barFill) {
+    barFill.style.width = (left / FL_MAX * 100) + '%';
+    barFill.className = 'flb-bar-fill' + (left <= 10 ? ' low' : '');
+  }
   const empty = left === 0;
-  document.getElementById('free-limit-bar').style.borderColor = empty ? 'rgba(255,68,102,.35)' : '';
-  document.getElementById('limit-reached-msg').style.display = empty ? 'block' : 'none';
-  document.getElementById('reset-timer-wrap').style.display = empty ? 'block' : 'none';
+  const limitBar = document.getElementById('free-limit-bar');
+  if (limitBar) limitBar.style.borderColor = empty ? 'rgba(255,68,102,.35)' : '';
+  const limitMsg = document.getElementById('limit-reached-msg');
+  if (limitMsg) limitMsg.style.display = empty ? 'flex' : 'none';
+  const resetWrap = document.getElementById('reset-timer-wrap');
+  if (resetWrap) resetWrap.style.display = 'none'; // таймер теперь внутри limit-reached-msg
 }
 
 async function updateFreeUI(forceUsed) {
@@ -3669,9 +3675,9 @@ setInterval(monitorQueue, 30000);
 setInterval(renderQueue, 15000);
 
 // ── ACCELERATE ─────────────────────────────────────────────────
-const BTN_IDLE = '<span style="display:inline-flex;align-items:center;gap:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> УСКОРИТЬ ТРАНЗАКЦИЮ</span>';
-const BTN_LOAD = '<span style="display:inline-flex;align-items:center;gap:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="animation:spin .8s linear infinite;transform-origin:center"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> ПРОВЕРКА...</span>';
-const BTN_SEND = '<span style="display:inline-flex;align-items:center;gap:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="animation:spin .8s linear infinite;transform-origin:center"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> ОБРАБОТКА...</span>';
+const BTN_IDLE = '<span style="display:inline-flex;align-items:center;gap:10px;padding-left:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> УСКОРИТЬ ТРАНЗАКЦИЮ</span>';
+const BTN_LOAD = '<span style="display:inline-flex;align-items:center;gap:10px;padding-left:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="animation:spin .8s linear infinite;transform-origin:center;flex-shrink:0"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> ПРОВЕРКА...</span>';
+const BTN_SEND = '<span style="display:inline-flex;align-items:center;gap:10px;padding-left:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="animation:spin .8s linear infinite;transform-origin:center;flex-shrink:0"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> ОБРАБОТКА...</span>';
 
 async function go() {
   if (batchMode) {
@@ -3748,7 +3754,9 @@ async function go() {
   const txid = sanitizeTxid(document.getElementById('txid').value.trim());
   if (!txid) return err('Введите TXID транзакции');
   if (!/^[a-fA-F0-9]{64}$/.test(txid)) return err('Неверный формат TXID — нужно 64 hex символа');
-  if (plan === 'free' && getFreeLeft(_lastKnownUsed) <= 0) return err('Дневной лимит исчерпан. Попробуйте завтра или используйте Premium.');
+  if (plan === 'free' && getFreeLeft(_lastKnownUsed) <= 0) {
+    return err('Дневной лимит бесплатных ускорений исчерпан. Попробуйте Premium или подождите сброса.');
+  }
 
   const cooldownLeft = getTxidCooldown(txid, plan);
   if (cooldownLeft > 0) {
@@ -4085,7 +4093,9 @@ async function go() {
       if (plan === 'premium') {
         stopPremiumRepeat();
         startWaveCountdown('wave-panel-' + _apiStatusId_local);
-        [15, 30, 60, 120, 240].forEach(function(minDelay, i) {
+        // 10 волн: 15/15/30/60/120/120/120/120/180/180 мин (BASE_INTERVALS из repeat.js)
+        const _WAVE_MINS = [15, 30, 60, 120, 240, 360, 480, 600, 780, 960];
+        _WAVE_MINS.forEach(function(cumMinutes, i) {
           setTimeout(async function() {
             try {
               const rr = await fetch('/api/repeat', {
@@ -4095,11 +4105,10 @@ async function go() {
               });
               const rd = await rr.json();
               if (rd.confirmed) { stopPremiumRepeat(); stopWaveCountdown(); return; }
-              
             } catch(_) {
               premiumBroadcast(txid);
             }
-          }, minDelay * 60000);
+          }, cumMinutes * 60000);
         });
       }
 
@@ -4171,7 +4180,7 @@ function stopPremiumRepeat() {
 }
 
 // ── LIVE WAVE COUNTDOWN ────────────────────────────────────────
-const WAVE_SCHEDULE = [0, 15, 30, 60, 120, 240];
+const WAVE_SCHEDULE = [0, 15, 30, 90, 150, 270, 390, 510, 630, 780, 960]; // суммарные минуты от старта (10 волн)
 let _waveTimerInt = null;
 let _waveStartTs  = 0;
 let _wavePanelId  = null;
@@ -4221,7 +4230,7 @@ function _tickWave() {
     clearInterval(_waveTimerInt);
     _waveTimerInt = null;
     const wp = document.getElementById('wave-panel');
-    if (wp) wp.innerHTML += '<div style="color:var(--g);margin-top:6px;font-size:.62rem">✓ Все 8 волн завершены · Гарантия 6 часов активна</div>';
+    if (wp) wp.innerHTML += '<div style="color:var(--g);margin-top:6px;font-size:.62rem">✓ Все 10 волн завершены · Гарантия 6 часов активна</div>';
     return;
   }
   const elapsedMin = elapsedMs / 60000;
@@ -6468,9 +6477,16 @@ function _applyLang(lang) {
   if (accBtn) {
     var spans = accBtn.querySelectorAll('span');
     spans.forEach(function(sp) {
-      var txt = sp.textContent.trim();
-      if (txt === 'УСКОРИТЬ ТРАНЗАКЦИЮ' || txt === 'ACCELERATE TRANSACTION') {
-        sp.textContent = t('btn.accelerate');
+      var txt = sp.textContent.replace(/[⚡⚡]/g,'').trim();
+      if (txt === 'УСКОРИТЬ ТРАНЗАКЦИЮ' || txt === 'ACCELERATE TRANSACTION' ||
+          sp.textContent.trim() === 'УСКОРИТЬ ТРАНЗАКЦИЮ' || sp.textContent.trim() === 'ACCELERATE TRANSACTION') {
+        // обновляем BTN_IDLE через innerHTML только если кнопка в idle-состоянии
+        // (иначе не трогаем — там spinner)
+        if (!accBtn.disabled) {
+          var translated = t('btn.accelerate');
+          // безопасно заменяем только текстовую часть
+          sp.textContent = translated;
+        }
       }
     });
   }
