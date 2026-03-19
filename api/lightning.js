@@ -78,46 +78,43 @@ async function requestInvoice(callback, amountMsats, comment) {
   return data;
 }
 
-// BUG FIX v14.1: правильный поиск разделителя HRP в bech32
-// Старая версия использовала lastIndexOf('1') — неверно для invoice с '1' в данных
+// v14.2: надёжный парсер BOLT-11 — исправлен sep + поддержка новых инвойсов без tag=1
 function extractPaymentHash(invoice) {
   try {
-    const inv = invoice.toLowerCase();
-    // HRP заканчивается на первый символ '1' после позиции 4 (минимальный HRP = "lnb" + цифры)
-    let sep = -1;
-    for (let i = 4; i < inv.length; i++) {
-      if (inv[i] === '1') { sep = i; break; }
-    }
-    if (sep < 0) return null;
+    const raw = invoice.toLowerCase().trim().replace(/^lightning:/, '');
+    // BOLT-11: разделитель — последняя '1' (не первая!) — это стандарт bech32
+    const sep = raw.lastIndexOf('1');
+    if (sep < 4) return null;
     const CHARSET = 'qpzry9x8gf2tvdw0s3jn54khce6mua7l';
-    const data = inv.slice(sep + 1, -6);
+    const dataStr = raw.slice(sep + 1, -6);
     const decoded = [];
-    for (const c of data) {
+    for (const c of dataStr) {
       const v = CHARSET.indexOf(c);
       if (v < 0) return null;
       decoded.push(v);
     }
-    let pos = 7; // пропускаем timestamp (7 * 5 = 35 бит)
-    while (pos < decoded.length - 3) {
+    function toHex(bits5) {
+      let hex = '', acc = 0, cnt = 0;
+      for (const b of bits5) {
+        acc = (acc << 5) | b; cnt += 5;
+        while (cnt >= 8) { cnt -= 8; hex += ((acc >> cnt) & 0xff).toString(16).padStart(2, '0'); }
+      }
+      return hex;
+    }
+    let pos = 7; // пропускаем timestamp (35 бит)
+    let paymentHash = null, paymentSecret = null;
+    while (pos + 3 <= decoded.length) {
       const tag = decoded[pos];
       const len = decoded[pos+1] * 32 + decoded[pos+2];
       pos += 3;
-      if (tag === 1 && len === 52) { // payment hash tag
-        const hashBits = decoded.slice(pos, pos + 52);
-        let hex = '', bits = 0, value = 0;
-        for (const b of hashBits) {
-          value = (value << 5) | b;
-          bits += 5;
-          while (bits >= 8) {
-            bits -= 8;
-            hex += ((value >> bits) & 0xff).toString(16).padStart(2, '0');
-          }
-        }
-        return hex.slice(0, 64);
-      }
+      if (pos + len > decoded.length) break;
+      const fieldBits = decoded.slice(pos, pos + len);
+      if (tag === 1  && len === 52) paymentHash   = toHex(fieldBits).slice(0, 64);
+      if (tag === 16 && len === 52) paymentSecret = toHex(fieldBits).slice(0, 64);
       pos += len;
     }
-    return null;
+    const result = paymentHash || paymentSecret;
+    return (result && result.length === 64) ? result : null;
   } catch { return null; }
 }
 
