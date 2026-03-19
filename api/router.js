@@ -509,11 +509,11 @@ async function handlePrice(req, res) {
     // normal     = вода    (8–13 мин            — нормальный поток)
     // slow       = огонь   (13–22 мин           — блоки тормозят, мемпул растёт)
     // explosion  = взрыв   (> 22 мин            — критическое торможение, TX накапливаются)
-    blockIcon: (// вода<14 огонь 14-18 взрыв 18-22 звёзды>22
-    (
-      blockTierIdx >= 3 ? 'fast'      :  // звёзды > 22 мин
-      blockTierIdx >= 2 ? 'explosion' :  // взрыв 18-22 мин
-      blockTierIdx === 1 ? 'slow'      : 'normal' // огонь 14-18 / вода ≤14
+    // blockIcon: вода(≤14) → огонь(14-18) → взрыв(18-22) → звёзды(>22)
+    blockIcon: (
+      blockTierIdx >= 3 ? 'fast'      :
+      blockTierIdx >= 2 ? 'explosion' :
+      blockTierIdx === 1 ? 'slow'     : 'normal'
     ),
     avgBlockMin: (() => {
       try {

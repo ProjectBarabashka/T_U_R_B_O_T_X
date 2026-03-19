@@ -15,12 +15,12 @@ import { createHmac, timingSafeEqual } from 'crypto';
 export const CORS = {
   'Access-Control-Allow-Origin':  '*',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, X-TurboTX-Token',
+  'Access-Control-Allow-Headers': 'Content-Type, X-TurboTX-Token, Cache-Control, Pragma',
 };
 
 export const CORS_API = {
   ...CORS,
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key, X-TurboTX-Token',
+  'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key, X-TurboTX-Token, Cache-Control, Pragma',
 };
 
 // ─── FETCH С ТАЙМАУТОМ ─────────────────────────────────────────
