@@ -6079,9 +6079,10 @@ function _rtApplyTicker(p) {
   // ── v14.2: heartLevel и blockIcon приходят прямо с сервера ──
   // Сервер уже посчитал все 3 сигнала (fee + мемпул + время блоков)
   // Фронтенд просто применяет — никаких дублирующих вычислений
+  // FIX: heartLevel с сервера синхронизирован с feeRate — используем напрямую.
+  // Fallback: calm если сервер не ответил (лучше underreact чем overreact)
   const heartLevel = p.heartLevel || (
-    p.congestion === 'critical' || p.congestion === 'extreme' ? 'busy' :
-    p.congestion === 'high' || p.congestion === 'medium' ? 'mid' : 'calm'
+    p.feeRate > 80 ? 'busy' : p.feeRate > 20 ? 'mid' : 'calm'
   );
 
   // Сохраняем avgBlockMin для других частей страницы
@@ -7517,25 +7518,17 @@ window._TurboAPI = {
     if (!p || !p.usd) return;
     const usd = p.usd;
 
-    // Берём congestion с сервера (он уже учёл и feeRate и мемпул)
-    // BUG FIX: congestion с сервера может быть 'low' даже при большом мемпуле
-    // Вычисляем локально с учётом mpCount, vsize и feeRate
-    const _apMpCount  = p.mempool?.count  || p.mempoolCongestion?.txCount || 0;
-    const _apMpMb     = p.mempool?.vsize  ? p.mempool.vsize / 1_000_000 : 0;
-    const _apFeeRate  = p.feeRate || p.fees?.fastest || 0;
-    let congKey = p.congestion || 'low';
-    // Повышаем уровень если мемпул сигнализирует о нагрузке
-    if (_apMpCount > 80000 || _apMpMb > 300 || _apFeeRate > 100) {
-      if (['low','medium','high'].includes(congKey)) congKey = 'extreme';
-    } else if (_apMpCount > 30000 || _apMpMb > 100 || _apFeeRate > 20) {
-      if (congKey === 'low') congKey = 'medium';
-    }
-    // Учитываем среднее время блока: медленные блоки = TX накапливаются
-    const _apBlockMin = window._avgBlockMin || 10;
-    if (_apBlockMin > 20 && ['low','medium'].includes(congKey)) congKey = 'high';
-    else if (_apBlockMin > 15 && congKey === 'low') congKey = 'medium';
+    // FIX: используем heartLevel и congestion напрямую с сервера — он источник правды.
+    // Сервер считает price tier из трёх сигналов: feeRate + mpCount + blockTime.
+    // Клиент не должен перезаписывать это своей логикой.
+    const congKey   = p.congestion || 'low';
     const state     = CONGESTION_STATE[congKey] || CONGESTION_STATE.low;
-    const { level, color: accentColor, bg: bgColor, netText } = state;
+    // heartLevel с сервера приоритетен — он синхронизирован с ценой и tier'ом
+    const serverHeartLevel = p.heartLevel; // 'calm' | 'mid' | 'busy'
+    const level       = serverHeartLevel || state.level;
+    const accentColor = state.color;
+    const bgColor     = state.bg;
+    const netText     = state.netText;
 
     // BUG FIX: если btcPrice пришёл с сервера — обновляем _btcUsd ДО расчёта btcVal
     if (p.btcPrice && p.btcPrice > 1000) _btcUsd = p.btcPrice;
