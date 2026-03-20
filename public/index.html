@@ -1748,7 +1748,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
       <div style="font-size:.65rem;color:var(--m);letter-spacing:.5px;text-transform:uppercase">Скорость подтверждения</div>
       <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
         <span style="font-size:.62rem;color:var(--m)">Эконом</span>
-        <input type="range" id="cpfp-speed" min="1" max="3" value="3" style="flex:1;accent-color:var(--g)">
+        <input type="range" id="cpfp-speed" aria-label="Скорость подтверждения CPFP" min="1" max="3" value="3" style="flex:1;accent-color:var(--g)">
         <span style="font-size:.62rem;color:var(--m)">Быстро</span>
       </div>
     </div>
@@ -1792,14 +1792,14 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
       Проверить статус TX
     </span></div>
     <div class="card-sub">Проверка подтверждений в реальном времени через mempool.space</div>
-    <div class="fg"><label>TXID</label><input type="text" id="stxid" placeholder="a1b2c3d4... (64 hex символа)" maxlength="64" autocomplete="off" data-lpignore="true" data-form-type="other"></div><button class="chk-btn" onclick="chk()"><span style="display:inline-flex;align-items:center;gap:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>ПРОВЕРИТЬ СТАТУС</span></button><div class="status-res" id="sr"></div>
+    <div class="fg"><label for="stxid">TXID</label><input type="text" id="stxid" placeholder="a1b2c3d4... (64 hex символа)" maxlength="64" autocomplete="off" data-lpignore="true" data-form-type="other"></div><button class="chk-btn" onclick="chk()"><span style="display:inline-flex;align-items:center;gap:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>ПРОВЕРИТЬ СТАТУС</span></button><div class="status-res" id="sr"></div>
   </div>
 
   <!-- ── ПАНЕЛЬ: SMART ADVISOR ─────────────────────── -->
   <div class="upanel" id="upanel-adv">
       <p style="font-size:.8rem;color:var(--m);margin-bottom:16px">Вставьте TXID — Advisor мгновенно скажет <strong style="color:var(--t)">что конкретно делать</strong> с вашей транзакцией прямо сейчас</p>
   <div style="display:flex;gap:8px;margin-bottom:14px">
-    <input type="text" id="adv-txid" placeholder="TXID транзакции (64 символа hex)" maxlength="64" autocomplete="off" data-lpignore="true" data-form-type="other"
+    <input type="text" id="adv-txid" aria-label="TXID для Smart Advisor" placeholder="TXID транзакции (64 символа hex)" maxlength="64" autocomplete="off" data-lpignore="true" data-form-type="other"
       style="flex:1;background:var(--b);border:1px solid var(--b2);border-radius:var(--r);padding:11px 14px;color:var(--t);font-family:var(--mono);font-size:.75rem;outline:none;transition:border-color .2s"
       oninput="this.value=this.value.trim()" onfocus="this.style.borderColor='rgba(124,92,252,.4)'" onblur="this.style.borderColor='var(--b2)'">
     <button onclick="runAdvisor()" style="padding:11px 18px;background:rgba(124,92,252,.15);border:1px solid rgba(124,92,252,.3);border-radius:var(--r);color:var(--accent2);font-family:var(--mono);font-size:.72rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .2s"
@@ -2770,7 +2770,8 @@ function _animCounterTo(from, to, duration) {
     el.textContent = cur.toLocaleString('ru');
     el.style.opacity = '1';
     el.style.animation = 'none';
-    if (t < 1) requestAnimationFrame(tick);
+    if (t < 1 && !document.hidden) requestAnimationFrame(tick);
+    else if (t < 1) { cnt = to; el.textContent = to.toLocaleString('ru'); return; } // скрыта — пропускаем анимацию
     else {
       cnt = to;
       localStorage.setItem(COUNTER_KEY, to);
@@ -8001,14 +8002,14 @@ window._TurboAPI = {
   <!-- ВКЛАДКА 3: ПРОМОКОД -->
   <div id="mtab-promo" class="pay-tab-content">
     <div style="text-align:center;padding:8px 0 14px"><div style="font-size:1.8rem;margin-bottom:8px">🎟</div><div style="font-family:var(--mono);font-size:.7rem;color:var(--m2);line-height:1.7">Введите промокод для активации Premium</div></div>
-    <input type="text" id="promo-input" placeholder="Введите промокод..." style="width:100%;background:var(--bg);border:1px solid var(--b);border-radius:8px;padding:12px 14px;color:var(--t);font-family:var(--mono);font-size:.8rem;outline:none;margin-bottom:10px;transition:border-color .2s;letter-spacing:1px" oninput="this.style.borderColor=''" onkeydown="if(event.key==='Enter')applyPromo()">
+    <input type="text" id="promo-input" aria-label="Промокод" placeholder="Введите промокод..." style="width:100%;background:var(--bg);border:1px solid var(--b);border-radius:8px;padding:12px 14px;color:var(--t);font-family:var(--mono);font-size:.8rem;outline:none;margin-bottom:10px;transition:border-color .2s;letter-spacing:1px" oninput="this.style.borderColor=''" onkeydown="if(event.key==='Enter')applyPromo()">
     <button class="okbtn" onclick="applyPromo()"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Применить промокод</span></button>
     <div id="promo-result" style="margin-top:10px;font-family:var(--mono);font-size:.74rem;display:none"></div>
   </div>
   <!-- ВЕРИФИКАЦИЯ -->
   <div id="verify-section" style="display:none;border-top:1px solid var(--b);padding-top:14px;margin-top:12px">
     <div style="font-family:var(--mono);font-size:.62rem;color:var(--m);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Подтверждение оплаты</div>
-    <input type="text" id="pay-txid" placeholder="TXID / хэш транзакции оплаты..." data-i18n-ph="ph.pay_txid" maxlength="100" style="width:100%;background:var(--bg);border:1px solid var(--b);border-radius:8px;padding:11px 13px;color:var(--t);font-family:var(--mono);font-size:.75rem;outline:none;margin-bottom:10px;transition:border-color .2s">
+    <input type="text" id="pay-txid" aria-label="TXID транзакции оплаты" placeholder="TXID / хэш транзакции оплаты..." data-i18n-ph="ph.pay_txid" maxlength="100" style="width:100%;background:var(--bg);border:1px solid var(--b);border-radius:8px;padding:11px 13px;color:var(--t);font-family:var(--mono);font-size:.75rem;outline:none;margin-bottom:10px;transition:border-color .2s">
     <button class="okbtn" onclick="verifyPayment()" id="verify-btn"><span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Активировать Premium</span></button>
     <div id="verify-result" style="margin-top:12px;font-family:var(--mono);font-size:.75rem;display:none"></div>
   </div>
@@ -8020,87 +8021,34 @@ window._TurboAPI = {
 
 <script>
 (function(){
-  var cv=document.createElement('canvas');cv.width=32;cv.height=32;
-  var cx=cv.getContext('2d');
-  var fav=document.getElementById('fav');
-  var t=0;
-  var DUR=90; // кадров на цикл
+  // Упрощённая favicon анимация — статичный SVG + редкое мигание через setInterval
+  // RAF убран полностью — он вызывал Violation rAF took 56-94ms
+  var fav = document.getElementById('fav');
+  if (!fav) return;
 
-  // 5 лепестков: угол, цвет, направление взрыва
-  var petals=[
-    {a:0,   c:'#fce7f3', s:'#f9a8d4'},
-    {a:72,  c:'#fbcfe8', s:'#f9a8d4'},
-    {a:144, c:'#fce7f3', s:'#f9a8d4'},
-    {a:216, c:'#fbcfe8', s:'#f9a8d4'},
-    {a:288, c:'#fce7f3', s:'#f9a8d4'},
-  ];
+  // Статичный favicon — bitcoin молния
+  var svgStatic = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">'
+    + '<rect width="32" height="32" rx="8" fill="#f7931a"/>'
+    + '<polygon points="18,4 10,18 15,18 14,28 22,14 17,14" fill="white"/>'
+    + '</svg>';
+  var svgActive = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">'
+    + '<rect width="32" height="32" rx="8" fill="#ff6b00"/>'
+    + '<polygon points="18,4 10,18 15,18 14,28 22,14 17,14" fill="#ffe066"/>'
+    + '</svg>';
 
-  function ease(x){ return x<0.5?2*x*x:1-Math.pow(-2*x+2,2)/2; }
-
-  function draw(){
-    cx.clearRect(0,0,32,32);
-    // Фон — чёрный круг
-    cx.beginPath();cx.arc(16,16,16,0,Math.PI*2);
-    cx.fillStyle='#0d0d14';cx.fill();
-    cx.save();cx.translate(16,16);
-
-    // Прогресс цикла 0→1→0
-    // p: 0..1 только во время анимации, пауза в конце
-    var p=Math.min(t/DUR,1);
-    // взрыв: 0→0.4 разлёт, 0.4→0.6 висим, 0.6→1 собираемся
-    var explode;
-    if(p<0.4) explode=ease(p/0.4);
-    else if(p<0.6) explode=1;
-    else explode=ease(1-(p-0.6)/0.4);
-
-    var maxDist=9; // макс расстояние разлёта
-
-    petals.forEach(function(pe,i){
-      var rad=pe.a*Math.PI/180;
-      // базовая позиция лепестка
-      var bx=Math.sin(rad)*5;
-      var by=-Math.cos(rad)*5;
-      // направление взрыва — от центра
-      var ex=bx/5*maxDist*explode;
-      var ey=by/5*maxDist*explode;
-      // спин лепестка при взрыве
-      var spin=rad + explode*Math.PI*(i%2?1:-1)*1.5;
-
-      cx.save();
-      cx.translate(bx+ex, by+ey);
-      cx.rotate(spin);
-      // прозрачность: при полном разлёте чуть прозрачнее
-      cx.globalAlpha=1-explode*0.3;
-      cx.beginPath();cx.ellipse(0,0,3.5,6.5,0,0,Math.PI*2);
-      cx.fillStyle=pe.c;cx.fill();
-      cx.strokeStyle=pe.s;cx.lineWidth=0.5;cx.stroke();
-      cx.globalAlpha=1;
-      cx.restore();
-    });
-
-    // Центр — пульсирует при взрыве
-    var cr=3+explode*4;
-    // вспышка
-    if(explode>0.05){
-      cx.beginPath();cx.arc(0,0,cr*1.8,0,Math.PI*2);
-      cx.fillStyle='rgba(244,114,182,'+(explode*0.3)+')';cx.fill();
-    }
-    cx.beginPath();cx.arc(0,0,cr*0.7,0,Math.PI*2);
-    cx.fillStyle='#fdf2f8';cx.fill();
-    cx.beginPath();cx.arc(0,0,cr*0.4,0,Math.PI*2);
-    cx.fillStyle='#f472b6';cx.fill();
-
-    cx.restore();
-
-    // пауза 80 кадров в собранном виде, потом 90 кадров взрыв
-    t++;
-    if(t>DUR+80) t=0;
-
-    fav.href=cv.toDataURL();
-    // Throttle favicon animation до 10fps — без этого RAF грузит CPU (Violation rAF took 94ms)
-    setTimeout(function(){ requestAnimationFrame(draw); }, 100);
+  function setFav(svg) {
+    fav.href = 'data:image/svg+xml;base64,' + btoa(svg);
   }
-  draw();
+
+  setFav(svgStatic);
+
+  // Лёгкое мигание раз в 4 сек — без RAF, без canvas
+  var _favState = false;
+  setInterval(function() {
+    if (document.hidden) return;
+    _favState = !_favState;
+    setFav(_favState ? svgActive : svgStatic);
+  }, 4000);
 })();
 </script>
 
