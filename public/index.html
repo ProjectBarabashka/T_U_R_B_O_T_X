@@ -4498,9 +4498,17 @@ async function go() {
           wrapEl.style.marginTop = '12px';
           _rbEl.appendChild(wrapEl);
           if (typeof _wDraw === 'function') _wDraw();
+          // Сохраняем в историю сразу — чтобы появилась кнопка "Подробности"
+          setTimeout(function() {
+            try {
+              updateHistoryExtra(txid, { html: _rbEl.innerHTML });
+              // renderHistory() вызывается внутри updateHistoryExtra при extra.html != null
+            } catch(_){}
+          }, 600);
+          // Обновляем историю ещё раз через 3 сек когда _wDraw() отрисовал реальные данные
           setTimeout(function() {
             try { updateHistoryExtra(txid, { html: _rbEl.innerHTML }); } catch(_){}
-          }, 400);
+          }, 3000);
         }
       } catch(_) {}
     }, 500);
@@ -6952,6 +6960,59 @@ function toggleHistDetail(btn) {
         // Скрываем лишние кнопки внутри
         detail.querySelectorAll('button.pbtn, button.acc-btn, #push-prompt').forEach(function(el) { el.style.display = 'none'; });
         detail.dataset.loaded = '1';
+        // Запускаем живой тикер волн если панель есть в деталях
+        (function() {
+          var wrapInDetail = detail.querySelector('#wave-hist-wrap');
+          if (!wrapInDetail) return;
+          var savedTs = parseInt(localStorage.getItem('turbotx_wave_start') || '0');
+          var savedTxid = localStorage.getItem('turbotx_wave_txid') || '';
+          // Проверяем что это та же txid и волны ещё идут
+          if (!savedTs || (Date.now() - savedTs) > 780 * 60000) return;
+          if (sanitizeTxid(savedTxid) !== sanitizeTxid(txid)) return;
+          // Перезапускаем тикер для этого контейнера
+          var _dSched = [0,15,30,60,120,240,360,480,600,780];
+          function _dDraw() {
+            var w = detail.querySelector('#wave-hist-wrap');
+            if (!w) { clearInterval(_dTick); return; }
+            var nowMs  = Date.now() - savedTs;
+            var nowMin = nowMs / 60000;
+            var wRes   = window._wResults || new Array(10).fill(null);
+            var nextIdx = null;
+            for (var j=1; j<_dSched.length; j++) { if (wRes[j]===null) { nextIdx=j; break; } }
+            var topHtml = '';
+            if (nextIdx !== null) {
+              var msL = Math.max(0, _dSched[nextIdx]*60000 - nowMs);
+              var s = Math.round(msL/1000);
+              var hh=String(Math.floor(s/3600)).padStart(2,'0');
+              var mm=String(Math.floor((s%3600)/60)).padStart(2,'0');
+              var ss=String(s%60).padStart(2,'0');
+              topHtml = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:6px 10px;background:rgba(247,147,26,.07);border-radius:6px;border:1px solid rgba(247,147,26,.18)">'
+                +'<span style="color:var(--m);font-size:.58rem">волна '+(nextIdx+1)+' через</span>'
+                +'<span style="font-family:var(--mono);font-size:1rem;font-weight:800;color:var(--a);letter-spacing:2px">'+hh+':'+mm+':'+ss+'</span></div>';
+            } else {
+              topHtml = '<div style="color:var(--g);font-size:.6rem;margin-bottom:8px">✓ Все 10 волн завершены</div>';
+            }
+            var rows = _dSched.map(function(wMin,i){
+              var res=wRes[i]; var isDone=res!==null; var isNext=nextIdx===i;
+              var cls=isDone?'done':isNext?'active':'pending';
+              var dot=isDone?'background:var(--g)':isNext?'background:var(--a)':'background:rgba(255,255,255,.15)';
+              var lbl=wMin===0?'Волна 1 · мгновенно':'Волна '+(i+1)+' · +'+wMin+' мин';
+              var info=isDone?'<span style="color:var(--g);font-size:.55rem">'+(res.ch?res.ch+' кан'+(res.hr?' ~'+res.hr+'%':''):'✓')+'</span>'
+                :isNext?'<span style="color:var(--a);font-size:.55rem">→ скоро</span>'
+                :'<span style="font-size:.55rem;opacity:.45">в '+wMin+' мин</span>';
+              return '<div class="wave-item '+cls+'" style="padding:5px 8px;border-radius:6px;display:flex;align-items:center;gap:8px;margin-bottom:2px">'
+                +'<div style="'+dot+';width:7px;height:7px;border-radius:50%;flex-shrink:0"></div>'
+                +'<span style="flex:1;font-size:.6rem">'+lbl+'</span>'+info+'</div>';
+            }).join('');
+            w.innerHTML = '<div style="padding:12px 14px;background:linear-gradient(135deg,rgba(0,232,122,.05) 0%,rgba(124,92,252,.05) 100%);border:1px solid rgba(0,232,122,.18);border-radius:10px;font-family:var(--mono)">'
+              +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+              +'<span style="color:var(--a);font-weight:700;letter-spacing:.5px;font-size:.65rem">⚡ АВТО-ПОВТОРЫ PREMIUM</span>'
+              +'<span style="color:var(--m);font-size:.55rem">10 волн · до 16 ч</span></div>'
+              +topHtml+'<div class="wave-list">'+rows+'</div></div>';
+          }
+          _dDraw();
+          var _dTick = setInterval(_dDraw, 1000);
+        })();
       } else {
         detail.innerHTML = '<span style="color:var(--m);font-size:.6rem">Детали не сохранились — ускорите транзакцию снова</span>';
       }
