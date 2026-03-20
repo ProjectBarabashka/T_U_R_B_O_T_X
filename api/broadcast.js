@@ -783,10 +783,10 @@ function freeChannels(hex, txid) {
         const t=await safeText(r);
         return {ok:r.ok||t.includes('"code":0'), status:r.status, ve:ve(r)};
       }},
-      { name:'mempoolAccel', tier:'pool', call: async()=>{
-        const r=await ftr('https://mempool.space/api/v1/tx-accelerator/enqueue',{method:'POST',body:JSON.stringify({txid}),headers:{'Content-Type':'application/json','User-Agent':UA}},12000,1,'mempoolAccel','pool');
-        const j=await safeJson(r);
-        return {ok:r.ok||j?.message==='Success', status:r.status, ve:ve(r)};
+      { name:'btcscan.org', tier:'node', call: async()=>{
+        const r=await ftr('https://btcscan.org/api/tx/push',{method:'POST',body:hex,headers:{'Content-Type':'text/plain','User-Agent':UA}},10000,2,'btcscan.org','node');
+        const b=await safeText(r);
+        return {ok:r.ok||ok400(b,r.status), status:r.status, ve:ve(r)};
       }},
     ] : []),
   ];
