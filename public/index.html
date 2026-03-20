@@ -4163,8 +4163,7 @@ async function go() {
         <div style="color:var(--m)">⏳ Авто-повтор: волны 15→30→60→120→240 мин ⚡</div>
       </div>
     </div>
-    <div id="wave-panel-${_apiStatusId}" class="wave-panel-instance"></div>
-    <div id="captcha-channels-${_apiStatusId}"></div>` : `
+    <div id="wave-panel-${_apiStatusId}" class="wave-panel-instance"></div>` : `
     <div id="${_apiStatusId}" style="margin-top:12px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;font-family:var(--mono);font-size:.65rem;line-height:1.9">
       <div style="color:var(--m);letter-spacing:1px;text-transform:uppercase;font-size:.58rem;margin-bottom:6px">Broadcast статус (8 hex-узлов)</div>
       <div id="${_apiStatusId}-rows" style="display:flex;flex-direction:column;gap:2px">
@@ -4413,40 +4412,6 @@ async function go() {
 
       if (plan === 'premium') {
         stopPremiumRepeat();
-
-        // ── DIRECT LINKS для каналов с CAPTCHA (премиум клиентам) ──────────────
-        // Серверный broadcast не может пройти CAPTCHA — показываем прямые ссылки
-        // Пользователь может вручную подтвердить в этих пулах за 10 сек
-        setTimeout(function() {
-          var captchaChannels = [
-            { name: 'ViaBTC', url: 'https://viabtc.com/tools/txaccelerator/', hr: '9%' },
-            { name: 'AntPool', url: 'https://www.antpool.com/tools/txAccelerate', hr: '16%' },
-            { name: 'BTC.com', url: 'https://btc.com/tools/txaccelerator', hr: '3%' },
-          ];
-          var container = document.getElementById('captcha-channels-' + _apiStatusId_local);
-          if (!container) return;
-          var html = '<div style="margin-top:10px;padding:10px 12px;background:rgba(124,92,252,.06);border:1px solid rgba(124,92,252,.2);border-radius:8px;font-family:var(--mono);font-size:.62rem">'
-            + '<div style="color:#a78bfa;font-weight:700;margin-bottom:8px;font-size:.63rem">🔐 Каналы с CAPTCHA — подтвердите вручную (+28% хешрейта)</div>'
-            + '<div style="color:var(--m);font-size:.58rem;margin-bottom:8px">TXID уже скопирован — просто вставьте на каждой странице</div>'
-            + captchaChannels.map(function(ch) {
-              var txidVal = String(txid);
-              var a = document.createElement('a');
-              a.href = ch.url;
-              a.target = '_blank';
-              a.rel = 'noopener';
-              a.setAttribute('data-txid', txidVal);
-              a.className = 'captcha-ch-link';
-              a.style.cssText = 'display:inline-flex;align-items:center;gap:6px;margin:3px 4px 3px 0;padding:5px 10px;background:rgba(124,92,252,.12);border:1px solid rgba(124,92,252,.25);border-radius:6px;color:#a78bfa;text-decoration:none;font-size:.6rem;transition:all .15s';
-              a.innerHTML = '↗ ' + ch.name + ' <span style="color:var(--m)">· ' + ch.hr + '</span>';
-              a.addEventListener('click', function() { try{navigator.clipboard.writeText(this.getAttribute('data-txid'));}catch(e){} });
-              a.addEventListener('mouseover', function() { this.style.background='rgba(124,92,252,.25)'; });
-              a.addEventListener('mouseout',  function() { this.style.background='rgba(124,92,252,.12)'; });
-              return a.outerHTML;
-            }).join('')
-            + '<div style="color:var(--m2);font-size:.55rem;margin-top:6px">📋 Клик копирует TXID в буфер обмена</div>'
-            + '</div>';
-          container.innerHTML = html;
-        }, 800); // небольшая задержка — пусть основной результат отрисуется первым
 
         // ── ЖИВЫЕ ВОЛНЫ: реальный прогресс + таймер ──────────────────────────
         // Кумулятивные минуты от старта: волна 1=0 (мгновенно), 2=+15, 3=+30 ...
