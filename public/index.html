@@ -2828,7 +2828,11 @@ async function fetchWithTimeout(url, ms) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), ms);
   try {
-    const r = await fetch(url, { cache: 'no-store', signal: ctrl.signal });
+    // Для внешних URL (mempool.space, blockstream и др.) — без cache:no-store
+    // cache:no-store вызывает CORS preflight который внешние серверы блокируют
+    const isExternal = url.startsWith('http') && !url.includes(location.hostname);
+    const opts = isExternal ? { signal: ctrl.signal } : { cache: 'no-store', signal: ctrl.signal };
+    const r = await fetch(url, opts);
     clearTimeout(timer);
     return r;
   } catch(e) { clearTimeout(timer); throw e; }
@@ -7288,9 +7292,26 @@ function restoreLastResult() {
     badge.innerHTML = '↺ восстановлено после перезагрузки · ' + Math.round((Date.now() - last.ts) / 60000) + ' мин назад';
     rb.appendChild(badge);
 
-    // Восстанавливаем конфирмейшн трекер
-    if (last.confs < 3 && typeof startConfTracker === 'function') {
+    // Восстанавливаем конфирмейшн трекер только если TX не подтверждена
+    if ((last.confs || 0) < 1 && typeof startConfTracker === 'function') {
       startConfTracker(last.txid);
+    } else if ((last.confs || 0) >= 1) {
+      // TX уже подтверждена — показываем финальный статус без запросов
+      const confTracker = document.getElementById('conf-tracker');
+      if (confTracker) {
+        const confs = last.confs || 1;
+        ['conf-0','conf-1','conf-2'].forEach(function(id, i) {
+          const d = document.getElementById(id);
+          if (d && i < confs) _setDot(d, confs >= 3 ? 'lit-green' : 'lit-orange');
+        });
+        const txt = document.getElementById('conf-text');
+        if (txt) {
+          if (confs >= 3) txt.innerHTML = '<span style="color:var(--g);font-weight:600">✓ ' + confs + ' подтверждения</span> — завершена';
+          else if (confs === 2) txt.innerHTML = '<span style="color:var(--a);font-weight:600">2 / 3</span> — почти безопасно';
+          else txt.innerHTML = '<span style="color:var(--a);font-weight:600">1 / 3</span> — включена в блок ✓';
+        }
+        confTracker.style.display = 'block';
+      }
     }
 
     // Восстанавливаем Premium токен
