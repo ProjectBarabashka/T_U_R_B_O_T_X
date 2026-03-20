@@ -426,10 +426,10 @@ async function handlePrice(req, res) {
   // mpTierIdx v14.2 — откалиброван по реальным данным (норма 2026 = 20-50k TX)
   // 300 MB = максимальный стандартный размер мемпула (3 блока по 1 вейт-МБ)
   const mpTierIdx =
-    mpCount > 150000 || mpVsizeMB > 250 ? 4 :   // critical — редкий спайк
+    mpCount > 150000 || mpVsizeMB > 250 ? 4 :   // critical
     mpCount >  80000 || mpVsizeMB > 150 ? 3 :   // extreme
     mpCount >  40000 || mpVsizeMB >  80 ? 2 :   // high
-    mpCount >  15000 || mpVsizeMB >  25 ? 1 :   // medium (текущий ~44k = medium)
+    mpCount >  25000 || mpVsizeMB >  40 ? 1 :   // medium (поднято с 15k: 13-25k TX = норма 2026)
                                           0;    // low
 
   // Сигнал 3: среднее время блока (получаем из /api/v1/mining/blocks/timestamps)
@@ -464,7 +464,10 @@ async function handlePrice(req, res) {
 
   // Итоговый тир = максимум из трёх сигналов
   const feeTierIdx = PRICE_TIERS.indexOf(tierByFee);
-  let tier = PRICE_TIERS[Math.max(feeTierIdx, mpTierIdx, blockTierIdx)];
+  // Если feeRate очень низкий (≤3 sat/vB) — рынок реально пустой,
+  // мемпул не должен поднимать цену (никто не платит больше минимума)
+  const effectiveMpTierIdx = feeRate <= 3 ? 0 : mpTierIdx;
+  let tier = PRICE_TIERS[Math.max(feeTierIdx, effectiveMpTierIdx, blockTierIdx)];
 
   // Отдельный индикатор нагрузки мемпула (не зависит от feeRate)
   const mempoolCongestion =
