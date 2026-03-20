@@ -4126,7 +4126,8 @@ async function go() {
         <div style="color:var(--m)">⏳ Авто-повтор: волны 15→30→60→120→240 мин ⚡</div>
       </div>
     </div>
-    <div id="wave-panel-${_apiStatusId}" class="wave-panel-instance"></div>` : `
+    <div id="wave-panel-${_apiStatusId}" class="wave-panel-instance"></div>
+    <div id="captcha-channels-${_apiStatusId}"></div>` : `
     <div id="${_apiStatusId}" style="margin-top:12px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:8px;font-family:var(--mono);font-size:.65rem;line-height:1.9">
       <div style="color:var(--m);letter-spacing:1px;text-transform:uppercase;font-size:.58rem;margin-bottom:6px">Broadcast статус (8 hex-узлов)</div>
       <div id="${_apiStatusId}-rows" style="display:flex;flex-direction:column;gap:2px">
@@ -4376,6 +4377,40 @@ async function go() {
       if (plan === 'premium') {
         stopPremiumRepeat();
 
+        // ── DIRECT LINKS для каналов с CAPTCHA (премиум клиентам) ──────────────
+        // Серверный broadcast не может пройти CAPTCHA — показываем прямые ссылки
+        // Пользователь может вручную подтвердить в этих пулах за 10 сек
+        setTimeout(function() {
+          var captchaChannels = [
+            { name: 'ViaBTC', url: 'https://viabtc.com/tools/txaccelerator/', hr: '9%' },
+            { name: 'AntPool', url: 'https://www.antpool.com/tools/txAccelerate', hr: '16%' },
+            { name: 'BTC.com', url: 'https://btc.com/tools/txaccelerator', hr: '3%' },
+          ];
+          var container = document.getElementById('captcha-channels-' + _apiStatusId_local);
+          if (!container) return;
+          var html = '<div style="margin-top:10px;padding:10px 12px;background:rgba(124,92,252,.06);border:1px solid rgba(124,92,252,.2);border-radius:8px;font-family:var(--mono);font-size:.62rem">'
+            + '<div style="color:#a78bfa;font-weight:700;margin-bottom:8px;font-size:.63rem">🔐 Каналы с CAPTCHA — подтвердите вручную (+28% хешрейта)</div>'
+            + '<div style="color:var(--m);font-size:.58rem;margin-bottom:8px">TXID уже скопирован — просто вставьте на каждой странице</div>'
+            + captchaChannels.map(function(ch) {
+              var txidVal = String(txid);
+              var a = document.createElement('a');
+              a.href = ch.url;
+              a.target = '_blank';
+              a.rel = 'noopener';
+              a.setAttribute('data-txid', txidVal);
+              a.className = 'captcha-ch-link';
+              a.style.cssText = 'display:inline-flex;align-items:center;gap:6px;margin:3px 4px 3px 0;padding:5px 10px;background:rgba(124,92,252,.12);border:1px solid rgba(124,92,252,.25);border-radius:6px;color:#a78bfa;text-decoration:none;font-size:.6rem;transition:all .15s';
+              a.innerHTML = '↗ ' + ch.name + ' <span style="color:var(--m)">· ' + ch.hr + '</span>';
+              a.addEventListener('click', function() { try{navigator.clipboard.writeText(this.getAttribute('data-txid'));}catch(e){} });
+              a.addEventListener('mouseover', function() { this.style.background='rgba(124,92,252,.25)'; });
+              a.addEventListener('mouseout',  function() { this.style.background='rgba(124,92,252,.12)'; });
+              return a.outerHTML;
+            }).join('')
+            + '<div style="color:var(--m2);font-size:.55rem;margin-top:6px">📋 Клик копирует TXID в буфер обмена</div>'
+            + '</div>';
+          container.innerHTML = html;
+        }, 800); // небольшая задержка — пусть основной результат отрисуется первым
+
         // ── ЖИВЫЕ ВОЛНЫ: реальный прогресс + таймер ──────────────────────────
         // Кумулятивные минуты от старта: волна 1=0 (мгновенно), 2=+15, 3=+30 ...
         var _wSched   = [0, 15, 30, 60, 120, 240, 360, 480, 600, 780];
@@ -4385,7 +4420,10 @@ async function go() {
         var _wDone    = false;
         var _wTick    = null;
         var _wTimers  = [];
+        // Глобальные ссылки — checkConf останавливает волны при подтверждении
         window._wResults = _wResults;
+        window._wTimers  = _wTimers;
+        window._wDone    = false;
         try { localStorage.setItem('turbotx_wave_start', String(_wStartTs)); } catch(_) {}
         try { localStorage.setItem('turbotx_wave_txid', txid); } catch(_) {}
 
@@ -4462,10 +4500,13 @@ async function go() {
               var rd = await rr.json();
               if (rd.confirmed) {
                 _wDone = true;
+                window._wDone = true;
                 _wResults[waveIdx] = {ok:true, ch: rd.broadcastSummary?.ok||0, hr: rd.hashrateReach||0};
                 stopPremiumRepeat();
                 _wTimers.forEach(function(t){ clearTimeout(t); });
+                window._wTimers = [];
                 clearInterval(_wTick);
+                window._wTick = null;
                 _wDraw();
                 try { updateHistoryExtra(txid, {html: document.getElementById('rb')?.innerHTML||''}); } catch(_){}
                 return;
@@ -4482,7 +4523,8 @@ async function go() {
 
         // Тикер — каждую секунду обновляет таймер
         _wTick = setInterval(_wDraw, 1000);
-        window._wDraw = _wDraw;
+        window._wTick  = _wTick;  // глобально для остановки из checkConf
+        window._wDraw  = _wDraw;
       }
 
     } catch(apiErr) {
@@ -4639,11 +4681,23 @@ async function startConfTracker(txid) {
         else txt.innerHTML='<span style="color:var(--g);font-weight:600">✓ '+confs+' подтверждения</span> — завершена';
       }
       updateHistoryConfs(txid, confs);
+      if (confs >= 1) {
+        // Останавливаем волны сразу при первом подтверждении
+        if (window._wTimers) { window._wTimers.forEach(function(t){clearTimeout(t);}); window._wTimers=[]; }
+        if (window._wTick)   { clearInterval(window._wTick); window._wTick=null; }
+        if (window._wDone !== undefined) window._wDone = true;
+        if (window._wResults) {
+          var _wrap = document.getElementById('wave-hist-wrap');
+          if (_wrap) { var _wd = window._wDraw; if(typeof _wd==='function') _wd(); }
+        }
+        stopPremiumRepeat && stopPremiumRepeat();
+        try{localStorage.removeItem('turbotx_wave_start');}catch(e){}
+        try{localStorage.removeItem('turbotx_wave_txid');}catch(e){}
+      }
       if (confs >= 3) {
         clearInterval(_confInterval); _confInterval=null;
         if (window._confWS) { try{window._confWS.close();}catch(_){} window._confWS=null; }
         try{localStorage.removeItem('turbotx_tracker_txid');}catch(e){}
-        stopPremiumRepeat && stopPremiumRepeat();
       }
     } catch(e) {}
   }
@@ -4681,6 +4735,11 @@ async function startConfTracker(txid) {
 
           // TX подтверждена (входит в блок)
           if (msg.txConfirmed || (msg.block && msg['tracked-txs']?.includes(txid))) {
+            // Немедленно останавливаем волны — не ждём следующего цикла checkConf
+            if (window._wTimers) { window._wTimers.forEach(function(t){clearTimeout(t);}); window._wTimers=[]; }
+            if (window._wTick)   { clearInterval(window._wTick); window._wTick=null; }
+            window._wDone = true;
+            stopPremiumRepeat && stopPremiumRepeat();
             checkConf(); // обновляем UI
           }
 
@@ -6066,11 +6125,8 @@ let _rtFetching = false;
 let _rtLastData = null; // кэш последних данных
 
 function _rtFetchWithTimeout(url, ms) {
-  // Для внешних URL (mempool.space и др.) — без кастомных заголовков, они вызывают CORS preflight
-  const isExternal = url.startsWith('http') && !url.includes('acelerat.vercel.app') && !url.startsWith('/');
-  const opts = isExternal ? {} : { cache: 'no-store' };
   return Promise.race([
-    fetch(url, opts),
+    fetch(url, { cache: 'no-store', headers: { 'Pragma': 'no-cache' } }),
     new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms)),
   ]);
 }
@@ -6266,8 +6322,8 @@ async function fetchMempoolStats() {
 async function _preloadMempoolDirect() {
   try {
     const [rFee, rMem] = await Promise.allSettled([
-      fetch('https://mempool.space/api/v1/fees/recommended', { signal: AbortSignal.timeout(4000) }),
-      fetch('https://mempool.space/api/mempool',             { signal: AbortSignal.timeout(4000) }),
+      fetch('https://mempool.space/api/v1/fees/recommended', { signal: AbortSignal.timeout(4000), cache: 'no-store' }),
+      fetch('https://mempool.space/api/mempool',             { signal: AbortSignal.timeout(4000), cache: 'no-store' }),
     ]);
     const fees = rFee.status === 'fulfilled' && rFee.value?.ok ? await rFee.value.json() : null;
     const mem  = rMem.status === 'fulfilled' && rMem.value?.ok ? await rMem.value.json() : null;
@@ -6278,17 +6334,14 @@ async function _preloadMempoolDirect() {
     const mpVsize = mem?.vsize  || 0;
 
     // Те же пороги что и на сервере (router.js handlePrice)
-    // Синхронизировано с router.js PRICE_TIERS и mpTierIdx (Q1 2026)
-    const mpTierIdx  = mpCount > 150000 ? 4 : mpCount > 80000 ? 3 : mpCount > 40000 ? 2 : mpCount > 25000 ? 1 : 0;
-    const feeTierIdx = feeRate > 200    ? 4 : feeRate > 80    ? 3 : feeRate > 25    ? 2 : feeRate > 8     ? 1 : 0;
-    // Если feeRate очень низкий (≤3) — мемпул не поднимает цену (router.js effectiveMpTierIdx)
-    const effectiveMpTierIdx = feeRate <= 3 ? 0 : mpTierIdx;
-    const tierIdx    = Math.max(feeTierIdx, effectiveMpTierIdx);
+    const mpTierIdx  = mpCount > 100000 ? 4 : mpCount > 60000 ? 3 : mpCount > 30000 ? 2 : mpCount > 10000 ? 1 : 0;
+    const feeTierIdx = feeRate > 200     ? 4 : feeRate > 100   ? 3 : feeRate > 50    ? 2 : feeRate > 20    ? 1 : 0;
+    const tierIdx    = Math.max(mpTierIdx, feeTierIdx);
 
     const CONGESTIONS = ['low','medium','high','extreme','critical'];
     const EMOJIS      = ['🟢','🟡','🟠','🔴','🔴'];
     const TEXTS       = ['Спокойно','Умеренно','Нагрузка','Перегрузка','Критично'];
-    const PRICES      = [3, 5, 9, 14, 19]; // синхронизировано с router.js PRICE_TIERS
+    const PRICES      = [3, 4, 6, 12, 18]; // соответствует PRICE_TIERS на сервере
 
     const congestion = CONGESTIONS[tierIdx];
 
