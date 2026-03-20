@@ -197,18 +197,13 @@ function classifyError(status, body='', vercelCode='') {
 
 function ok400(body, status) {
   const b = String(body).toLowerCase();
-  // Транзакция уже в мемпуле / уже известна ноде → это успех, цель достигнута
-  if (b.includes('already') || b.includes('duplicate') || b.includes('known') ||
-      b.includes('exists') || b.includes('258') || b.includes('txn-mempool-conflict') ||
-      b.includes('transaction already') || b.includes('already have') ||
-      b.includes('already in') || b.includes('previously broadcast')) return true;
-  // Некоторые ноды возвращают 400 без явной ошибки — тоже успех если не критическая ошибка
-  if (status === 400 &&
-      !b.includes('bad-txns') && !b.includes('non-mandatory') &&
-      !b.includes('invalid') && !b.includes('scriptsig') &&
-      !b.includes('witness') && !b.includes('sequence') &&
-      !b.includes('missing') && !b.includes('fee too low') &&
-      !b.includes('insufficient fee')) return true;
+  if (b.includes('already')||b.includes('duplicate')||b.includes('known')||
+      b.includes('exists')||b.includes('258')||b.includes('txn-mempool-conflict')||
+      b.includes('transaction already')||b.includes('already have')||
+      b.includes('already in')||b.includes('previously broadcast')) return true;
+  if (status===400&&!b.includes('bad-txns')&&!b.includes('non-mandatory')&&
+      !b.includes('invalid')&&!b.includes('scriptsig')&&!b.includes('fee too low')&&
+      !b.includes('insufficient fee')&&!b.includes('missing')) return true;
   return false;
 }
 
@@ -324,12 +319,15 @@ async function ftr(url, opts={}, ms=13000, tries=2, chName='', tier='node') {
 // NOTE: MaraSlipstream — это приватный мемпул MARA, тот же пул (11% хешрейта)
 // При подсчёте hr используем дедупликацию MARA/MaraSlipstream (см. uniqueHr ниже)
 const HR = {
-  Foundry:27, AntPool:16, MARA:11, ViaBTC:9, SpiderPool:8,
+  // Пулы с реальными акселераторами (хешрейт Q1 2026)
+  Foundry:27, AntPool:16, MaraSlipstream:11, ViaBTC:9, SpiderPool:8,
   F2Pool:7, Luxor:5, CloverPool:4, BitFuFu:4, 'BTC.com':3,
   Ocean:2, EMCDPool:2, SBICrypto:2,
   TxBoost:1, mempoolAccel:1, bitaccelerate:1, '360btc':1, txfaster:1, btcspeed:1,
   Rawpool:1, '2Miners':1, Lincoin:1,
-  MaraSlipstream:0, // 0 здесь — дедупликация с MARA происходит через uniqueHr
+  // Ноды — не добывают, но распространяют TX по p2p сети (считаем как 0 хешрейта)
+  'mempool.space':0, 'blockstream.info':0, blockchair:0, blockcypher:0,
+  'btcscan.org':0, 'blockchain.info':0, 'bitaps.com':0, 'sochain.com':0,
 };
 
 // Итого Premium охват: ~88% хешрейта (считаем уникальных, Slipstream = MARA)
@@ -510,10 +508,9 @@ async function run(channels, feeRatioHint = 0.5, lastBlockMiner = null) {
     !isDead(ch.name) && !cbIsBlocked(ch.name) && !isCooling(ch.name) && !isNegCached(ch.name)
   );
 
-  // ⒠ v12: Hashrate-weighted early stop
-  // Вместо "65% каналов" → "70% хешрейта покрыто"
-  const HASHRATE_STOP_TARGET = feeRatioHint < 0.4 ? 90 : feeRatioHint >= 0.8 ? 70 : 80; // v14: +10% (было 85/60/70)
-  const COUNT_STOP  = Math.max(3, Math.ceil(activeChannels.length * (feeRatioHint < 0.4 ? 0.90 : 0.75))); // v14: +10%
+  // Early stop отключён — отправляем во ВСЕ каналы всегда
+  const HASHRATE_STOP_TARGET = Infinity;
+  const COUNT_STOP = sorted.length + 1;
 
   await new Promise(resolve => {
     let finished = 0, aborted = false;
@@ -549,7 +546,6 @@ async function run(channels, feeRatioHint = 0.5, lastBlockMiner = null) {
         ch.call().then(r => {
           const ms  = Date.now()-t0;
           const vercelCode = r.ve || '';
-          // FIX v15: передаём r.body чтобы "already in mempool" → accepted
           const cls = classifyError(r.status, r.body || '', vercelCode);
           const isOk = r.ok || cls==='accepted';
 
@@ -813,50 +809,50 @@ function freeChannels(hex, txid) {
 }
 
 // ─── PREMIUM CHANNELS v15 — 8 нод + 22 акселератора ─────────────────────────
-// Каждый канал возвращает {ok, status, ve, body} — body нужен для classifyError
+// Каждый канал возвращает {ok, status, ve, body} чтобы ok400/classifyError работали
 function premiumChannels(txid, hex) {
   const UA = getUA();
 
-  // ── 8 РЕАЛЬНЫХ HEX-BROADCAST НОД ──────────────────────────────────────────
+  // ── 8 HEX-BROADCAST НОД (только реально принимающие pushtx в 2025-2026) ──
   const nodes = hex ? [
     { name:'mempool.space', tier:'node', call: async()=>{
       const r=await ftr('https://mempool.space/api/tx',{method:'POST',body:hex,headers:{'Content-Type':'text/plain'}},12000,2,'mempool.space','node');
-      const b=await safeText(r); return {ok:r.ok||ok400(b,r.status), status:r.status, ve:ve(r), body:b};
+      const b=await safeText(r); return {ok:r.ok||ok400(b,r.status),status:r.status,ve:ve(r),body:b};
     }},
     { name:'blockstream.info', tier:'node', call: async()=>{
       const r=await ftr('https://blockstream.info/api/tx',{method:'POST',body:hex,headers:{'Content-Type':'text/plain'}},12000,2,'blockstream.info','node');
-      const b=await safeText(r); return {ok:r.ok||ok400(b,r.status), status:r.status, ve:ve(r), body:b};
+      const b=await safeText(r); return {ok:r.ok||ok400(b,r.status),status:r.status,ve:ve(r),body:b};
     }},
     { name:'blockchair', tier:'node', call: async()=>{
       const r=await ftr('https://api.blockchair.com/bitcoin/push/transaction',{method:'POST',body:`data=${encodeURIComponent(hex)}`,headers:{'Content-Type':'application/x-www-form-urlencoded'}},12000,2,'blockchair','node');
       const j=await safeJson(r); const b=JSON.stringify(j);
-      return {ok:!!(j?.data||j?.context?.code===200||ok400(b,r.status)), status:r.status, ve:ve(r), body:b};
+      return {ok:!!(j?.data||j?.context?.code===200||ok400(b,r.status)),status:r.status,ve:ve(r),body:b};
     }},
     { name:'blockcypher', tier:'node', call: async()=>{
       const r=await ftr('https://api.blockcypher.com/v1/btc/main/txs/push',{method:'POST',body:JSON.stringify({tx:hex}),headers:{'Content-Type':'application/json'}},12000,2,'blockcypher','node');
       const j=await safeJson(r); const b=JSON.stringify(j);
-      return {ok:r.status===201||ok400(b,r.status), status:r.status, ve:ve(r), body:b};
+      return {ok:r.status===201||ok400(b,r.status),status:r.status,ve:ve(r),body:b};
     }},
     { name:'btcscan.org', tier:'node', call: async()=>{
       const r=await ftr('https://btcscan.org/api/tx/push',{method:'POST',body:hex,headers:{'Content-Type':'text/plain'}},10000,2,'btcscan.org','node');
-      const b=await safeText(r); return {ok:r.ok||ok400(b,r.status), status:r.status, ve:ve(r), body:b};
+      const b=await safeText(r); return {ok:r.ok||ok400(b,r.status),status:r.status,ve:ve(r),body:b};
     }},
     { name:'blockchain.info', tier:'node', call: async()=>{
       const r=await ftr('https://blockchain.info/pushtx',{method:'POST',body:`tx=${hex}`,headers:{'Content-Type':'application/x-www-form-urlencoded'}},12000,2,'blockchain.info','node');
-      const b=await safeText(r); return {ok:r.ok||ok400(b,r.status), status:r.status, ve:ve(r), body:b};
+      const b=await safeText(r); return {ok:r.ok||ok400(b,r.status),status:r.status,ve:ve(r),body:b};
     }},
     { name:'bitaps.com', tier:'node', call: async()=>{
       const r=await ftr('https://bitaps.com/api/bitcoin/push/transaction',{method:'POST',body:hex,headers:{'Content-Type':'text/plain'}},10000,2,'bitaps.com','node');
-      const b=await safeText(r); return {ok:r.ok||ok400(b,r.status), status:r.status, ve:ve(r), body:b};
+      const b=await safeText(r); return {ok:r.ok||ok400(b,r.status),status:r.status,ve:ve(r),body:b};
     }},
     { name:'sochain.com', tier:'node', call: async()=>{
       const r=await ftr('https://sochain.com/api/v2/send_tx/BTC',{method:'POST',body:JSON.stringify({tx_hex:hex}),headers:{'Content-Type':'application/json'}},10000,2,'sochain.com','node');
       const j=await safeJson(r); const b=JSON.stringify(j);
-      return {ok:j?.status==='success'||ok400(b,r.status), status:r.status, ve:ve(r), body:b};
+      return {ok:j?.status==='success'||ok400(b,r.status),status:r.status,ve:ve(r),body:b};
     }},
   ] : [];
 
-  // ── 22 АКСЕЛЕРАТОРА (реальные + с правильными body) ───────────────────────
+  // ── 22 АКСЕЛЕРАТОРА ───────────────────────────────────────────────────────
   const pools = [
     { name:'ViaBTC', tier:'pool', call: async()=>{
       try {
@@ -865,124 +861,115 @@ function premiumChannels(txid, hex) {
       } catch {}
       const r2=await ftr('https://viabtc.com/tools/txaccelerator/',{method:'POST',body:`txid=${txid}`,headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':UA,'Referer':'https://viabtc.com/'}},14000,2,'ViaBTC','pool');
       const t2=await safeText(r2);
-      return {ok:r2.ok||t2.includes('"code":0')||ok400(t2,r2.status), status:r2.status, ve:ve(r2), body:t2};
+      return {ok:r2.ok||t2.includes('"code":0')||ok400(t2,r2.status),status:r2.status,ve:ve(r2),body:t2};
     }},
     { name:'AntPool', tier:'pool', call: async()=>{
       try {
         const r=await ft('https://www.antpool.com/txAccelerate',{method:'POST',body:JSON.stringify({txHash:txid}),headers:{'Content-Type':'application/json','User-Agent':UA,'Referer':'https://www.antpool.com/','Origin':'https://www.antpool.com'}},14000);
-        const j=await safeJson(r);
-        if(r.ok||j?.code===0) return {ok:true,status:r.status,body:JSON.stringify(j)};
+        const j=await safeJson(r); if(r.ok||j?.code===0) return {ok:true,status:r.status,body:JSON.stringify(j)};
       } catch {}
       const r2=await ftr('https://antpool.com/txAccelerate.htm',{method:'POST',body:`txHash=${txid}`,headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':UA}},12000,2,'AntPool','pool');
       const t2=await safeText(r2);
-      return {ok:r2.ok||t2.includes('success')||ok400(t2,r2.status), status:r2.status, ve:ve(r2), body:t2};
+      return {ok:r2.ok||t2.includes('success')||ok400(t2,r2.status),status:r2.status,ve:ve(r2),body:t2};
     }},
     { name:'MaraSlipstream', tier:'pool', call: async()=>{
-      const body=hex||JSON.stringify({txid});
-      const ct=hex?'text/plain':'application/json';
+      const body=hex||JSON.stringify({txid}); const ct=hex?'text/plain':'application/json';
       const r=await ftr('https://slipstream.mara.com/tx',{method:'POST',body,headers:{'Content-Type':ct,'User-Agent':UA,'Origin':'https://mara.com','Referer':'https://mara.com/'}},16000,3,'MaraSlipstream','pool');
-      const b=await safeText(r);
-      return {ok:r.ok||ok400(b,r.status), status:r.status, ve:ve(r), body:b};
+      const b=await safeText(r); return {ok:r.ok||ok400(b,r.status),status:r.status,ve:ve(r),body:b};
     }},
     { name:'BTC.com', tier:'pool', call: async()=>{
       const r=await ftr('https://btc.com/tools/txaccelerator',{method:'POST',body:JSON.stringify({tx_id:txid}),headers:{'Content-Type':'application/json','User-Agent':UA,'Referer':'https://btc.com/'}},12000,2,'BTC.com','pool');
       const j=await safeJson(r); const b=JSON.stringify(j);
-      return {ok:r.ok||j?.err_no===0||j?.success===true||ok400(b,r.status), status:r.status, ve:ve(r), body:b};
+      return {ok:r.ok||j?.err_no===0||j?.success===true||ok400(b,r.status),status:r.status,ve:ve(r),body:b};
     }},
     { name:'CloverPool', tier:'pool', call: async()=>{
       const r=await ftr('https://clvpool.com/accelerator',{method:'POST',body:`tx_id=${txid}`,headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':UA,'Referer':'https://clvpool.com/'}},12000,2,'CloverPool','pool');
       const t=await safeText(r);
-      return {ok:r.ok||t.includes('success')||ok400(t,r.status), status:r.status, ve:ve(r), body:t};
+      return {ok:r.ok||t.includes('success')||ok400(t,r.status),status:r.status,ve:ve(r),body:t};
     }},
     { name:'SpiderPool', tier:'pool', call: async()=>{
       const r=await ftr('https://www.spiderpool.com/btc/accelerator',{method:'POST',body:JSON.stringify({tx_hash:txid}),headers:{'Content-Type':'application/json','User-Agent':UA,'Referer':'https://www.spiderpool.com/'}},12000,2,'SpiderPool','pool');
       const j=await safeJson(r); const b=JSON.stringify(j);
-      return {ok:r.ok||j?.code===0||j?.success===true||ok400(b,r.status), status:r.status, ve:ve(r), body:b};
+      return {ok:r.ok||j?.code===0||j?.success===true||ok400(b,r.status),status:r.status,ve:ve(r),body:b};
     }},
     { name:'F2Pool', tier:'pool', call: async()=>{
       const r=await ftr('https://www.f2pool.com/accelerate',{method:'POST',body:JSON.stringify({tx_id:txid}),headers:{'Content-Type':'application/json','User-Agent':UA,'Referer':'https://www.f2pool.com/'}},12000,2,'F2Pool','pool');
       const j=await safeJson(r); const b=JSON.stringify(j);
-      return {ok:r.ok||j?.code===0||ok400(b,r.status), status:r.status, ve:ve(r), body:b};
+      return {ok:r.ok||j?.code===0||ok400(b,r.status),status:r.status,ve:ve(r),body:b};
     }},
     { name:'mempoolAccel', tier:'pool', call: async()=>{
       const r=await ftr('https://mempool.space/api/v1/tx-accelerator/enqueue',{method:'POST',body:JSON.stringify({txid}),headers:{'Content-Type':'application/json','User-Agent':UA}},12000,2,'mempoolAccel','pool');
       const j=await safeJson(r); const b=JSON.stringify(j);
-      return {ok:r.ok||j?.message==='Success'||ok400(b,r.status), status:r.status, ve:ve(r), body:b};
+      return {ok:r.ok||j?.message==='Success'||ok400(b,r.status),status:r.status,ve:ve(r),body:b};
     }},
     { name:'bitaccelerate', tier:'pool', call: async()=>{
       const r=await ftr('https://www.bitaccelerate.com/api/push',{method:'POST',body:JSON.stringify({txid}),headers:{'Content-Type':'application/json','User-Agent':UA}},12000,2,'bitaccelerate','pool');
       const j=await safeJson(r);
       if(r.ok||j?.success) return {ok:true,status:r.status,body:JSON.stringify(j)};
       const r2=await ftr('https://www.bitaccelerate.com/',{method:'POST',body:`txid=${txid}`,headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':UA}},12000,1,'bitaccelerate','pool');
-      const t=await safeText(r2);
-      return {ok:r2.ok||ok400(t,r2.status), status:r2.status, ve:ve(r2), body:t};
+      const t=await safeText(r2); return {ok:r2.ok||ok400(t,r2.status),status:r2.status,ve:ve(r2),body:t};
     }},
     { name:'TxBoost', tier:'pool', call: async()=>{
       const r=await ftr('https://txboost.com/',{method:'POST',body:`txid=${txid}`,headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':UA,'Referer':'https://txboost.com/'}},12000,2,'TxBoost','pool');
       const t=await safeText(r);
-      return {ok:r.ok||t.includes('success')||t.includes('submitted')||ok400(t,r.status), status:r.status, ve:ve(r), body:t};
+      return {ok:r.ok||t.includes('success')||t.includes('submitted')||ok400(t,r.status),status:r.status,ve:ve(r),body:t};
     }},
     { name:'EMCDPool', tier:'pool', call: async()=>{
       const r=await ftr('https://emcd.io/accelerate',{method:'POST',body:JSON.stringify({txHash:txid}),headers:{'Content-Type':'application/json','User-Agent':UA,'Referer':'https://emcd.io/'}},12000,2,'EMCDPool','pool');
       const j=await safeJson(r); const b=JSON.stringify(j);
-      return {ok:r.ok||j?.success===true||ok400(b,r.status), status:r.status, ve:ve(r), body:b};
+      return {ok:r.ok||j?.success===true||ok400(b,r.status),status:r.status,ve:ve(r),body:b};
     }},
     { name:'SBICrypto', tier:'pool', call: async()=>{
       const r=await ftr('https://sbicrypto.com/accelerate',{method:'POST',body:JSON.stringify({txid}),headers:{'Content-Type':'application/json','User-Agent':UA,'Referer':'https://sbicrypto.com/'}},12000,2,'SBICrypto','pool');
       const j=await safeJson(r); const b=JSON.stringify(j);
-      return {ok:r.ok||j?.ok===true||ok400(b,r.status), status:r.status, ve:ve(r), body:b};
+      return {ok:r.ok||j?.ok===true||ok400(b,r.status),status:r.status,ve:ve(r),body:b};
     }},
     { name:'2Miners', tier:'pool', call: async()=>{
       const r=await ftr('https://2miners.com/api/v1/btc/accelerate',{method:'POST',body:JSON.stringify({txid}),headers:{'Content-Type':'application/json','User-Agent':UA}},12000,2,'2Miners','pool');
       const j=await safeJson(r); const b=JSON.stringify(j);
-      return {ok:r.ok||j?.result==='ok'||ok400(b,r.status), status:r.status, ve:ve(r), body:b};
+      return {ok:r.ok||j?.result==='ok'||ok400(b,r.status),status:r.status,ve:ve(r),body:b};
     }},
     { name:'Rawpool', tier:'pool', call: async()=>{
       const r=await ftr('https://rawpool.com/api/accelerate',{method:'POST',body:JSON.stringify({txid}),headers:{'Content-Type':'application/json','User-Agent':UA}},12000,2,'Rawpool','pool');
       const j=await safeJson(r); const b=JSON.stringify(j);
-      return {ok:r.ok||j?.ok===true||ok400(b,r.status), status:r.status, ve:ve(r), body:b};
+      return {ok:r.ok||j?.ok===true||ok400(b,r.status),status:r.status,ve:ve(r),body:b};
     }},
     { name:'Lincoin', tier:'pool', call: async()=>{
       const r=await ftr('https://lincoin.com/api/accelerate',{method:'POST',body:JSON.stringify({txid}),headers:{'Content-Type':'application/json','User-Agent':UA}},12000,2,'Lincoin','pool');
       const j=await safeJson(r); const b=JSON.stringify(j);
-      return {ok:r.ok||j?.success===true||ok400(b,r.status), status:r.status, ve:ve(r), body:b};
+      return {ok:r.ok||j?.success===true||ok400(b,r.status),status:r.status,ve:ve(r),body:b};
     }},
     { name:'Luxor', tier:'pool', call: async()=>{
-      // Luxor API через GraphQL (подтверждён 2025)
-      const gql='{"query":"mutation AccelerateTransaction($txid: String!) { accelerateTransaction(txid: $txid) { success } }","variables":{"txid":"'+txid+'"}}';
-      const r=await ftr('https://api.lexoloy.io/graphql',{method:'POST',body:gql,headers:{'Content-Type':'application/json','User-Agent':UA}},12000,2,'Luxor','pool');
+      const r=await ftr('https://btc.luxor.tech/accelerate',{method:'POST',body:JSON.stringify({tx_hash:txid}),headers:{'Content-Type':'application/json','User-Agent':UA,'Referer':'https://luxor.tech/'}},12000,2,'Luxor','pool');
       const j=await safeJson(r); const b=JSON.stringify(j);
-      return {ok:r.ok||j?.data?.accelerateTransaction?.success===true||ok400(b,r.status), status:r.status, ve:ve(r), body:b};
+      return {ok:r.ok||j?.success===true||ok400(b,r.status),status:r.status,ve:ve(r),body:b};
     }},
     { name:'BitFuFu', tier:'pool', call: async()=>{
       const r=await ftr('https://www.bitfufu.com/txaccelerator/submit',{method:'POST',body:JSON.stringify({txHash:txid}),headers:{'Content-Type':'application/json','User-Agent':UA}},12000,2,'BitFuFu','pool');
       const j=await safeJson(r); const b=JSON.stringify(j);
-      return {ok:r.ok||j?.success===true||ok400(b,r.status), status:r.status, ve:ve(r), body:b};
+      return {ok:r.ok||j?.success===true||ok400(b,r.status),status:r.status,ve:ve(r),body:b};
     }},
     { name:'Ocean', tier:'pool', call: async()=>{
       const r=await ftr('https://ocean.xyz/api/accelerate',{method:'POST',body:JSON.stringify({txid}),headers:{'Content-Type':'application/json','User-Agent':UA}},12000,2,'Ocean','pool');
       const j=await safeJson(r); const b=JSON.stringify(j);
-      return {ok:r.ok||j?.success===true||ok400(b,r.status), status:r.status, ve:ve(r), body:b};
+      return {ok:r.ok||j?.success===true||ok400(b,r.status),status:r.status,ve:ve(r),body:b};
     }},
     { name:'Foundry', tier:'pool', call: async()=>{
       const r=await ftr('https://foundryusapool.com/accelerate',{method:'POST',body:JSON.stringify({txid}),headers:{'Content-Type':'application/json','User-Agent':UA}},14000,2,'Foundry','pool');
-      const b=await safeText(r);
-      return {ok:r.ok||ok400(b,r.status), status:r.status, ve:ve(r), body:b};
+      const b=await safeText(r); return {ok:r.ok||ok400(b,r.status),status:r.status,ve:ve(r),body:b};
     }},
     { name:'txfaster', tier:'pool', call: async()=>{
       const r=await ftr('https://txfaster.com/api/accelerate',{method:'POST',body:JSON.stringify({txid}),headers:{'Content-Type':'application/json','User-Agent':UA}},10000,2,'txfaster','pool');
       const j=await safeJson(r); const b=JSON.stringify(j);
-      return {ok:r.ok||j?.success===true||ok400(b,r.status), status:r.status, ve:ve(r), body:b};
+      return {ok:r.ok||j?.success===true||ok400(b,r.status),status:r.status,ve:ve(r),body:b};
     }},
     { name:'360btc', tier:'pool', call: async()=>{
       const r=await ftr('https://360btc.net/accelerate',{method:'POST',body:`txid=${txid}`,headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':UA}},10000,2,'360btc','pool');
-      const t=await safeText(r);
-      return {ok:r.ok||ok400(t,r.status), status:r.status, ve:ve(r), body:t};
+      const t=await safeText(r); return {ok:r.ok||ok400(t,r.status),status:r.status,ve:ve(r),body:t};
     }},
     { name:'btcspeed', tier:'pool', call: async()=>{
       const r=await ftr('https://btcspeed.org/boost',{method:'POST',body:`tx=${txid}`,headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':UA}},10000,2,'btcspeed','pool');
-      const t=await safeText(r);
-      return {ok:r.ok||ok400(t,r.status), status:r.status, ve:ve(r), body:t};
+      const t=await safeText(r); return {ok:r.ok||ok400(t,r.status),status:r.status,ve:ve(r),body:t};
     }},
   ];
 
@@ -1154,9 +1141,7 @@ export default async function handler(req, res) {
     : 0;
   const okCount = results.filter(r=>r.ok).length;
 
-  // Deduplicate MARA/MaraSlipstream в hashrate
-  // FIX v14.1: считаем не только ok:true но и accepted/rate_limit —
-  // акселераторы пулов часто отвечают 202/429 но транзакцию всё равно принимают
+  // Реальный охват хешрейта — только фактически ответившие пулы
   const uniqueHr = (() => {
     const seen = new Set();
     let total = 0;
@@ -1167,10 +1152,7 @@ export default async function handler(req, res) {
       const key = r.name === 'MaraSlipstream' ? 'MARA' : (r.name || r.channel);
       if (!seen.has(key)) { seen.add(key); total += HR[key] || HR[r.name] || 0; }
     }
-    // Минимум 88% только для Premium когда хоть один пул ответил
-    const premiumMin = (effectivePlan === 'premium' && results.some(r => r.ok && r.tier === 'pool')) ? 88 : 0;
-    // Для free — реальный охват: ViaBTC(9%) + mempoolAccel(1%) = ~10%
-    return Math.max(total, premiumMin);
+    return total; // честный реальный охват, без заглушек
   })();
 
   const sentCount    = results.filter(r => !r.skipped).length;
@@ -1190,7 +1172,7 @@ export default async function handler(req, res) {
     waveStrategy,
     lastBlockMiner: lastBlock,
     feeTrend: feeTrend?.direction ?? 'stable',
-    totalChannels: 30, // 8 nodes + 22 pools (v14)
+    totalChannels: 30, // 8 broadcast nodes + 22 pool accelerators (v15)
     circuitBreakers: (() => {
       const open=[], halfOpen=[];
       for (const [name,e] of _cb) {
