@@ -3993,7 +3993,7 @@ async function go() {
     el.className = 'step done'; el.querySelector('.step-ic').textContent = '✓';
   }
 
-  const poolCount = plan === 'premium' ? 22 : 7;
+  const poolCount = plan === 'premium' ? 30 : 5;
   const eta       = plan === 'premium' ? '10–20 мин ⚡' : '1–3 часа';
 
   addToQueue(txid, plan);
@@ -4008,7 +4008,7 @@ async function go() {
   rb.innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--a)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-      <span style="color:var(--a);font-family:var(--mono);font-weight:700;font-size:.82rem;letter-spacing:.5px">ОТПРАВЛЕНО В ${poolCount} КАНАЛОВ</span>
+      <span style="color:var(--a);font-family:var(--mono);font-weight:700;font-size:.82rem;letter-spacing:.5px" id="sent-channels-label">ОТПРАВЛЕНО В ${poolCount} КАНАЛОВ</span>
     </div>
     <div class="rr"><span class="rk">TXID</span><span class="rv">${txid.slice(0,12)}…${txid.slice(-8)}</span></div>
     <div class="rr"><span class="rk" data-i18n="tx.mode">Режим</span><span class="rv a">${plan.toUpperCase()}</span></div>
@@ -4163,7 +4163,10 @@ async function go() {
         const okCnt   = data.summary?.ok ?? 0;
         const sent    = data.summary?.sent ?? data.summary?.total ?? 0;
         const skipped = data.summary?.skipped ?? 0;
-        const total   = sent; // показываем только реально отправленные, не skipped
+        const total   = sent;
+        // Обновляем заголовок реальным числом из ответа сервера
+        const _scl = document.getElementById('sent-channels-label');
+        if (_scl && sent > 0) _scl.textContent = 'ОТПРАВЛЕНО В ' + sent + ' КАНАЛОВ';
         const elapsed = data.summary?.ms ?? 0;
         const rbf     = data.summary?.rbfEnabled || data.analysis?.rbfEnabled || false;
         const confLabel = data.analysis?.feeRate && plan === 'premium' ? '10–20 мин ⚡' : null;
@@ -4421,6 +4424,15 @@ function _tickWave() { /* no-op */ }
 
 function stopWaveCountdown() {
   if (_waveTimerInt) { clearInterval(_waveTimerInt); _waveTimerInt = null; }
+}
+
+async function getCurrentHeight() {
+  if (_tipHeightCache > 0 && Date.now() - _tipHeightTs < 60000) return _tipHeightCache;
+  try {
+    const r = await fetchWithTimeout('https://mempool.space/api/blocks/tip/height', 5000);
+    if (r.ok) { const h = parseInt(await r.text()); if (h>0) { _tipHeightCache=h; _tipHeightTs=Date.now(); return h; } }
+  } catch(e) {}
+  return _tipHeightCache || 0;
 }
 
 function _setDot(d, state) {
