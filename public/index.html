@@ -3105,16 +3105,19 @@ async function _fbFetch(url, opts, ms) {
 async function _testFirebase() {
   if (_fbDead) return false;
   try {
-    const r = await _fbFetch(`${FIREBASE_DB}/.json?shallow=true`, {}, 3000);
-    if (r.ok || r.status === 204) { _fbReady = true; return true; }
+    const r = await _fbFetch(`${FIREBASE_DB}/.json?shallow=true`, {}, 4000);
+    if (!r) return false; // timeout — не крашимся, попробуем позже
+    if (r.ok || r.status === 204) { _fbReady = true; _fbTimeoutCount = 0; return true; }
+    // 401/403 = правила закрыты → пробуем писать напрямую (правила могут разрешать write но не read root)
     if (r.status === 401 || r.status === 403) {
-      _fbDead = true;
-      console.debug('[TurboTX] Firebase: доступ закрыт. Открой правила в консоли Firebase.');
-      return false;
+      // Не убиваем _fbDead — пишем всё равно, просто не читаем
+      console.debug('[TurboTX] Firebase: read закрыт, write-only режим');
+      _fbReady = true; // разрешаем write-операции
+      return true;
     }
   } catch(e) {
-    _fbDead = true;
-    console.debug('[TurboTX] Firebase недоступен:', e.message);
+    // Не ставим _fbDead здесь — это делает _fbFetch после 3 таймаутов
+    console.debug('[TurboTX] Firebase test error:', e.message);
   }
   return false;
 }
@@ -5617,7 +5620,8 @@ async function applyPromo() {
     if (!isAdmin) {
       try {
         const r = await _fbFetch(FIREBASE_DB + '/promos/' + promoId + '/used.json', {});
-        if (r.ok) {
+        if (!r) { promoValid = false; promoError = 'Сервис временно недоступен'; }
+        else if (r.ok) {
           const val = await r.json();
           usedCount = (typeof val === 'number' && val >= 0) ? val : 0;
         }
