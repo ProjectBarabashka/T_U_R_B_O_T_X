@@ -15,7 +15,7 @@
 
 export const config = { maxDuration: 20 };
 
-import { CORS as CORS_ALL, ft, getIp, sj, makeRl } from './_shared.js';
+import { CORS as CORS_ALL, ft, getIp, sj, makeRl, checkPremiumAuth } from './_shared.js';
 
 // ─── УТИЛИТЫ ──────────────────────────────────────────────────
 // ft(), sj(), getIp(), makeRl() — из _shared.js
@@ -510,12 +510,6 @@ async function handlePrice(req, res) {
     confLabel,
     bestTime:tip,mempool:mempoolStats,
     // heartLevel и blockIcon для анимаций фронта (v14.2)
-    // heartLevel: определяется по feeRate а НЕ по итоговому tier.
-    // Tier может подняться из-за mpCount/blockTime, но сердечко отражает
-    // реальную рыночную ставку — пользователь платит за ускорение, а не за мемпул.
-    // calm  = feeRate низкий (сеть физически свободна, TX просто не конкурентны)
-    // mid   = feeRate средний (есть конкуренция за блок)
-    // busy  = feeRate высокий (перегрузка, каждый sat на счету)
     heartLevel: (
       feeRate > 80  ? 'busy' :
       feeRate > 20  ? 'mid'  : 'calm'
@@ -706,7 +700,7 @@ async function tgSend(token, chatId, text, extra = {}) {
 async function handleNotify(req, res) {
   if (req.method !== 'POST') return res.status(405).end();
   const secret=process.env.PREMIUM_SECRET,token=req.headers['x-turbotx-token']||req.body?.token;
-  if(secret&&token!==secret) return res.status(401).json({ok:false,error:'Unauthorized'});
+  if(!checkPremiumAuth(token,secret)) return res.status(401).json({ok:false,error:'Unauthorized'});
   if(!checkRl(getIp(req),30)) return res.status(429).json({ok:false,error:'Rate limited'});
   const tgToken=process.env.TG_TOKEN,chatId=process.env.TG_CHAT_ID;
   if(!tgToken||!chatId) return res.status(200).json({ok:false,reason:'TG not configured'});
