@@ -3081,7 +3081,7 @@ const FB_SSE_MAX_ERRORS = 4; // после N ошибок — навсегда �
 async function _testFirebase() {
   if (_fbDead) return false;
   try {
-    const r = await fetch(`${FIREBASE_DB}/.json?shallow=true`, { cache: 'no-store', signal: AbortSignal.timeout(2500) });
+    const r = await fetch(`${FIREBASE_DB}/.json?shallow=true`, { signal: AbortSignal.timeout(2500) });
     if (r.ok || r.status === 204) { _fbReady = true; return true; }
     if (r.status === 401 || r.status === 403) {
       _fbDead = true;
@@ -3282,6 +3282,8 @@ function renderFeedFromData(feed) {
 
 // ── GLOBAL QUEUE ──────────────────────────────────────────────
 async function fbQueueAdd(txid, planType) {
+  // Не пишем если Firebase недоступен — избегаем Failed fetch в консоли
+  if (!_fbReady || _fbDead) return;
   try {
     await fetch(`${FIREBASE_DB}/queue/${txid}.json`, {
       method: 'PUT', headers: {'Content-Type':'application/json'},
@@ -4698,6 +4700,7 @@ async function startConfTracker(txid) {
   renderHistory();
   let _fails = 0;
   let _wsAlive = false;
+  let _wsAttempts = 0; // счётчик попыток реконнекта WebSocket
 
   async function checkConf() {
     try {
@@ -4753,6 +4756,7 @@ async function startConfTracker(txid) {
 
       ws.onopen = () => {
         _wsAlive = true;
+        _wsAttempts = 0; // сброс при успешном подключении
         // Подписываемся на TX
         ws.send(JSON.stringify({ action: 'want', data: ['blocks'] }));
         ws.send(JSON.stringify({ action: 'track-tx', data: txid }));
@@ -4792,8 +4796,14 @@ async function startConfTracker(txid) {
       ws.onclose = () => {
         _wsAlive = false;
         window._confWS = null;
-        // Реконнект через 10 сек если трекер ещё нужен
-        if (_confInterval) setTimeout(startWS, 10000);
+        // Реконнект только если трекер ещё нужен И не больше 5 попыток
+        _wsAttempts = (_wsAttempts || 0) + 1;
+        if (_confInterval && _wsAttempts <= 5) {
+          // Экспоненциальный backoff: 10, 20, 40, 60, 60 сек
+          const delay = Math.min(10000 * Math.pow(2, _wsAttempts - 1), 60000);
+          setTimeout(startWS, delay);
+        }
+        // После 5 попыток — только polling, WS недоступен
       };
     } catch(_) {
       // WebSocket недоступен — только polling
