@@ -1935,16 +1935,39 @@ function renderAdvisor(d, out) {
   if (feeRatio !== null) html += `<div class="adv-stat"><div class="adv-stat-lbl" id="mp-lbl-coverage">покрытие</div><div class="adv-stat-val" style="color:${feeRatio>=80?'var(--g)':feeRatio>=40?'var(--a)':'var(--err)'}">${feeRatio}%</div></div>`;
   if (fa.vsize) html += `<div class="adv-stat"><div class="adv-stat-lbl">размер</div><div class="adv-stat-val">${fa.vsize} vB</div></div>`;
   if (stuckH > 0) html += `<div class="adv-stat"><div class="adv-stat-lbl" id="mp-lbl-stuck">зависла</div><div class="adv-stat-val" style="color:${stuckH>=72?'var(--err)':stuckH>=48?'#ff6b35':'var(--a)'}">${stuckH}ч</div></div>`;
+  // Вероятность подтверждения в следующем блоке
+  const wp = timing?.winProbability;
+  if (wp != null) html += `<div class="adv-stat"><div class="adv-stat-lbl">следующий блок</div><div class="adv-stat-val" style="color:${wp>=70?'var(--g)':wp>=40?'var(--a)':wp>=15?'#ff6b35':'var(--err)'}">${wp}%</div></div>`;
   html += '</div>';
+
+  // Позиция в мемпуле — отдельная строка если очередь большая
+  const mp_pos = d.mempoolPosition;
+  if (mp_pos && mp_pos.txAhead > 500) {
+    html += `<div style="display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.15);border-radius:7px;padding:8px 12px;margin-bottom:12px;font-family:var(--mono);font-size:.65rem">
+      <span style="flex:1">${mp_pos.label} — <span style="color:var(--m)">${mp_pos.txAhead.toLocaleString('ru')} TX впереди</span></span>
+      ${mp_pos.blocksAhead > 0 ? `<span style="color:var(--m2);font-size:.6rem">≈ ${mp_pos.blocksAhead} блок${mp_pos.blocksAhead===1?'':'а'} ожидания</span>` : ''}
+    </div>`;
+  }
 
   // Time forecast
   if (timing) {
+    const wp2 = timing.winProbability;
+    const wpBar = wp2 != null ? `<div style="margin-top:8px">
+      <div style="display:flex;justify-content:space-between;font-size:.6rem;color:var(--m);margin-bottom:3px">
+        <span>Шанс попасть в следующий блок</span>
+        <span style="color:${wp2>=70?'var(--g)':wp2>=40?'var(--a)':wp2>=15?'#ff6b35':'var(--err)'};font-weight:700">${wp2}% ${timing.winProbLabel||''}</span>
+      </div>
+      <div style="height:4px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden">
+        <div style="height:100%;width:${wp2}%;background:${wp2>=70?'var(--g)':wp2>=40?'var(--a)':wp2>=15?'#ff6b35':'var(--err)'};border-radius:4px;transition:width .5s"></div>
+      </div>
+    </div>` : '';
     html += `<div style="background:rgba(0,0,0,.2);border-radius:8px;padding:10px 14px;margin-bottom:12px;font-family:var(--mono);font-size:.68rem">
       <div style="color:var(--m);margin-bottom:6px">📅 Прогноз времени:</div>
-      <div style="display:flex;gap:16px;flex-wrap:wrap">
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:4px">
         <div>Без ускорения: <span style="color:var(--a)">${timing.withoutBoost?.text||'—'}</span></div>
-        ${timing.withBoost?.text !== timing.withoutBoost?.text ? `<div>С ускорением: <span style="color:var(--g)">${timing.withBoost?.text||'—'}</span></div>` : ''}
+        ${timing.withBoost?.text !== timing.withoutBoost?.text ? `<div>С TurboTX: <span style="color:var(--g);font-weight:700">${timing.withBoost?.text||'—'} ⚡</span></div>` : ''}
       </div>
+      ${wpBar}
     </div>`;
   }
 
