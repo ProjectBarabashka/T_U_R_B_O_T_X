@@ -2878,6 +2878,9 @@ async function _updateChannelsFromStats() {
         el2.style.color = 'var(--g)';
       }
     }
+    // Обновляем счётчик каналов в hero badge
+    const heroChEl = document.getElementById('hero-badge-channels');
+    if (heroChEl && d.ok) heroChEl.textContent = '30 каналов · ~88% хешрейта · BTC + USDT + ⚡LN';
     // FIX: хешрейт
     const ehs = d?.network?.hashrateEHs;
     if (ehs && ehs > 0) {
@@ -4811,8 +4814,8 @@ async function chk() {
 let _btcUsd = 0, _btcUsdAt = 0;
 
 async function fetchBtcPrice() {
-  // FIX: Пропускаем если /api/price уже обновил _btcUsd недавно
-  if (_btcUsd > 0 && Date.now() - _btcUsdAt < 180000) return _btcUsd;
+  // Если /api/price уже обновил _btcUsd в последние 5 мин — используем его, не делаем лишний запрос
+  if (_btcUsd > 0 && Date.now() - _btcUsdAt < 300000) return _btcUsd;
   try {
     const r = await fetch('https://blockchain.info/ticker', { cache: 'no-store' });
     if (r.ok) {
@@ -5445,22 +5448,23 @@ function updateNetworkIntelligence(priceData, mempoolData) {
   const titleEl = document.getElementById('ni-advice-title');
   const textEl  = document.getElementById('ni-advice-text');
   if (titleEl && textEl) {
+    var _priceNow = usd ? '$' + usd : '…';
+    var _mpTxStr  = mpCount > 0 ? mpCount.toLocaleString('ru') + ' TX в мемпуле' : '';
     if (effectiveLevel === 0) {
       titleEl.textContent = 'Сейчас идеально!';
-      textEl.textContent  = 'Сеть разгружена — Premium по минимальной цене ($3), быстрое подтверждение';
+      textEl.textContent  = 'Сеть разгружена — Premium ' + _priceNow + ', быстрое подтверждение' + (feeRate ? ' · ' + feeRate + ' sat/vB' : '');
     } else if (effectiveLevel === 1) {
       titleEl.textContent = 'Хороший момент';
-      textEl.textContent  = 'Умеренная нагрузка — Premium эффективен, стоит $' + (usd || '3–7');
+      textEl.textContent  = 'Умеренная нагрузка — Premium ' + _priceNow + (_mpTxStr ? ' · ' + _mpTxStr : '') + (feeRate ? ' · ' + feeRate + ' sat/vB' : '');
     } else if (effectiveLevel === 2) {
       titleEl.textContent = 'Повышенная нагрузка';
-      const mpNote = mpLevel >= 2 ? ` (очередь ${mpCount > 0 ? mpCount.toLocaleString('ru') + ' TX' : 'большая'})` : '';
-      textEl.textContent  = 'Сеть занята' + mpNote + ' — Premium ускорит, цена $' + (usd || '7');
+      textEl.textContent  = 'Сеть занята' + (_mpTxStr ? ' · ' + _mpTxStr : '') + ' — Premium ' + _priceNow + (feeRate ? ' · ' + feeRate + ' sat/vB' : '');
     } else if (effectiveLevel === 3) {
       titleEl.textContent = 'Высокая нагрузка';
-      textEl.textContent  = 'Мемпул загружен — Premium критичен для своевременного подтверждения';
+      textEl.textContent  = 'Мемпул загружен' + (_mpTxStr ? ': ' + _mpTxStr : '') + ' — Premium ' + _priceNow + ' критичен' + (feeRate ? ' · ' + feeRate + ' sat/vB' : '');
     } else {
       titleEl.textContent = 'Пиковая загрузка!';
-      textEl.textContent  = 'Мемпул переполнен — без Premium транзакция может зависнуть на часы';
+      textEl.textContent  = 'Мемпул переполнен' + (_mpTxStr ? ': ' + _mpTxStr : '') + ' — без Premium транзакция зависнет · Premium ' + _priceNow;
     }
     // Цвет заголовка по уровню
     titleEl.style.color = effectiveLevel === 0 ? 'var(--g)' :
@@ -5474,13 +5478,21 @@ function updateNetworkIntelligence(priceData, mempoolData) {
   const h = now.getUTCHours();
   const timingEl = document.getElementById('ni-timing');
   if (timingEl) {
-    if (h >= 1 && h <= 7) {
-      timingEl.textContent = '🌙 Сейчас ночь UTC — нагрузка обычно низкая, хороший момент';
+    // Реальный факт заменяет статичное расписание если данные есть
+    var _timingText = '';
+    if (feeRate > 0 && mpCount > 0) {
+      // Реальные данные: показываем факт
+      var _nextBlockMins = feeRate >= 50 ? '~5 мин' : feeRate >= 20 ? '~10–15 мин' : feeRate >= 5 ? '~30–60 мин' : 'неопределённо';
+      _timingText = (effectiveLevel === 0 ? '🟢' : effectiveLevel <= 1 ? '🟡' : effectiveLevel <= 2 ? '🟠' : '🔴')
+        + ' ' + mpCount.toLocaleString('ru') + ' TX в очереди · ' + feeRate + ' sat/vB · след. блок ' + _nextBlockMins;
+    } else if (h >= 1 && h <= 7) {
+      _timingText = '🌙 Сейчас ночь UTC — нагрузка обычно низкая, хороший момент';
     } else if (h >= 13 && h <= 20) {
-      timingEl.textContent = '⚡ Пиковые часы США/EU — возможны задержки в сети';
+      _timingText = '⚡ Пиковые часы США/EU — возможны задержки в сети';
     } else {
-      timingEl.textContent = '🌅 Умеренная активность — ' + (effectiveLevel <= 1 ? 'комиссии в норме' : 'следите за изменениями');
+      _timingText = '🌅 Умеренная активность — ' + (effectiveLevel <= 1 ? 'комиссии в норме' : 'следите за изменениями');
     }
+    timingEl.textContent = _timingText;
   }
 
   const updEl = document.getElementById('ni-updated');
@@ -6228,6 +6240,24 @@ function _rtApplyTicker(p) {
   // Для анимации используем ТОЛЬКО window._avgBlockMin (из fetchLiveStats — самый точный)
   // p.blockIcon от сервера НЕ используем — сервер считает по unstable endpoint
   // Анимация блока управляется только fetchLiveStats — здесь не трогаем
+
+  // ── BTC курс — обновляем из данных которые уже есть ──────
+  if (p.btcPrice && p.btcPrice > 1000) {
+    const rateEl = document.getElementById('modal-rate-note');
+    if (rateEl) rateEl.textContent = '1 BTC ≈ $' + Math.round(p.btcPrice).toLocaleString('ru-RU');
+    const btcRateEl = document.getElementById('btc-rate-display');
+    if (btcRateEl) btcRateEl.textContent = '$' + Math.round(p.btcPrice).toLocaleString('ru-RU');
+  }
+
+  // ── hero-desc: обновляем confLabel когда данные пришли ───
+  if (p.confLabel) {
+    var heroDesc = document.getElementById('hero-desc');
+    if (heroDesc && p.usd) {
+      heroDesc.innerHTML = 'Серверный broadcast в 30 каналов: 8 hex-узлов + 22 пул-акселератора.'
+        + '<br>Бесплатно · Premium в среднем <strong style="color:var(--a)">' + p.confLabel + '</strong>'
+        + ' · Цена сейчас <strong style="color:var(--a)">$' + p.usd + '</strong>';
+    }
+  }
 
   // ── price-tag-text — что именно подняло цену ─────────────
   const tagText = document.getElementById('price-tag-text');
@@ -7750,9 +7780,16 @@ window._TurboAPI = {
     const amtEl  = document.getElementById('direct-amount'); if (amtEl && btcVal) amtEl.textContent = btcVal.toFixed(6) + ' BTC';
     const usdtEl = document.getElementById('usdt-amount');   if (usdtEl) usdtEl.textContent = usd + ' USDT';
 
-    // RT FIX v14: тикер (tk-stuck, tk-nextfee, tk-size, fee-meter-text) обновляет
-    // единая RT-петля fetchMempoolStats каждые 20 сек — здесь не трогаем.
-    // Обновляем только Network Intelligence карточки.
+    // Обновляем plan-p-li5 с реальной динамической ценой
+    var pli5 = document.getElementById('plan-p-li5');
+    if (pli5 && p.usd) pli5.innerHTML = 'Цена <strong style="color:var(--a)">$' + p.usd + '</strong> — дешевле когда сеть спокойна'
+      + (p.feeRate ? ' · сейчас ' + p.feeRate + ' sat/vB' : '');
+    // Обновляем confLabel в описании плана
+    var planDesc = document.querySelector('.plan-card.prem .plan-desc');
+    if (planDesc && p.confLabel && p.usd) {
+      planDesc.textContent = '30 каналов: 8 hex-узлов + 22 пула (~88% хешрейта). Реальные ответы от Foundry, AntPool, MARA. Premium ≈ ' + p.confLabel + ' · $' + p.usd + ' сейчас.';
+    }
+    // Обновляем Network Intelligence карточки.
     try { updateNetworkIntelligence(p, p.mempool || {}); } catch(e) {}
   }
 
