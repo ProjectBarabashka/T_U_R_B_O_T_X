@@ -4437,8 +4437,16 @@ async function go() {
         function _wDraw() {
           var wrap = document.getElementById('wave-hist-wrap');
           if (!wrap) return;
+          // Проверяем глобальный флаг — checkConf устанавливает window._wDone
+          if (window._wDone) { _wDone = true; }
           var nowMs   = Date.now() - _wStartTs;
           var nowMin  = nowMs / 60000;
+
+          // Если подтверждено — останавливаем тикер и показываем финал
+          if (_wDone) {
+            clearInterval(window._wTick); window._wTick = null;
+            if (window._wTimers) { window._wTimers.forEach(function(t){clearTimeout(t);}); window._wTimers=[]; }
+          }
 
           // Таймер до следующей волны
           var nextIdx = null;
@@ -4686,12 +4694,12 @@ async function startConfTracker(txid) {
       updateHistoryConfs(txid, confs);
       if (confs >= 1) {
         // Останавливаем волны сразу при первом подтверждении
+        window._wDone = true;   // ← _wDraw читает это при следующем тике
         if (window._wTimers) { window._wTimers.forEach(function(t){clearTimeout(t);}); window._wTimers=[]; }
         if (window._wTick)   { clearInterval(window._wTick); window._wTick=null; }
-        if (window._wDone !== undefined) window._wDone = true;
-        if (window._wResults) {
-          var _wrap = document.getElementById('wave-hist-wrap');
-          if (_wrap) { var _wd = window._wDraw; if(typeof _wd==='function') _wd(); }
+        // Немедленно перерисовываем панель волн с "✅ Подтверждено"
+        if (typeof window._wDraw === 'function') {
+          try { window._wDraw(); } catch(e) {}
         }
         stopPremiumRepeat && stopPremiumRepeat();
         try{localStorage.removeItem('turbotx_wave_start');}catch(e){}
