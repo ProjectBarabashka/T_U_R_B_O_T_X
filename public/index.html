@@ -2796,24 +2796,25 @@ function _setCounterUI(val) {
 }
 
 async function bumpCounter() {
+  if (!_fbReady || _fbDead) { _setCounterUI(cnt + 1); return; }
   const url = `${FIREBASE_DB}/stats/total.json`;
-  for (let attempt = 0; attempt < 5; attempt++) {
+  for (let attempt = 0; attempt < 3; attempt++) {
     try {
-      const r1 = await fetch(url, { cache: 'no-store' });
+      const r1 = await _fbFetch(url, {}, 4000);
       const cur = r1.ok ? await r1.json() : null;
       const nv = Math.min((typeof cur === 'number' ? cur : 0) + 1, COUNTER_MAX);
-      const r2 = await fetch(url, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(nv)
-      });
+      const r2 = await _fbFetch(url, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(nv) }, 4000);
       if (r2.ok) { _setCounterUI(nv); return; }
       if (r2.status === 403 || r2.status === 412) {
         await new Promise(r => setTimeout(r, 100 + Math.random() * 200));
         continue;
       }
       break;
-    } catch(e) { break; }
+    } catch(e) {
+      // Timeout или сеть — ставим _fbDead чтобы не пытаться больше
+      if (e.name === 'AbortError' || e.name === 'TimeoutError') { _fbDead = true; }
+      break;
+    }
   }
   _setCounterUI(cnt + 1);
 }
@@ -3076,12 +3077,28 @@ const FL_MAX = 100;
 let _fbReady  = false;
 let _fbDead   = false; // true = Firebase недоступен, все SSE остановлены
 let _fbSSEErrors = 0;  // глобальный счётчик ошибок SSE
-const FB_SSE_MAX_ERRORS = 4; // после N ошибок — навсегда отключаем
+const FB_SSE_MAX_ERRORS = 2; // после 2 ошибок — навсегда отключаем (было 4)
+
+// Централизованный fetch к Firebase — при timeout сразу убиваем всё
+async function _fbFetch(url, opts, ms) {
+  if (_fbDead) return null;
+  try {
+    const r = await fetch(url, { ...opts, signal: AbortSignal.timeout(ms || 5000) });
+    return r;
+  } catch(e) {
+    if (e.name === 'AbortError' || e.name === 'TimeoutError' || e.message?.includes('ERR_TIMED_OUT')) {
+      console.debug('[TurboTX] Firebase timeout → отключаем:', url.split('/').slice(-1)[0]);
+      _fbDead  = true;
+      _fbReady = false;
+    }
+    return null;
+  }
+}
 
 async function _testFirebase() {
   if (_fbDead) return false;
   try {
-    const r = await fetch(`${FIREBASE_DB}/.json?shallow=true`, { signal: AbortSignal.timeout(2500) });
+    const r = await _fbFetch(`${FIREBASE_DB}/.json?shallow=true`, {}, 3000);
     if (r.ok || r.status === 204) { _fbReady = true; return true; }
     if (r.status === 401 || r.status === 403) {
       _fbDead = true;
@@ -3105,7 +3122,8 @@ function todayStr() {
 
 async function getGlobalUsed() {
   try {
-    const r = await fetch(`${FIREBASE_DB}/daily/${todayStr()}/used.json`, { cache: 'no-store', signal: AbortSignal.timeout(5000) });
+    const r = await _fbFetch(`${FIREBASE_DB}/daily/${todayStr()}/used.json`, {});
+    if (!r) return 0;
     if (r.ok) {
       const val = await r.json();
       if (val === null) return 0;
@@ -3285,30 +3303,22 @@ async function fbQueueAdd(txid, planType) {
   // Не пишем если Firebase недоступен — избегаем Failed fetch в консоли
   if (!_fbReady || _fbDead) return;
   try {
-    await fetch(`${FIREBASE_DB}/queue/${txid}.json`, {
-      method: 'PUT', headers: {'Content-Type':'application/json'},
-      signal: AbortSignal.timeout(5000),
-      body: JSON.stringify({ txid, plan: planType, ts: Date.now(), status: 'processing' })
-    });
+    await _fbFetch(`${FIREBASE_DB}/queue/${txid}.json`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ txid, plan: planType, ts: Date.now(), status: 'processing' }) });
   } catch(e) {}
   try {
-    await fetch(`${FIREBASE_DB}/transactions/${txid}.json`, {
-      method: 'PUT', headers: {'Content-Type':'application/json'},
-      signal: AbortSignal.timeout(5000),
-      body: JSON.stringify(txid)
-    });
+    await _fbFetch(`${FIREBASE_DB}/transactions/${txid}.json`, { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(txid) });
   } catch(e) {}
 }
 
 async function fbQueueRemove(txid) {
-  try { await fetch(`${FIREBASE_DB}/queue/${txid}.json`, { method: 'DELETE', signal: AbortSignal.timeout(5000) }); } catch(e) {}
+  try { await _fbFetch(`${FIREBASE_DB}/queue/${txid}.json`, { method: 'DELETE' }); } catch(e) {}
 }
 
 async function syncGlobalQueue() {
-  if (!_fbReady) return;
+  if (!_fbReady || _fbDead) return;
   try {
-    const r = await fetch(`${FIREBASE_DB}/queue.json`, { cache: 'no-store', signal: AbortSignal.timeout(5000) });
-    if (!r.ok) return;
+    const r = await _fbFetch(`${FIREBASE_DB}/queue.json`, {});
+    if (!r || !r.ok) return;
     const data = await r.json();
 
     if (!data || typeof data !== 'object') {
@@ -3360,7 +3370,7 @@ async function fbFeedAdd(txid, planType, mins, accelTs) {
     localStorage.setItem('turbotx_feed', JSON.stringify(lf.slice(0, 8)));
   } catch(e) {}
   try {
-    await fetch(`${FIREBASE_DB}/feed/${txid}.json`, {
+    await _fbFetch(`${FIREBASE_DB}/feed/${txid}.json`, {
       method: 'PUT', headers: {'Content-Type':'application/json'},
       signal: AbortSignal.timeout(5000),
       body: JSON.stringify(item)
@@ -3369,12 +3379,14 @@ async function fbFeedAdd(txid, planType, mins, accelTs) {
 }
 
 async function syncGlobalFeed() {
+  if (!_fbReady || _fbDead) return;
   try {
     const lf = JSON.parse(localStorage.getItem('turbotx_feed') || '[]');
     if (lf.length) renderFeedFromData(lf);
   } catch(e) {}
   try {
-    const r = await fetch(`${FIREBASE_DB}/feed.json`, { cache: 'no-store', signal: AbortSignal.timeout(5000) });
+    const r = await _fbFetch(`${FIREBASE_DB}/feed.json`, {});
+    if (!r) return;
     if (!r.ok) return;
     const raw = await r.json();
     if (!raw || typeof raw !== 'object') return;
@@ -3401,7 +3413,8 @@ async function syncGlobalFeed() {
 async function syncCounterFromFirebase() {
   if (!_fbReady) return;
   try {
-    const r = await fetch(`${FIREBASE_DB}/stats/total.json`, { cache: 'no-store', signal: AbortSignal.timeout(5000) });
+    const r = await _fbFetch(`${FIREBASE_DB}/stats/total.json`, {});
+    if (!r) return;
     if (r.ok) {
       const v = await r.json();
       if (typeof v === 'number' && v >= 0) {
@@ -3613,19 +3626,22 @@ function _makeSSE(url, onPut, onPatch) {
       es.onerror = () => {
         es.close();
         _fbSSEErrors++;
-        if (_fbSSEErrors >= FB_SSE_MAX_ERRORS) {
-          // Firebase недоступен — отключаем навсегда, не спамим
+        // При первой же ошибке SSE — ERR_TIMED_OUT = Firebase мёртв
+        if (_fbSSEErrors >= FB_SSE_MAX_ERRORS || _fbDead) {
           _fbDead  = true;
           _fbReady = false;
           console.debug('[TurboTX] Firebase SSE недоступен — отключено.');
-          return;
+          return; // не пытаемся переподключиться
         }
         sched();
       };
     } catch(e) { sched(); }
   }
   // Максимум 2 попытки переподключения на один SSE
-  function sched() { if(!_fbDead && retries++<2) setTimeout(connect, Math.min(3000*Math.pow(2,retries),20000)); }
+  function sched() {
+    if (!_fbDead && retries++ < 2) setTimeout(connect, Math.min(3000*Math.pow(2,retries),20000));
+    else if (retries >= 2) { _fbDead = true; } // 2 ошибки SSE = Firebase мёртв
+  }
   connect();
 }
 
@@ -5570,7 +5586,7 @@ async function applyPromo() {
     let usedCount = 0;
     if (!isAdmin) {
       try {
-        const r = await fetch(FIREBASE_DB + '/promos/' + promoId + '/used.json', { cache: 'no-store', signal: AbortSignal.timeout(5000) });
+        const r = await _fbFetch(FIREBASE_DB + '/promos/' + promoId + '/used.json', {});
         if (r.ok) {
           const val = await r.json();
           usedCount = (typeof val === 'number' && val >= 0) ? val : 0;
@@ -5589,8 +5605,8 @@ async function applyPromo() {
     if (!isAdmin) {
       for (let attempt = 0; attempt < 3; attempt++) {
         try {
-          const r2 = await fetch(FIREBASE_DB + '/promos/' + promoId + '/used.json', {
-          signal: AbortSignal.timeout(5000),
+          const r2 = await _fbFetch(FIREBASE_DB + '/promos/' + promoId + '/used.json', {
+          // signal: AbortSignal.timeout(5000),
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(usedCount + 1)
