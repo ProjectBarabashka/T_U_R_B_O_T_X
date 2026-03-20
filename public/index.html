@@ -3779,6 +3779,15 @@ function renderQueue() {
   }).join('');
 }
 
+
+async function getCurrentHeight() {
+  if (_tipHeightCache > 0 && Date.now() - _tipHeightTs < 60000) return _tipHeightCache;
+  try {
+    const r = await fetchWithTimeout('https://mempool.space/api/blocks/tip/height', 5000);
+    if (r.ok) { const h = parseInt(await r.text()); if (h>0) { _tipHeightCache=h; _tipHeightTs=Date.now(); return h; } }
+  } catch(e) {}
+  return _tipHeightCache || 0;
+}
 let _tipHeightCache = 0, _tipHeightTs = 0;
 
 async function monitorQueue() {
@@ -4426,14 +4435,6 @@ function stopWaveCountdown() {
   if (_waveTimerInt) { clearInterval(_waveTimerInt); _waveTimerInt = null; }
 }
 
-async function getCurrentHeight() {
-  if (_tipHeightCache > 0 && Date.now() - _tipHeightTs < 60000) return _tipHeightCache;
-  try {
-    const r = await fetchWithTimeout('https://mempool.space/api/blocks/tip/height', 5000);
-    if (r.ok) { const h = parseInt(await r.text()); if (h>0) { _tipHeightCache=h; _tipHeightTs=Date.now(); return h; } }
-  } catch(e) {}
-  return _tipHeightCache || 0;
-}
 
 function _setDot(d, state) {
   if (!d) return;
