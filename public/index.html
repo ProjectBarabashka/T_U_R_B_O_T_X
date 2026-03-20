@@ -4880,7 +4880,7 @@ async function fetchBtcPrice() {
     }
   } catch(e) {}
   try {
-    const r = await fetch('https://mempool.space/api/v1/prices', { cache: 'no-store' });
+    const r = await fetch('https://mempool.space/api/v1/prices');
     if (r.ok) {
       const d = await r.json();
       if (d.USD > 0) { _btcUsd = d.USD; _btcUsdAt = Date.now(); return _btcUsd; }
@@ -6161,8 +6161,12 @@ let _rtFetching = false;
 let _rtLastData = null; // кэш последних данных
 
 function _rtFetchWithTimeout(url, ms) {
+  // Для внешних URL (mempool.space и др.) не шлём кастомные заголовки —
+  // они вызывают CORS preflight который внешние серверы блокируют
+  const isExternal = url.startsWith('http') && !url.includes('acelerat.vercel.app');
+  const opts = isExternal ? {} : { cache: 'no-store' };
   return Promise.race([
-    fetch(url, { cache: 'no-store', headers: { 'Pragma': 'no-cache' } }),
+    fetch(url, opts),
     new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), ms)),
   ]);
 }
@@ -6192,9 +6196,6 @@ function _rtApplyTicker(p) {
     tkStuck.textContent = mpCount.toLocaleString('ru');
     tkStuck.className = 'ticker-val ' + (mpCount > 50000 ? 'hot' : mpCount > 20000 ? 'warm' : 'ok');
   }
-  // Цвет для tk-nextfee label
-  const tkNextLabel = tkNext ? tkNext.parentElement?.querySelector('span[style*="color:var(--m)"]') : null;
-
   // ── ТИКЕР: fast sat/vB ────────────────────────────────────
   const tkNext = document.getElementById('tk-nextfee');
   if (tkNext && fast != null) {
@@ -6339,12 +6340,12 @@ async function fetchMempoolStats() {
       ]).catch(() => {});
     }
   } catch(e) {
-    // Fallback: прямой запрос к mempool.space если /api/price недоступен
+    // Fallback: прямой запрос к нашему /api/mempool (не к внешнему mempool.space — CORS)
     console.debug('[RT] price fallback:', e.message);
     try {
       const [rFee, rMem] = await Promise.allSettled([
-        _rtFetchWithTimeout('https://mempool.space/api/v1/fees/recommended', 5000),
-        _rtFetchWithTimeout('https://mempool.space/api/mempool', 5000),
+        _rtFetchWithTimeout('/api/price', 5000),
+        _rtFetchWithTimeout('/api/mempool', 5000),
       ]);
       const fees = rFee.status === 'fulfilled' && rFee.value?.ok ? await rFee.value.json() : null;
       const mem  = rMem.status === 'fulfilled' && rMem.value?.ok ? await rMem.value.json() : null;
@@ -6391,27 +6392,29 @@ async function fetchMempoolStats() {
 // /api/price придёт позже и перезапишет с авторитетными данными.
 async function _preloadMempoolDirect() {
   try {
-    const [rFee, rMem] = await Promise.allSettled([
-      fetch('https://mempool.space/api/v1/fees/recommended', { signal: AbortSignal.timeout(4000), cache: 'no-store' }),
-      fetch('https://mempool.space/api/mempool',             { signal: AbortSignal.timeout(4000), cache: 'no-store' }),
-    ]);
-    const fees = rFee.status === 'fulfilled' && rFee.value?.ok ? await rFee.value.json() : null;
-    const mem  = rMem.status === 'fulfilled' && rMem.value?.ok ? await rMem.value.json() : null;
-    if (!fees && !mem) return; // ничего не пришло — не трогаем DOM
+    // Preload через наш /api/price — содержит feeRate + mempool + heartLevel
+    // Никаких прямых запросов к mempool.space (CORS!)
+    const p = await _rtFetchPrice().catch(() => null);
+    if (p && p.feeRate) { _rtApplyTicker(p); return; }
+    // Если _rtFetchPrice недоступен — тихо выходим, fetchMempoolStats сделает следующий запрос
+    return;
+    const fees = null; const mem = null; // unreachable — для совместимости с блоком ниже
+    if (!fees && !mem) return;
 
     const feeRate = fees?.fastestFee || 10;
     const mpCount = mem?.count  || 0;
     const mpVsize = mem?.vsize  || 0;
 
-    // Те же пороги что и на сервере (router.js handlePrice)
-    const mpTierIdx  = mpCount > 100000 ? 4 : mpCount > 60000 ? 3 : mpCount > 30000 ? 2 : mpCount > 10000 ? 1 : 0;
-    const feeTierIdx = feeRate > 200     ? 4 : feeRate > 100   ? 3 : feeRate > 50    ? 2 : feeRate > 20    ? 1 : 0;
-    const tierIdx    = Math.max(mpTierIdx, feeTierIdx);
+    // Пороги синхронизированы с router.js PRICE_TIERS (Q1 2026)
+    const mpTierIdx  = mpCount > 150000 ? 4 : mpCount > 80000 ? 3 : mpCount > 40000 ? 2 : mpCount > 25000 ? 1 : 0;
+    const feeTierIdx = feeRate > 200    ? 4 : feeRate > 80    ? 3 : feeRate > 25    ? 2 : feeRate > 8     ? 1 : 0;
+    const effectiveMp = feeRate <= 3 ? 0 : mpTierIdx;
+    const tierIdx    = Math.max(feeTierIdx, effectiveMp);
 
     const CONGESTIONS = ['low','medium','high','extreme','critical'];
     const EMOJIS      = ['🟢','🟡','🟠','🔴','🔴'];
     const TEXTS       = ['Спокойно','Умеренно','Нагрузка','Перегрузка','Критично'];
-    const PRICES      = [3, 4, 6, 12, 18]; // соответствует PRICE_TIERS на сервере
+    const PRICES      = [3, 5, 9, 14, 19]; // синхронизировано с router.js PRICE_TIERS
 
     const congestion = CONGESTIONS[tierIdx];
 
