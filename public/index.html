@@ -4465,7 +4465,11 @@ async function go() {
         var _wDone    = false;
         var _wTick    = null;
         var _wTimers  = [];
-        // Глобальные ссылки — checkConf останавливает волны при подтверждении
+        // Реестр волн — каждая TX изолирована по txid
+        if (!window._waves) window._waves = {};
+        var _waveId = txid; // уникальный ключ
+        window._waves[_waveId] = { results: _wResults, timers: _wTimers, done: false, tick: null, startTs: _wStartTs };
+        // Обратная совместимость — глобальные ссылки на ПОСЛЕДНЮЮ активную TX
         window._wResults = _wResults;
         window._wTimers  = _wTimers;
         window._wDone    = false;
@@ -4477,10 +4481,14 @@ async function go() {
 
         // Функция рендера панели
         function _wDraw() {
-          var wrap = document.getElementById('wave-hist-wrap');
+          // Ищем wrap специфичный для этой TX — по txid
+          var wrap = document.getElementById('wave-hist-wrap-' + _waveId)
+                  || document.getElementById('wave-hist-wrap');
           if (!wrap) return;
-          // Проверяем глобальный флаг — checkConf устанавливает window._wDone
-          if (window._wDone) { _wDone = true; }
+          // Проверяем флаг из реестра — checkConf устанавливает через window._waves
+          var _ws = window._waves && window._waves[_waveId];
+          if (_ws && _ws.done) { _wDone = true; }
+          if (window._wDone && _waveId === localStorage.getItem('turbotx_wave_txid')) { _wDone = true; }
           var nowMs   = Date.now() - _wStartTs;
           var nowMin  = nowMs / 60000;
 
@@ -4553,11 +4561,14 @@ async function go() {
               var rd = await rr.json();
               if (rd.confirmed) {
                 _wDone = true;
+                _wDone = true;
                 window._wDone = true;
+                if (window._waves && window._waves[_waveId]) window._waves[_waveId].done = true;
                 _wResults[waveIdx] = {ok:true, ch: rd.broadcastSummary?.ok||0, hr: rd.hashrateReach||0};
                 stopPremiumRepeat();
                 _wTimers.forEach(function(t){ clearTimeout(t); });
                 window._wTimers = [];
+                if (window._waves && window._waves[_waveId]) { window._waves[_waveId].timers = []; }
                 clearInterval(_wTick);
                 window._wTick = null;
                 _wDraw();
@@ -4575,12 +4586,16 @@ async function go() {
         });
 
         // Тикер — каждую секунду обновляет таймер
-        // Пропускаем если вкладка скрыта (document.hidden) — экономим CPU
         _wTick = setInterval(function() {
           if (!document.hidden) _wDraw();
         }, 1000);
         window._wTick  = _wTick;
         window._wDraw  = _wDraw;
+        // Сохраняем draw и tick в реестре для per-TX управления
+        if (window._waves && window._waves[_waveId]) {
+          window._waves[_waveId].tick = _wTick;
+          window._waves[_waveId].draw = _wDraw;
+        }
       }
 
     } catch(apiErr) {
@@ -4615,7 +4630,8 @@ async function go() {
         var _rbEl = document.getElementById('rb');
         if (_rbEl && _rbEl.innerHTML.trim()) {
           var wrapEl = document.createElement('div');
-          wrapEl.id = 'wave-hist-wrap';
+          wrapEl.id = 'wave-hist-wrap-' + txid; // уникальный per-TX
+          wrapEl.dataset.txid = txid;
           wrapEl.style.marginTop = '12px';
           _rbEl.appendChild(wrapEl);
           if (typeof _wDraw === 'function') _wDraw();
@@ -4739,17 +4755,27 @@ async function startConfTracker(txid) {
       }
       updateHistoryConfs(txid, confs);
       if (confs >= 1) {
-        // Останавливаем волны сразу при первом подтверждении
-        window._wDone = true;   // ← _wDraw читает это при следующем тике
-        if (window._wTimers) { window._wTimers.forEach(function(t){clearTimeout(t);}); window._wTimers=[]; }
-        if (window._wTick)   { clearInterval(window._wTick); window._wTick=null; }
-        // Немедленно перерисовываем панель волн с "✅ Подтверждено"
-        if (typeof window._wDraw === 'function') {
-          try { window._wDraw(); } catch(e) {}
+        // Останавливаем волны для ЭТОЙ конкретной TX (не глобально)
+        var _wEntry = window._waves && window._waves[txid];
+        if (_wEntry) {
+          _wEntry.done = true;
+          if (_wEntry.timers) { _wEntry.timers.forEach(function(t){clearTimeout(t);}); _wEntry.timers = []; }
+          if (_wEntry.tick)   { clearInterval(_wEntry.tick); _wEntry.tick = null; }
         }
+        // Глобальный флаг только если это последняя активная TX
+        var _savedWaveTxid = localStorage.getItem('turbotx_wave_txid') || '';
+        if (_savedWaveTxid === txid || !_savedWaveTxid) {
+          window._wDone = true;
+          if (window._wTimers) { window._wTimers.forEach(function(t){clearTimeout(t);}); window._wTimers=[]; }
+          if (window._wTick)   { clearInterval(window._wTick); window._wTick=null; }
+          try{localStorage.removeItem('turbotx_wave_start');}catch(e){}
+          try{localStorage.removeItem('turbotx_wave_txid');}catch(e){}
+        }
+        // Перерисовываем панель этой TX
+        var _wDrawFn = window._waves && window._waves[txid] && window._waves[txid].draw;
+        if (typeof _wDrawFn === 'function') { try { _wDrawFn(); } catch(e) {} }
+        else if (typeof window._wDraw === 'function') { try { window._wDraw(); } catch(e) {} }
         stopPremiumRepeat && stopPremiumRepeat();
-        try{localStorage.removeItem('turbotx_wave_start');}catch(e){}
-        try{localStorage.removeItem('turbotx_wave_txid');}catch(e){}
       }
       if (confs >= 3) {
         clearInterval(_confInterval); _confInterval=null;
@@ -4793,12 +4819,12 @@ async function startConfTracker(txid) {
 
           // TX подтверждена (входит в блок)
           if (msg.txConfirmed || (msg.block && msg['tracked-txs']?.includes(txid))) {
-            // Немедленно останавливаем волны — не ждём следующего цикла checkConf
-            if (window._wTimers) { window._wTimers.forEach(function(t){clearTimeout(t);}); window._wTimers=[]; }
-            if (window._wTick)   { clearInterval(window._wTick); window._wTick=null; }
+            // Останавливаем волны для этой TX через реестр
+            var _wsEntry = window._waves && window._waves[txid];
+            if (_wsEntry) { _wsEntry.done = true; }
             window._wDone = true;
             stopPremiumRepeat && stopPremiumRepeat();
-            checkConf(); // обновляем UI
+            checkConf(); // обновляем UI и перерисовываем
           }
 
           // Новый блок → проверяем нашу TX
