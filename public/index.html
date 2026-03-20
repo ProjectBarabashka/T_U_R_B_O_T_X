@@ -3565,7 +3565,7 @@ async function initGlobalSync() {
 
   Promise.race([
     _testFirebase(),
-    new Promise(res => setTimeout(() => res(false), 2000))
+    new Promise(res => setTimeout(() => res(false), 1500)) // FIX v14.2: faster Firebase fallback
   ]).then(async fbOk => {
     if (fbOk && !_fbDead) {
       await updateFreeUI();
@@ -3636,7 +3636,7 @@ function _makeSSE(url, onPut, onPatch) {
       es.onerror = () => {
         es.close();
         _fbSSEErrors++;
-        // При первой же ошибке SSE — ERR_TIMED_OUT = Firebase мёртв
+        // FIX v14.2: ERR_TIMED_OUT на SSE = Firebase недоступен → сразу offline
         if (_fbSSEErrors >= FB_SSE_MAX_ERRORS || _fbDead) {
           _fbDead  = true;
           _fbReady = false;
@@ -3673,6 +3673,7 @@ function startRealtimeListeners() {
 }
 
 function _startDailySSE(ns) {
+  if (_fbDead) return; // FIX v14.2: не запускаем SSE если Firebase недоступен
   _currentDayKey = todayStr();
   _makeSSE(`${FIREBASE_DB}/daily/${_currentDayKey}/used.json?ns=${ns}`, d => {
     if (!d) return;
@@ -3683,7 +3684,7 @@ function _startDailySSE(ns) {
 }
 
 setInterval(() => {
-  if (!_fbReady) return;
+  if (!_fbReady || _fbDead) return; // FIX v14.2
   const newDay = todayStr();
   if (newDay !== _currentDayKey) {
     _currentDayKey = newDay;
