@@ -1613,7 +1613,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
 
   <div class="prog-wrap" id="pw"><div class="prog-bar"><div class="prog-fill" id="pf"></div></div><div class="steps-list" id="sl"></div></div>
   <div class="res-box" id="rb"></div>
-  <div id="wave-panel-global" style="margin-top:12px"></div>
+  <div id="wave-panel-global" style="display:none"></div>
 
   <!-- ИСТОРИЯ УСКОРЕНИЙ -->
   <div id="history-block" style="display:none;margin-top:16px">
@@ -3376,7 +3376,7 @@ async function initGlobalSync() {
     if (savedWaveStart) {
       const ts = parseInt(savedWaveStart);
       const elapsed = Date.now() - ts;
-      const maxWaveMs = 960 * 60000; // последняя волна
+      const maxWaveMs = 780 * 60000; // последняя волна (WAVE_SCHEDULE[-1]=780)
       if (elapsed > 0 && elapsed < maxWaveMs + 60000) {
         _waveStartTs = ts; // восстанавливаем — тикер сам покажет правильное время
         // Если wave-panel-global есть с данными — запускаем тикер
@@ -4189,7 +4189,9 @@ async function go() {
         }
 
         const okCnt   = data.summary?.ok ?? 0;
-        const total   = data.summary?.total ?? 0;
+        const sent    = data.summary?.sent ?? data.summary?.total ?? 0;
+        const skipped = data.summary?.skipped ?? 0;
+        const total   = sent; // показываем только реально отправленные, не skipped
         const elapsed = data.summary?.ms ?? 0;
         const rbf     = data.summary?.rbfEnabled || data.analysis?.rbfEnabled || false;
         const confLabel = data.analysis?.feeRate && plan === 'premium' ? '10–20 мин ⚡' : null;
@@ -4219,7 +4221,7 @@ async function go() {
 
         const mainRow = document.createElement('div');
         mainRow.style.cssText = 'padding-top:8px;border-top:1px solid rgba(255,255,255,.06);font-size:.6rem;letter-spacing:.5px;display:flex;justify-content:space-between;color:' + (okCnt > 0 ? 'var(--a)' : 'var(--err)');
-        mainRow.innerHTML = '<span>⚡ ' + okCnt + '/' + total + ' каналов ответили</span><span style="color:var(--m)">' + elapsed + 'мс</span>';
+        mainRow.innerHTML = '<span>⚡ ' + okCnt + '/' + total + ' каналов ответили' + (skipped > 0 ? ' <span style="color:var(--m);font-size:.55rem">(' + skipped + ' пропущено)</span>' : '') + '</span><span style="color:var(--m)">' + elapsed + 'мс</span>';
         summaryEl.appendChild(mainRow);
 
         if (hrReach > 0) {
@@ -4294,7 +4296,7 @@ async function go() {
 
       if (plan === 'premium') {
         stopPremiumRepeat();
-        startWaveCountdown('wave-panel-' + _apiStatusId_local);
+        // wave-панель рисуется только в историю (статично), не в живой UI
         // 10 волн: 15/15/30/60/120/120/120/120/180/180 мин (BASE_INTERVALS из repeat.js)
         // Кумулятивные минуты для setTimeout: волна 2 через 15, волна 3 через 30, ...
         const _WAVE_MINS = [15, 30, 60, 120, 240, 360, 480, 600, 780, 960];
@@ -4352,26 +4354,33 @@ async function go() {
       }
     }
 
-    // Сохраняем финальный html в историю (через 500мс — wave-panel тоже готов)
+    // Сохраняем результат + статичную панель волн прямо внутри rb → в историю
     setTimeout(function() {
       try {
-        const _rbEl  = document.getElementById('rb');
-        const _wpEl  = document.getElementById('wave-panel-global');
+        const _rbEl = document.getElementById('rb');
         if (_rbEl && _rbEl.innerHTML.trim()) {
-          // Сохраняем снапшот wave-panel БЕЗ живых ID (чтобы не дублировать с тикером)
-          let wpHtml = '';
-          if (_wpEl && _wpEl.innerHTML.trim()) {
-            // Заменяем ID на data-атрибуты чтобы не конфликтовать с живым тикером
-            const wpSnapshot = _wpEl.innerHTML
-              .replace(/id="wave-countdown-val"/g, 'data-snap="wave-countdown-val"')
-              .replace(/id="wave-next-label"/g, 'data-snap="wave-next-label"')
-              .replace(/id="wave-list-items"/g, 'data-snap="wave-list-items"')
-              .replace(/id="wave-panel"/g, 'data-snap="wave-panel"');
-            wpHtml = '<div id="wave-panel-in-history" style="margin-top:12px">' + wpSnapshot + '</div>';
-          }
-          updateHistoryExtra(txid, { html: _rbEl.innerHTML + wpHtml });
+          // Статичная панель волн — только для отображения в истории, без живого тикера
+          const waveRows = [
+            ['мгновенно',0],['+ 15 мин',15],['+ 30 мин',30],['+ 60 мин',60],
+            ['+ 120 мин',120],['+ 240 мин',240],['+ 360 мин',360],
+            ['+ 480 мин',480],['+ 600 мин',600],['+ 780 мин',780]
+          ].map(function(w, i) {
+            var label = w[0], done = i === 0;
+            var cls = done ? 'done' : 'pending';
+            var dot = done ? 'background:var(--g)' : 'background:rgba(255,255,255,.15)';
+            var time = done ? '✓' : 'в очереди';
+            return '<div class="wave-item ' + cls + '"><div class="wave-dot" style="' + dot + ';width:7px;height:7px;border-radius:50%;flex-shrink:0"></div>'
+              + '<span style="flex:1">Волна ' + (i+1) + ' · ' + label + '</span>'
+              + '<span style="font-size:.58rem;opacity:.7">' + time + '</span></div>';
+          }).join('');
+          var waveHtml = '<div style="margin-top:12px;padding:12px 14px;background:linear-gradient(135deg,rgba(0,232,122,.05) 0%,rgba(124,92,252,.05) 100%);border:1px solid rgba(0,232,122,.18);border-radius:10px;font-family:var(--mono);font-size:.62rem">'
+            + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+            + '<span style="color:var(--a);font-weight:700;letter-spacing:.5px;font-size:.65rem">⚡ АВТО-ПОВТОРЫ PREMIUM</span>'
+            + '<span style="color:var(--m);font-size:.58rem">10 волн · до 16 часов</span></div>'
+            + '<div class="wave-list" style="display:flex;flex-direction:column;gap:4px">' + waveRows + '</div></div>';
+          updateHistoryExtra(txid, { html: _rbEl.innerHTML + waveHtml });
         }
-        // Скрываем только rb — wave-panel-global остаётся пока волны работают
+        // Скрываем rb после сохранения в историю
         setTimeout(function() {
           if (_rbEl) {
             _rbEl.style.transition = 'opacity .6s';
@@ -4382,8 +4391,6 @@ async function go() {
               _rbEl.style.transition = '';
             }, 600);
           }
-          // wave-panel-global НЕ скрываем — тикер должен работать
-          // он скроется сам когда все волны завершатся (в stopWaveCountdown)
         }, 1500);
       } catch(_) {}
     }, 500);
@@ -4423,12 +4430,17 @@ function stopPremiumRepeat() {
 // ── LIVE WAVE COUNTDOWN ────────────────────────────────────────
 // 10 волн: BASE_INTERVALS из repeat.js: 15/15/30/60/120/120/120/120/180/180 мин
 // Кумулятивно от старта: волна 1 = 0 (мгновенно), волна 2 = +15, волна 3 = +30, ...
-const WAVE_SCHEDULE = [0, 15, 30, 60, 120, 240, 360, 480, 600, 780]; // 10 волн, последняя через 780 мин
+const WAVE_SCHEDULE = [0, 15, 30, 60, 120, 240, 360, 480, 600, 780, 960]; // 11 позиций: волна 1=мгновенно + 10 повторов
 let _waveTimerInt = null;
 let _waveStartTs  = 0;
 let _wavePanelId  = null;
 
 function startWaveCountdown(panelContainerId) {
+  // Если тикер уже идёт — не перезапускаем, только обновляем ID
+  if (_waveTimerInt && _waveStartTs > 0) {
+    _wavePanelId = panelContainerId;
+    return;
+  }
   _waveStartTs = Date.now();
   _wavePanelId = panelContainerId;
   // Сохраняем время старта — для восстановления после F5
@@ -6980,17 +6992,8 @@ function restoreLastResult() {
 
     rb.style.display = 'block';
     rb.className = 'res-box';
-    // Отделяем wave-panel из сохранённого html и показываем в wave-panel-global
+    // wave-panel остаётся внутри истории (rb), wave-panel-global не используется
     let savedHtml = last.html;
-    const wpMatch = savedHtml.match(/<div id="wave-panel-in-history"[^>]*>([\s\S]*?)<\/div>$/);
-    if (wpMatch) {
-      savedHtml = savedHtml.replace(wpMatch[0], '');
-      const wpGlobal = document.getElementById('wave-panel-global');
-      if (wpGlobal) {
-        wpGlobal.style.display = '';
-        wpGlobal.innerHTML = wpMatch[1];
-      }
-    }
     rb.innerHTML = savedHtml;
 
     // Убираем wave-panel таймеры (они не работают после F5)
