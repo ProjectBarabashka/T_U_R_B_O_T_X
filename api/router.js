@@ -510,9 +510,15 @@ async function handlePrice(req, res) {
     confLabel,
     bestTime:tip,mempool:mempoolStats,
     // heartLevel и blockIcon для анимаций фронта (v14.2)
+    // heartLevel: определяется по feeRate а НЕ по итоговому tier.
+    // Tier может подняться из-за mpCount/blockTime, но сердечко отражает
+    // реальную рыночную ставку — пользователь платит за ускорение, а не за мемпул.
+    // calm  = feeRate низкий (сеть физически свободна, TX просто не конкурентны)
+    // mid   = feeRate средний (есть конкуренция за блок)
+    // busy  = feeRate высокий (перегрузка, каждый sat на счету)
     heartLevel: (
-      tier.label === 'critical' || tier.label === 'extreme' ? 'busy' :
-      tier.label === 'high' || tier.label === 'medium' ? 'mid' : 'calm'
+      feeRate > 80  ? 'busy' :
+      feeRate > 20  ? 'mid'  : 'calm'
     ),
     // blockIcon: 4 состояния — источник правды для анимации на фронте
     // fast       = звёзды  (avgBlock < 8 мин   — блоки летят, сеть свободна)
