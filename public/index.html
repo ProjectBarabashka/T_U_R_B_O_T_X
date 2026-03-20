@@ -3500,6 +3500,24 @@ async function initGlobalSync() {
       localStorage.removeItem('turbotx_wave_txid');
     }
   } catch(_) {}
+  // Очищаем старые записи истории от captcha блоков
+  try {
+    var _hist = JSON.parse(localStorage.getItem('tx_history') || '[]');
+    var _changed = false;
+    _hist.forEach(function(entry) {
+      if (entry.html && entry.html.includes('Каналы с CAPTCHA')) {
+        var _d = document.createElement('div');
+        _d.innerHTML = entry.html;
+        _d.querySelectorAll('div').forEach(function(el){
+          if (el.textContent.includes('Каналы с CAPTCHA')) el.remove();
+        });
+        entry.html = _d.innerHTML;
+        _changed = true;
+      }
+    });
+    if (_changed) localStorage.setItem('tx_history', JSON.stringify(_hist));
+  } catch(_) {}
+
   const _scEl = document.getElementById('sc');
   if (_scEl && cnt > 0) {
     _scEl.textContent = cnt.toLocaleString('ru');
@@ -6417,6 +6435,19 @@ async function _preloadMempoolDirect() {
 (function _rtStart() {
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
+  // Защита: убиваем captcha блок если он каким-то образом попал в DOM
+  (function _killCaptcha() {
+    var kill = function() {
+      document.querySelectorAll('[id^="captcha-channels"]').forEach(function(el){ el.remove(); });
+      // Ищем по содержимому — на случай если id изменился
+      document.querySelectorAll('div').forEach(function(el) {
+        if (el.textContent && el.textContent.includes('Каналы с CAPTCHA')) el.remove();
+      });
+    };
+    kill();
+    setTimeout(kill, 1000);
+    setTimeout(kill, 3000);
+  })();
       _preloadMempoolDirect(); // ← мгновенно: прямо на mempool.space
       fetchMempoolStats();     // ← параллельно: /api/price с ценой BTC
       setInterval(fetchMempoolStats, 20000);
@@ -7083,7 +7114,19 @@ function toggleHistDetail(btn) {
       const entry = h.find(function(x) { return sanitizeTxid(x.txid) === txid; });
       if (entry && entry.html) {
         // wave-panel уже включён в entry.html (wave-panel-in-history)
-        detail.innerHTML = entry.html +
+        // Очищаем сохранённый HTML от устаревших блоков перед вставкой
+        var _cleanHtml = entry.html || '';
+        // Убираем captcha-channels блок если он остался в старых записях
+        var _tmpDiv = document.createElement('div');
+        _tmpDiv.innerHTML = _cleanHtml;
+        _tmpDiv.querySelectorAll('[id^="captcha-channels"]').forEach(function(el){ el.remove(); });
+        // Убираем по тексту — ищем div с текстом про CAPTCHA
+        _tmpDiv.querySelectorAll('div').forEach(function(el){
+          if (el.textContent.includes('Каналы с CAPTCHA') || el.textContent.includes('captcha-ch-link') || el.querySelector('a.captcha-ch-link')) el.remove();
+        });
+        _cleanHtml = _tmpDiv.innerHTML;
+
+        detail.innerHTML = _cleanHtml +
           '<div style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(255,255,255,.05);font-size:.55rem;color:var(--m);display:flex;align-items:center;gap:5px">' +
           '<svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>' +
           ' Сохранено ' + new Date(entry.ts).toLocaleString('ru', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) + '</div>';
