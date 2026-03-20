@@ -48,7 +48,7 @@ if (typeof AbortSignal !== 'undefined') {
     'TurboTX — BTC Accelerator',
   ];
   var i = 0;
-  setInterval(function(){ i=(i+1)%titles.length; document.title=titles[i]; }, 900);
+  setInterval(function(){ if(!document.hidden){ i=(i+1)%titles.length; document.title=titles[i]; } }, 900);
 })();
 </script>
 
@@ -1592,13 +1592,15 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
     <div style="font-family:var(--mono);font-size:.7rem;color:var(--m);margin-bottom:16px">Вставьте TXID из кошелька — мы займёмся остальным</div>
 
     <div class="fg" style="margin-bottom:20px">
-    <label style="font-size:.58rem;letter-spacing:2.5px;color:rgba(255,255,255,.5);margin-bottom:10px">Transaction ID (TXID)</label>
+    <label for="txid" style="font-size:.58rem;letter-spacing:2.5px;color:rgba(255,255,255,.5);margin-bottom:10px">Transaction ID (TXID)</label>
     <div id="single-mode" style="position:relative">
       <div style="position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none;opacity:.4">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#f7931a" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
       </div>
-      <input type="text" name="username" style="display:none;position:absolute;left:-9999px" tabindex="-1" aria-hidden="true" autocomplete="username">
-      <input type="password" name="password" style="display:none;position:absolute;left:-9999px" tabindex="-1" aria-hidden="true" autocomplete="current-password">
+      <form style="display:none;position:absolute;left:-9999px" aria-hidden="true">
+        <input type="text" name="username" tabindex="-1" autocomplete="username">
+        <input type="password" name="password" tabindex="-1" autocomplete="current-password">
+      </form>
       <input type="text" id="txid" placeholder="Вставьте TXID из кошелька (64 символа)" maxlength="64" oninput="onTxidDiag(this.value)" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other" data-lpignore="true">
     </div>
     <div style="margin-top:6px;font-family:var(--mono);font-size:.6rem;color:rgba(255,255,255,.28);display:flex;align-items:center;gap:5px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Найдите TXID в своём кошельке — это 64-символьный хеш транзакции</div>
@@ -1616,7 +1618,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
   </div>
 
   <div class="fg">
-    <label>Режим ускорения</label>
+    <div class="fee-calc-lbl" style="font-size:.65rem;letter-spacing:2px;color:var(--m);text-transform:uppercase;font-family:var(--mono);margin-bottom:10px">Режим ускорения</div>
     <div class="plan-row">
       <div class="plan-opt on" id="of" onclick="pick('free')"><div class="po-title" style="display:flex;align-items:center;gap:7px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><rect x="2.5" y="10.5" width="19" height="12" rx="3" fill="rgba(247,147,26,0.12)" stroke="#f7931a" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 10.5V7.5a5 5 0 0 1 9.9-1" stroke="#f7931a" stroke-width="1.6" stroke-linecap="round" fill="none"/><circle cx="12" cy="16" r="2" fill="#f7931a" opacity="0.85"/><rect x="11" y="16.8" width="2" height="3" rx="1" fill="#f7931a" opacity="0.7"/></svg> Бесплатный</div><div class="po-desc">Rebroadcast в 5 пулов</div><div class="po-price">$0 — бесплатно</div></div>
       <div class="plan-opt" id="op" onclick="pick('premium')"><div class="po-title" style="display:flex;align-items:center;gap:7px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><defs><linearGradient id="cg15" x1="2" y1="5" x2="22" y2="19" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFE566"/><stop offset="45%" stop-color="#F7931A"/><stop offset="100%" stop-color="#FF6B00"/></linearGradient></defs><path d="M3 19h18" stroke="url(#cg15)" stroke-width="2" stroke-linecap="round"/><path d="M3 19L4.5 9.5L9 14L12 6L15 14L19.5 9.5L21 19z" fill="url(#cg15)" stroke="url(#cg15)" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="12" cy="6" r="1.4" fill="#FFE566"/><circle cx="4.5" cy="9.5" r="1.1" fill="#FFE566"/><circle cx="19.5" cy="9.5" r="1.1" fill="#FFE566"/></svg> Premium</div><div class="po-desc">30 каналов · ~88%</div><div class="po-price" style="color:var(--a);font-weight:700">от <span id="plan-opt-price">…</span></div></div>
@@ -1660,7 +1662,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
       
 
   <div class="fg" style="margin-top:20px">
-    <label>TXID транзакции для замены комиссии</label>
+    <label for="rbf-txid">TXID транзакции для замены комиссии</label>
     <input type="text" id="rbf-txid" placeholder="a1b2c3d4... (64 hex символа)" maxlength="64" autocomplete="off" data-lpignore="true" data-form-type="other"
       oninput="rbfOnInput()" style="width:100%;box-sizing:border-box">
   </div>
@@ -1670,7 +1672,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
   </div>
 
   <div id="rbf-target-wrap" style="display:none;margin-top:18px">
-    <label style="font-size:.65rem;letter-spacing:2px;color:var(--m);text-transform:uppercase;font-family:var(--mono);display:block;margin-bottom:10px">Целевая скорость</label>
+    <div style="font-size:.65rem;letter-spacing:2px;color:var(--m);text-transform:uppercase;font-family:var(--mono);display:block;margin-bottom:10px">Целевая скорость</div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px">
       <div class="popt on" id="rbf-spd-eco" onclick="rbfPickSpeed(this,'eco')">
         <div style="font-size:.65rem;color:var(--m);font-family:var(--mono)">Эконом</div>
@@ -1738,12 +1740,12 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
     <div class="card-sub">Child-Pays-for-Parent — разгони застрявшую транзакцию дочерней TX без Premium</div>
 
     <div class="fg" style="margin-top:12px">
-      <label>TXID родительской транзакции</label>
+      <label for="cpfp-parent">TXID родительской транзакции</label>
       <input type="text" id="cpfp-parent" placeholder="a1b2c3d4... (64 hex символа)" maxlength="64" oninput="onCpfpInput()" autocomplete="off" data-lpignore="true" data-form-type="other" style="font-family:var(--mono);font-size:.72rem">
     </div>
 
     <div style="margin:12px 0 4px;display:none" id="cpfp-target-wrap">
-      <label style="font-size:.65rem;color:var(--m);letter-spacing:.5px;text-transform:uppercase">Скорость подтверждения</label>
+      <div style="font-size:.65rem;color:var(--m);letter-spacing:.5px;text-transform:uppercase">Скорость подтверждения</div>
       <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
         <span style="font-size:.62rem;color:var(--m)">Эконом</span>
         <input type="range" id="cpfp-speed" min="1" max="3" value="3" style="flex:1;accent-color:var(--g)">
@@ -3203,7 +3205,7 @@ function updateResetTimer() {
 }
 
 updateResetTimer();
-setInterval(updateResetTimer, 1000);
+setInterval(function(){ if(!document.hidden) updateResetTimer(); }, 1000);
 
 // ── RENDER FEED ────────────────────────────────────────────────
 function renderFeedFromData(feed) {
@@ -3994,8 +3996,8 @@ function addToQueue(txid, planType) {
 
 renderQueue();
 monitorQueue();
-setInterval(monitorQueue, 30000);
-setInterval(renderQueue, 15000);
+setInterval(function(){ if(!document.hidden) monitorQueue(); }, 30000);
+setInterval(function(){ if(!document.hidden) renderQueue(); }, 15000);
 
 // ── ACCELERATE ─────────────────────────────────────────────────
 const BTN_IDLE = '<span style="display:inline-flex;align-items:center;gap:10px;padding-left:8px"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg> УСКОРИТЬ ТРАНЗАКЦИЮ</span>';
@@ -4550,8 +4552,11 @@ async function go() {
         });
 
         // Тикер — каждую секунду обновляет таймер
-        _wTick = setInterval(_wDraw, 1000);
-        window._wTick  = _wTick;  // глобально для остановки из checkConf
+        // Пропускаем если вкладка скрыта (document.hidden) — экономим CPU
+        _wTick = setInterval(function() {
+          if (!document.hidden) _wDraw();
+        }, 1000);
+        window._wTick  = _wTick;
         window._wDraw  = _wDraw;
       }
 
@@ -4898,7 +4903,7 @@ async function updateBtcPrices() {
 }
 
 updateBtcPrices();
-setInterval(updateBtcPrices, 3 * 60 * 1000);
+setInterval(function(){ if(!document.hidden) updateBtcPrices(); }, 3 * 60 * 1000);
 
 // ── MODAL ──────────────────────────────────────────────────────
 let selectedUsd = 4;
@@ -8092,7 +8097,8 @@ window._TurboAPI = {
     if(t>DUR+80) t=0;
 
     fav.href=cv.toDataURL();
-    requestAnimationFrame(draw);
+    // Throttle favicon animation до 10fps — без этого RAF грузит CPU (Violation rAF took 94ms)
+    setTimeout(function(){ requestAnimationFrame(draw); }, 100);
   }
   draw();
 })();
