@@ -3370,37 +3370,9 @@ async function syncCounterFromFirebase() {
 
 // ── INIT ──────────────────────────────────────────────────────
 async function initGlobalSync() {
-  // Восстанавливаем время старта волн после F5
-  try {
-    const savedWaveStart = localStorage.getItem('turbotx_wave_start');
-    if (savedWaveStart) {
-      const ts = parseInt(savedWaveStart);
-      const elapsed = Date.now() - ts;
-      const maxWaveMs = 780 * 60000; // последняя волна (WAVE_SCHEDULE[-1]=780)
-      if (elapsed > 0 && elapsed < maxWaveMs + 60000) {
-        _waveStartTs = ts; // восстанавливаем — тикер сам покажет правильное время
-        // Если wave-panel-global есть с данными — запускаем тикер
-        setTimeout(function() {
-          const wpG = document.getElementById('wave-panel-global');
-          if (!wpG) return;
-          // Если панель пуста — рендерим заново (после F5 она всегда пуста)
-          if (!wpG.querySelector('#wave-countdown-val')) {
-            wpG.style.display = '';
-            wpG.innerHTML = '<div id="wave-panel" class="active">' +
-              '<div style="display:flex;justify-content:space-between;align-items:center">' +
-              '<span style="color:var(--a);font-weight:700;letter-spacing:.5px;font-size:.65rem">⚡ АВТО-ПОВТОРЫ PREMIUM</span>' +
-              '<span id="wave-next-label" style="font-size:.6rem">следующая волна</span></div>' +
-              '<div id="wave-countdown-val" style="font-size:1.1rem;font-weight:800;color:var(--t);margin:4px 0 6px;letter-spacing:2px">00:00:00</div>' +
-              '<div class="wave-list" id="wave-list-items"></div></div>';
-          }
-          if (_waveTimerInt) clearInterval(_waveTimerInt);
-          _renderWaveList();
-          _tickWave();
-          _waveTimerInt = setInterval(_tickWave, 1000);
-        }, 400);
-      }
-    }
-  } catch(_) {}
+  // wave-panel-global скрыт — волны только в истории
+  // Очищаем старые ключи чтобы не всплывал старый тикер
+  try { localStorage.removeItem('turbotx_wave_start'); } catch(_) {}
   const _scEl = document.getElementById('sc');
   if (_scEl && cnt > 0) {
     _scEl.textContent = cnt.toLocaleString('ru');
@@ -4435,102 +4407,20 @@ let _waveTimerInt = null;
 let _waveStartTs  = 0;
 let _wavePanelId  = null;
 
+// wave-panel-global скрыт — волны только в истории (статично)
+// Функции оставлены как no-op для совместимости с _WAVE_MINS таймерами
 function startWaveCountdown(panelContainerId) {
-  // Если тикер уже идёт — не перезапускаем, только обновляем ID
-  if (_waveTimerInt && _waveStartTs > 0) {
-    _wavePanelId = panelContainerId;
-    return;
-  }
   _waveStartTs = Date.now();
   _wavePanelId = panelContainerId;
-  // Сохраняем время старта — для восстановления после F5
-  try { localStorage.setItem('turbotx_wave_start', String(_waveStartTs)); } catch(_) {}
-  // Всегда рендерим в глобальный контейнер — он НЕ скрывается вместе с rb
-  const el = document.getElementById('wave-panel-global');
-  if (!el) return;
-
-  const html = `
-    <div id="wave-panel" class="active">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <span style="color:var(--a);font-weight:700;letter-spacing:.5px;font-size:.65rem">⚡ АВТО-ПОВТОРЫ PREMIUM</span>
-        <span id="wave-next-label" style="font-size:.6rem">следующая волна</span>
-      </div>
-      <div id="wave-countdown-val" style="font-size:1.1rem;font-weight:800;color:var(--t);margin:4px 0 6px;letter-spacing:2px">00:00:00</div>
-      <div class="wave-list" id="wave-list-items"></div>
-    </div>`;
-  el.innerHTML = html;
-
-  _renderWaveList();
-  if (_waveTimerInt) clearInterval(_waveTimerInt);
-  _tickWave(); // первый tick сразу — не ждём 1 секунду (иначе остаётся 00:00:00)
-  _waveTimerInt = setInterval(_tickWave, 1000);
+  // НЕ сохраняем в localStorage и НЕ рендерим в DOM — панель только в истории
 }
 
-function _renderWaveList() {
-  const wpGlobal = document.getElementById('wave-panel-global');
-  const list = wpGlobal ? wpGlobal.querySelector('#wave-list-items') : document.getElementById('wave-list-items');
-  if (!list) return;
-  const elapsedMin = (Date.now() - _waveStartTs) / 60000;
-  let html = '';
-  WAVE_SCHEDULE.forEach((wMin, i) => {
-    const isDone   = elapsedMin > wMin + 0.5;
-    const isActive = !isDone && elapsedMin >= wMin - 0.5 && (i === WAVE_SCHEDULE.length - 1 || elapsedMin < WAVE_SCHEDULE[i+1] - 0.5);
-    const state    = isDone ? 'done' : isActive ? 'active' : 'pending';
-    const label    = wMin === 0 ? 'Волна 1 · мгновенно' : `Волна ${i+1} · +${wMin} мин`;
-    const time     = isDone ? '✓' : isActive ? '→ идёт' : `в ${wMin} мин`;
-    html += `<div class="wave-item ${state}"><div class="wave-dot"></div><span style="flex:1">${label}</span><span style="font-size:.58rem;opacity:.7">${time}</span></div>`;
-  });
-  list.innerHTML = html;
-}
+function _renderWaveList() { /* no-op: панель в истории, не в живом UI */ }
 
-function _tickWave() {
-  // Ищем элементы ВНУТРИ wave-panel-global — не по document (там могут быть дубли из истории)
-  const wpGlobal = document.getElementById('wave-panel-global');
-  if (!wpGlobal) return;
-
-  const elapsedMs  = Date.now() - _waveStartTs;
-  const endMs      = WAVE_SCHEDULE.at(-1) * 60000;
-  if (elapsedMs >= endMs + 30000) {
-    clearInterval(_waveTimerInt);
-    _waveTimerInt = null;
-    const wp = wpGlobal.querySelector('#wave-panel');
-    if (wp) wp.innerHTML += '<div style="color:var(--g);margin-top:6px;font-size:.62rem">✓ Все 10 волн завершены · Гарантия 6 часов активна</div>';
-    return;
-  }
-  const elapsedMin = elapsedMs / 60000;
-  const nextWave   = WAVE_SCHEDULE.find(m => m > elapsedMin + 0.2);
-  const countdownEl = wpGlobal.querySelector('#wave-countdown-val');
-  const labelEl     = wpGlobal.querySelector('#wave-next-label');
-  if (countdownEl && nextWave != null) {
-    const secsLeft = Math.max(0, Math.round((nextWave * 60000 - elapsedMs) / 1000));
-    const hh = String(Math.floor(secsLeft / 3600)).padStart(2,'0');
-    const mm = String(Math.floor((secsLeft % 3600) / 60)).padStart(2,'0');
-    const ss = String(secsLeft % 60).padStart(2,'0');
-    countdownEl.textContent = hh + ':' + mm + ':' + ss;
-    if (labelEl) {
-      const waveIdx = WAVE_SCHEDULE.indexOf(nextWave);
-      labelEl.textContent = 'волна ' + (waveIdx + 1) + ' через';
-    }
-  } else if (countdownEl && nextWave == null) {
-    countdownEl.textContent = '✓';
-  }
-  _renderWaveList();
-}
+function _tickWave() { /* no-op */ }
 
 function stopWaveCountdown() {
   if (_waveTimerInt) { clearInterval(_waveTimerInt); _waveTimerInt = null; }
-  // Убираем панель из глобального контейнера
-  const g = document.getElementById('wave-panel-global');
-  if (g) g.innerHTML = '';
-}
-
-async function getCurrentHeight() {
-  if (_tipHeightCache > 0 && Date.now() - _tipHeightTs < 60000) return _tipHeightCache;
-  try {
-    const r = await fetchWithTimeout('https://mempool.space/api/blocks/tip/height', 5000);
-    if (r.ok) { const h = parseInt(await r.text()); if (h>0) { _tipHeightCache=h; _tipHeightTs=Date.now(); return h; } }
-  } catch(e) {}
-  return _tipHeightCache || 0;
 }
 
 function _setDot(d, state) {
