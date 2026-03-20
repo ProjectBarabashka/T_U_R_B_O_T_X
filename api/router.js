@@ -421,13 +421,15 @@ async function handlePrice(req, res) {
   const tierByFee = PRICE_TIERS.find(t => feeRate <= t.maxFee) ?? PRICE_TIERS.at(-1);
 
   // Сигнал 2: очередь мемпула (TX count + vsize)
-  // Пороги мемпула откалиброваны под реалии Q1 2026:
-  // Норма = 5-20k TX (~3-10 МБ). Спайк = 50k+. Критика = 100k+.
+  // 1 блок = ~1 МБ = ~2000 TX; норма ≤3 блоков = ≤6000 TX / 3 МБ
+  // Каждые +2000 TX сверх нормы = ещё один блок ожидания
+  // mpTierIdx v14.2 — откалиброван по реальным данным (норма 2026 = 20-50k TX)
+  // 300 MB = максимальный стандартный размер мемпула (3 блока по 1 вейт-МБ)
   const mpTierIdx =
-    mpCount > 150000 || mpVsizeMB > 250 ? 4 :   // critical
+    mpCount > 150000 || mpVsizeMB > 250 ? 4 :   // critical — редкий спайк
     mpCount >  80000 || mpVsizeMB > 150 ? 3 :   // extreme
     mpCount >  40000 || mpVsizeMB >  80 ? 2 :   // high
-    mpCount >  25000 || mpVsizeMB >  40 ? 1 :   // medium (поднято с 15k до 25k — 13k TX = норма)
+    mpCount >  15000 || mpVsizeMB >  25 ? 1 :   // medium (текущий ~44k = medium)
                                           0;    // low
 
   // Сигнал 3: среднее время блока (получаем из /api/v1/mining/blocks/timestamps)
@@ -462,10 +464,7 @@ async function handlePrice(req, res) {
 
   // Итоговый тир = максимум из трёх сигналов
   const feeTierIdx = PRICE_TIERS.indexOf(tierByFee);
-  // Если feeRate очень низкий (≤3 sat/vB) — рынок реально пустой,
-  // мемпул не должен поднимать цену выше low ($3)
-  const effectiveMpTierIdx = feeRate <= 3 ? 0 : mpTierIdx;
-  let tier = PRICE_TIERS[Math.max(feeTierIdx, effectiveMpTierIdx, blockTierIdx)];
+  let tier = PRICE_TIERS[Math.max(feeTierIdx, mpTierIdx, blockTierIdx)];
 
   // Отдельный индикатор нагрузки мемпула (не зависит от feeRate)
   const mempoolCongestion =
@@ -897,8 +896,9 @@ function costAnalysis(feeRate, fastest, vsize, feePaid, btcPrice) {
   const rbfAdditSat    = Math.max(0, rbfTotalSat - feePaid);
   const rbfFeeUsd      = +(rbfAdditSat / SAT * btcPrice).toFixed(4);
 
-  // TurboTX Premium: фиксированная цена (из /api/price логики)
-  const turboUsd       = fastest > 150 ? 18 : fastest > 60 ? 12 : fastest > 30 ? 7 : fastest > 10 ? 4 : 3;
+  // TurboTX Premium: динамическая цена (синхронизирована с PRICE_TIERS)
+  const TURBO_TIERS = [{f:8,u:3},{f:25,u:5},{f:80,u:9},{f:200,u:14},{f:Infinity,u:19}];
+  const turboUsd = (TURBO_TIERS.find(t=>fastest<=t.f)||TURBO_TIERS.at(-1)).u;
 
   return {
     currentFee:   { sat:currentFeeSat,  usd:currentFeeUsd },
@@ -912,26 +912,66 @@ function costAnalysis(feeRate, fastest, vsize, feePaid, btcPrice) {
 }
 
 // ─── TIME FORECAST ────────────────────────────────────────────
-function timeForecast(feeRate, fastest, halfHour, stuckHours) {
+function timeForecast(feeRate, fastest, halfHour, stuckHours, mpCount=0, mpVsizeMB=0) {
   const ratio = feeRate / (fastest || 50);
 
-  // Без ускорения
-  const withoutBoost =
-    ratio >= 1.0  ? { blocks:1,  text:'~10 мин' }  :
-    ratio >= 0.8  ? { blocks:1,  text:'~10–20 мин' }:
-    ratio >= 0.5  ? { blocks:3,  text:'~30–60 мин' }:
-    ratio >= 0.3  ? { blocks:6,  text:'~1–2 часа' } :
-    ratio >= 0.1  ? { blocks:20, text:'~3–5 часов' }:
-                    { blocks:144,text:'24+ часов или никогда' };
+  // Поправка на размер мемпула: каждые 10 МБ = +1 блок ожидания (1 блок ~ 1-1.5 МБ)
+  const mpDelay = mpVsizeMB > 5 ? Math.round(mpVsizeMB / 8) : 0;
 
-  // С TurboTX Premium (цель: приоритетная очередь в топ-пулах)
-  const withBoost = ratio >= 0.5
-    ? withoutBoost  // уже быстро
-    : ratio >= 0.3
-      ? { blocks:2, text:'~20–40 мин после ускорения' }
-      : { blocks:4, text:'~40–90 мин после ускорения' };
+  // Без ускорения — с учётом реального мемпула
+  const base =
+    ratio >= 1.0  ? { blocks:1,  mins:10  } :
+    ratio >= 0.8  ? { blocks:2,  mins:20  } :
+    ratio >= 0.5  ? { blocks:4,  mins:40  } :
+    ratio >= 0.3  ? { blocks:8,  mins:80  } :
+    ratio >= 0.1  ? { blocks:24, mins:240 } :
+                    { blocks:144,mins:1440};
 
-  return { withoutBoost, withBoost, improvementBlocks: withoutBoost.blocks - withBoost.blocks };
+  const totalBlocks = base.blocks + mpDelay;
+  const totalMins   = Math.round(totalBlocks * 10);
+  const withoutBoost = {
+    blocks: totalBlocks,
+    text: totalMins < 20  ? '~10–20 мин' :
+          totalMins < 60  ? `~${Math.round(totalMins/10)*10} мин` :
+          totalMins < 180 ? `~${Math.round(totalMins/30)*0.5} ч` :
+          totalMins < 1440? `~${Math.round(totalMins/60)} ч` : '24+ часов',
+  };
+
+  // С TurboTX Premium — broadcast в 30 каналов реально сокращает время
+  const boostBlocks = ratio >= 0.5 ? Math.max(1, Math.ceil(totalBlocks*0.5)) :
+                      ratio >= 0.3 ? Math.max(1, Math.ceil(totalBlocks*0.4)) :
+                                     Math.max(2, Math.ceil(totalBlocks*0.3));
+  const boostMins   = Math.round(boostBlocks * 10);
+  const withBoost = {
+    blocks: boostBlocks,
+    text: boostMins < 20  ? '~10–20 мин' :
+          boostMins < 60  ? `~${Math.round(boostMins/10)*10} мин` :
+          boostMins < 180 ? `~${Math.round(boostMins/30)*0.5} ч` : `~${Math.round(boostMins/60)} ч`,
+  };
+
+  // Вероятность подтверждения в следующем блоке (0-100%)
+  // Основана на соотношении fee и размере очереди
+  const winProb = ratio >= 1.2 ? 92 :
+                  ratio >= 1.0 ? 80 :
+                  ratio >= 0.8 ? 65 :
+                  ratio >= 0.6 ? 45 :
+                  ratio >= 0.4 ? 25 :
+                  ratio >= 0.2 ? 10 :
+                  ratio >= 0.1 ? 4  : 1;
+  // Штраф за большой мемпул
+  const mpPenalty = mpVsizeMB > 20 ? 15 : mpVsizeMB > 10 ? 8 : mpVsizeMB > 5 ? 3 : 0;
+  const winProbability = Math.max(1, Math.min(99, winProb - mpPenalty));
+
+  return {
+    withoutBoost,
+    withBoost,
+    improvementBlocks: totalBlocks - boostBlocks,
+    winProbability,        // % шанс попасть в следующий блок
+    winProbLabel: winProbability >= 70 ? '🟢 высокая' :
+                  winProbability >= 40 ? '🟡 средняя' :
+                  winProbability >= 15 ? '🟠 низкая'  : '🔴 очень низкая',
+    mpDelay,               // лишних блоков из-за мемпула
+  };
 }
 
 // ─── ⑨ STUCK RESCUE PLAN ──────────────────────────────────────
@@ -1007,8 +1047,12 @@ async function makeDecision(txid, btcPrice, fees, tx, status, mp, miners) {
     decision = 'boost_aggressive'; urgency = 'critical';
     message = `TX зависла ${stuckHours}ч! Нужны срочные меры.`;
   } else if (ratio >= 0.5) {
-    decision = 'boost'; urgency = 'medium';
-    message = `TurboTX ускорит на 1–3 часа (${feeRate}/${fastest} sat/vB).`;
+    // Если мемпул большой — ускорение важнее
+    const mpBig = mpVsizeMB > 15;
+    decision = 'boost'; urgency = mpBig ? 'high' : 'medium';
+    message = mpBig
+      ? `Мемпул загружен (${mpVsizeMB.toFixed(1)} МБ). TurboTX приоритизирует TX в очереди пулов.`
+      : `TurboTX ускорит подтверждение (${feeRate}/${fastest} sat/vB, ~${Math.round(feeRate/fastest*100)}% от нормы).`;
   } else if (rbfEnabled) {
     decision = 'rbf'; urgency = 'high';
     message = `Низкая комиссия (${feeRate}/${fastest} sat/vB). RBF доступен — лучшее решение.`;
@@ -1018,7 +1062,7 @@ async function makeDecision(txid, btcPrice, fees, tx, status, mp, miners) {
   }
 
   const costs = costAnalysis(feeRate, fastest, vsize, feePaid, btcPrice);
-  const timing = timeForecast(feeRate, fastest, halfHour, stuckHours);
+  const timing = timeForecast(feeRate, fastest, halfHour, stuckHours, mp.count||0, mpVsizeMB);
   const cheapWindow = await cheapWindowForecast(feeRate); // v14: async + динамический
   const rescuePlan = stuckRescuePlan(feeRate, fastest, vsize, feePaid, rbfEnabled, stuckHours);
 
@@ -1059,6 +1103,19 @@ async function makeDecision(txid, btcPrice, fees, tx, status, mp, miners) {
     currentMiners: miners,
     // ⑧ cheap window
     cheapWindow,
+    // ⑨ mempool position — сколько TX впереди с более высокой fee
+    mempoolPosition: mp.count && feeRate > 0 ? (() => {
+      // Приблизительно: TX с fee >= нашей = (1-ratio) * count
+      const ahead = Math.round(Math.max(0, 1 - Math.min(feeRate/fastest, 1)) * (mp.count || 0));
+      const blocksAhead = Math.ceil(ahead / 2000); // ~2000 TX в блоке
+      return {
+        txAhead:     ahead,
+        blocksAhead: blocksAhead,
+        label:       ahead < 1000  ? 'В начале очереди 🟢' :
+                     ahead < 5000  ? 'Середина очереди 🟡' :
+                     ahead < 20000 ? 'Конец очереди 🟠' : 'Очень далеко 🔴',
+      };
+    })() : null,
     // ⑨ rescue plan (только если stuck)
     rescuePlan,
     timestamp: Date.now(),
