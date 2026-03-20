@@ -4626,8 +4626,12 @@ async function startConfTracker(txid) {
   }
 
   // ── WebSocket (п.5) — мгновенное подтверждение ──────────────
-  // mempool.space поддерживает WSS API для отслеживания TX
   function startWS() {
+    // Закрываем предыдущий сокет чисто перед новым
+    if (window._confWS) {
+      try { window._confWS.onclose = null; window._confWS.close(); } catch(_) {}
+      window._confWS = null;
+    }
     try {
       const ws = new WebSocket('wss://mempool.space/api/v1/ws');
       window._confWS = ws;
