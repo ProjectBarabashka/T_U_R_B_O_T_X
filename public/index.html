@@ -3370,23 +3370,74 @@ async function syncCounterFromFirebase() {
 
 // ── INIT ──────────────────────────────────────────────────────
 async function initGlobalSync() {
-  // Восстанавливаем живой таймер волн в истории после F5
+  // Восстановление живого таймера волн после F5
   try {
-    var _savedWaveTs = parseInt(localStorage.getItem('turbotx_wave_start') || '0');
-    var _maxWaveMs = 780 * 60000;
+    var _savedWaveTs  = parseInt(localStorage.getItem('turbotx_wave_start') || '0');
+    var _savedWaveTxid = localStorage.getItem('turbotx_wave_txid') || '';
+    var _maxWaveMs    = 780 * 60000;
     if (_savedWaveTs > 0 && Date.now() - _savedWaveTs < _maxWaveMs + 60000) {
-      // Запускаем тикер прямо в history entry если он там есть
+      // Восстанавливаем состояние волн по прошедшему времени
+      var _elapsedMin = (Date.now() - _savedWaveTs) / 60000;
+      var _wSchedR    = [0, 15, 30, 60, 120, 240, 360, 480, 600, 780];
+      var _wResultsR  = _wSchedR.map(function(wMin) {
+        return _elapsedMin > wMin + 1 ? { ok: true, restored: true } : null;
+      });
+      window._wResults = _wResultsR;
       setTimeout(function() {
-        var w = document.getElementById('wave-hist-wrap');
-        if (w && typeof _buildWavePanel === 'function') {
-          setInterval(function() {
-            var ww = document.getElementById('wave-hist-wrap');
-            if (ww) ww.innerHTML = _buildWavePanel(_savedWaveTs);
-          }, 1000);
+        var wrap = document.getElementById('wave-hist-wrap');
+        if (!wrap) return;
+        // Запускаем тикер восстановленного состояния
+        function _drawRestored() {
+          var w = document.getElementById('wave-hist-wrap');
+          if (!w) { clearInterval(_restoreTimer); return; }
+          var eMin = (Date.now() - _savedWaveTs) / 60000;
+          var nextIdx = null;
+          for (var j = 0; j < _wSchedR.length; j++) {
+            if (_wResultsR[j] === null && eMin < _wSchedR[j] + 0.1) { nextIdx = j; break; }
+          }
+          var timerHtml = '';
+          if (nextIdx !== null) {
+            var msLeft = Math.max(0, _wSchedR[nextIdx] * 60000 - (Date.now() - _savedWaveTs));
+            var s = Math.round(msLeft / 1000);
+            var hh = String(Math.floor(s/3600)).padStart(2,'0');
+            var mm = String(Math.floor((s%3600)/60)).padStart(2,'0');
+            var ss = String(s%60).padStart(2,'0');
+            timerHtml = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:6px 10px;background:rgba(247,147,26,.06);border-radius:6px;border:1px solid rgba(247,147,26,.15)">'
+              + '<span style="color:var(--m);font-size:.58rem">волна ' + (nextIdx+1) + ' через</span>'
+              + '<span style="font-size:1rem;font-weight:800;color:var(--a);letter-spacing:2px;font-family:var(--mono)">' + hh + ':' + mm + ':' + ss + '</span>'
+              + '</div>';
+          } else {
+            timerHtml = '<div style="color:var(--g);font-size:.6rem;margin-bottom:8px">✓ Все 10 волн завершены</div>';
+            clearInterval(_restoreTimer);
+          }
+          var rows = _wSchedR.map(function(wMin, i) {
+            var res = _wResultsR[i];
+            var isDone = res !== null;
+            var isActive = !isDone && nextIdx === i;
+            var cls = isDone ? 'done' : isActive ? 'active' : 'pending';
+            var dot = isDone ? 'background:var(--g)' : isActive ? 'background:var(--a)' : 'background:rgba(255,255,255,.15)';
+            var lbl = wMin === 0 ? 'Волна 1 · мгновенно' : 'Волна '+(i+1)+' · +'+wMin+' мин';
+            var info = isDone
+              ? '<span style="color:var(--g);font-size:.55rem">✓' + (res.restored ? ' (восст.)' : '') + '</span>'
+              : isActive ? '<span style="color:var(--a);font-size:.55rem">→ скоро</span>'
+              : '<span style="font-size:.55rem;opacity:.5">в '+wMin+' мин</span>';
+            return '<div class="wave-item '+cls+'" style="padding:5px 8px;border-radius:6px;display:flex;align-items:center;gap:8px">'
+              + '<div class="wave-dot" style="'+dot+';width:7px;height:7px;border-radius:50%;flex-shrink:0"></div>'
+              + '<span style="flex:1;font-size:.6rem">'+lbl+'</span>'+info+'</div>';
+          }).join('');
+          w.innerHTML = '<div style="padding:12px 14px;background:linear-gradient(135deg,rgba(0,232,122,.05) 0%,rgba(124,92,252,.05) 100%);border:1px solid rgba(0,232,122,.18);border-radius:10px;font-family:var(--mono)">'
+            + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+            + '<span style="color:var(--a);font-weight:700;font-size:.65rem">⚡ АВТО-ПОВТОРЫ PREMIUM</span>'
+            + '<span style="color:var(--m);font-size:.55rem">восстановлено</span></div>'
+            + timerHtml
+            + '<div class="wave-list" style="display:flex;flex-direction:column;gap:3px">'+rows+'</div></div>';
         }
-      }, 600);
+        _drawRestored();
+        var _restoreTimer = setInterval(_drawRestored, 1000);
+      }, 700);
     } else {
       localStorage.removeItem('turbotx_wave_start');
+      localStorage.removeItem('turbotx_wave_txid');
     }
   } catch(_) {}
   const _scEl = document.getElementById('sc');
@@ -4189,6 +4240,11 @@ async function go() {
         const sent    = data.summary?.sent ?? data.summary?.total ?? 0;
         const skipped = data.summary?.skipped ?? 0;
         const total   = sent;
+        // Сохраняем результат первого broadcast для панели волн
+        window._lastBroadcastOk = okCnt;
+        window._lastBroadcastHr = data.summary?.hashrateReach ?? 0;
+        // Обновляем результат волны 0 если панель уже смонтирована
+        if (window._wResults) window._wResults[0] = { ok: okCnt > 0, channels: okCnt, hashr: window._lastBroadcastHr };
         // Обновляем заголовок реальным числом из ответа сервера
         const _scl = document.getElementById('sent-channels-label');
         if (_scl && sent > 0) _scl.textContent = 'ОТПРАВЛЕНО В ' + sent + ' КАНАЛОВ';
@@ -4296,36 +4352,139 @@ async function go() {
 
       if (plan === 'premium') {
         stopPremiumRepeat();
-        // wave-панель рисуется только в историю (статично), не в живой UI
-        // 10 волн: 15/15/30/60/120/120/120/120/180/180 мин (BASE_INTERVALS из repeat.js)
-        // Кумулятивные минуты для setTimeout: волна 2 через 15, волна 3 через 30, ...
-        const _WAVE_MINS = [15, 30, 60, 120, 240, 360, 480, 600, 780, 960];
-        const _waveTimers = [];
-        _WAVE_MINS.forEach(function(cumMinutes, i) {
-          const tid = setTimeout(async function() {
-            // Берём токен в момент выполнения — к этому времени он точно установлен
-            const token = _PREM_TOKEN || localStorage.getItem('turbotx_prem_token') || '';
-            if (!token) return; // без токена не шлём
+
+        // ── ВОЛНЫ: реальный прогресс ──────────────────────────────────────────
+        // BASE_INTERVALS из repeat.js: 15/15/30/60/120/120/120/120/180/180 мин
+        // Кумулятивные минуты: [0, 15, 30, 60, 120, 240, 360, 480, 600, 780]
+        var _wStartTs   = Date.now();
+        var _wSched     = [0, 15, 30, 60, 120, 240, 360, 480, 600, 780]; // cumMin
+        var _wDelay     = [0, 15, 15, 30,  60, 120, 120, 120, 120, 180]; // interval
+        var _wResults   = new Array(10).fill(null); // null=pending, {ok,channels,hashr}=done
+        window._wResults = _wResults; // глобально для обновления из broadcast callback
+        var _wConfirmed = false;
+        var _wTimerInt  = null;
+        var _wTimers    = [];
+
+        try { localStorage.setItem('turbotx_wave_start', String(_wStartTs)); } catch(_) {}
+        try { localStorage.setItem('turbotx_wave_txid', txid); } catch(_) {}
+
+        // ── Рендер панели ────────────────────────────────────────────────────
+        function _drawWaves() {
+          var wrap = document.getElementById('wave-hist-wrap');
+          if (!wrap) return;
+          var elapsedMin = (Date.now() - _wStartTs) / 60000;
+
+          // Таймер до следующей волны
+          var nextIdx = null;
+          for (var j = 0; j < _wSched.length; j++) {
+            if (_wResults[j] === null && elapsedMin < _wSched[j] + 0.1) { nextIdx = j; break; }
+          }
+          var timerHtml = '';
+          if (_wConfirmed) {
+            timerHtml = '<div style="color:var(--g);font-size:.75rem;font-weight:700;margin-bottom:8px;text-align:center">✅ Транзакция подтверждена!</div>';
+          } else if (nextIdx !== null) {
+            var msLeft = Math.max(0, _wSched[nextIdx] * 60000 - (Date.now() - _wStartTs));
+            var secsLeft = Math.round(msLeft / 1000);
+            var hh = String(Math.floor(secsLeft / 3600)).padStart(2,'0');
+            var mm = String(Math.floor((secsLeft % 3600) / 60)).padStart(2,'0');
+            var ss = String(secsLeft % 60).padStart(2,'0');
+            var label = nextIdx === 0 ? 'идёт сейчас' : 'волна ' + (nextIdx + 1) + ' через';
+            timerHtml = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:6px 10px;background:rgba(247,147,26,.06);border-radius:6px;border:1px solid rgba(247,147,26,.15)">'
+              + '<span style="color:var(--m);font-size:.58rem">' + label + '</span>'
+              + '<span style="font-size:1rem;font-weight:800;color:var(--a);letter-spacing:2px;font-family:var(--mono)">' + hh + ':' + mm + ':' + ss + '</span>'
+              + '</div>';
+          } else {
+            timerHtml = '<div style="color:var(--g);font-size:.6rem;margin-bottom:8px">✓ Все 10 волн завершены · Гарантия 6 часов активна</div>';
+          }
+
+          // Список волн
+          var rows = _wSched.map(function(wMin, i) {
+            var res = _wResults[i];
+            var elMin = (Date.now() - _wStartTs) / 60000;
+            var isActive = (res === null) && (nextIdx === i);
+            var isDone   = (res !== null);
+            var isPend   = !isDone && !isActive;
+            var cls  = isDone ? 'done' : isActive ? 'active' : 'pending';
+            var dot  = isDone ? 'background:var(--g)' : isActive ? 'background:var(--a);animation:wavePulse 1s ease infinite' : 'background:rgba(255,255,255,.15)';
+            var lbl  = wMin === 0 ? 'Волна 1 · мгновенно' : 'Волна ' + (i+1) + ' · +' + wMin + ' мин';
+            var info = '';
+            if (isDone && res.ok) {
+              info = '<span style="color:var(--g);font-size:.55rem">' + (res.channels ? res.channels + ' кан.' : '✓') + (res.hashr ? ' ~' + res.hashr + '%' : '') + '</span>';
+            } else if (isDone && !res.ok) {
+              info = '<span style="color:var(--err);font-size:.55rem">ошибка</span>';
+            } else if (isActive) {
+              info = '<span style="color:var(--a);font-size:.55rem">→ отправляем...</span>';
+            } else {
+              info = '<span style="font-size:.55rem;opacity:.5">в ' + wMin + ' мин</span>';
+            }
+            return '<div class="wave-item ' + cls + '" style="padding:5px 8px;border-radius:6px;display:flex;align-items:center;gap:8px">'
+              + '<div class="wave-dot" style="' + dot + ';width:7px;height:7px;border-radius:50%;flex-shrink:0"></div>'
+              + '<span style="flex:1;font-size:.6rem">' + lbl + '</span>'
+              + info + '</div>';
+          }).join('');
+
+          wrap.innerHTML = '<div style="margin-top:12px;padding:12px 14px;background:linear-gradient(135deg,rgba(0,232,122,.05) 0%,rgba(124,92,252,.05) 100%);border:1px solid rgba(0,232,122,.18);border-radius:10px;font-family:var(--mono)">'
+            + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+            + '<span style="color:var(--a);font-weight:700;letter-spacing:.5px;font-size:.65rem">⚡ АВТО-ПОВТОРЫ PREMIUM</span>'
+            + '<span style="color:var(--m);font-size:.55rem">10 волн · до 16 ч</span></div>'
+            + timerHtml
+            + '<div class="wave-list" style="display:flex;flex-direction:column;gap:3px">' + rows + '</div></div>';
+        }
+
+        // ── Запускаем волны ──────────────────────────────────────────────────
+        // Волна 0 — уже выполнена (это был первый broadcast)
+        _wResults[0] = { ok: true, channels: (window._lastBroadcastOk || 0), hashr: (window._lastBroadcastHr || 0) };
+
+        // Волны 1-9 — через setTimeout
+        _wDelay.slice(1).forEach(function(delayMin, idx) {
+          var waveIdx = idx + 1;
+          var cumMs   = _wSched[waveIdx] * 60000;
+          var tid = setTimeout(async function() {
+            // Ставим "активна"
+            _wResults[waveIdx] = null; // сбрасываем чтобы isActive сработал
+            _drawWaves();
+            var token = _PREM_TOKEN || localStorage.getItem('turbotx_prem_token') || '';
+            if (!token) { _wResults[waveIdx] = {ok:false}; _drawWaves(); return; }
             try {
-              const rr = await fetch('/api/repeat', {
+              var rr = await fetch('/api/repeat', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'X-TurboTX-Token': token },
-                body: JSON.stringify({ txid: txid, wave: i + 1 }),
+                body: JSON.stringify({ txid: txid, wave: waveIdx, startedAt: _wStartTs }),
               });
-              const rd = await rr.json();
+              var rd = await rr.json();
               if (rd.confirmed) {
-                stopPremiumRepeat(); stopWaveCountdown();
-                _waveTimers.forEach(function(t){ clearTimeout(t); });
+                _wConfirmed = true;
+                _wResults[waveIdx] = { ok: true, channels: rd.broadcastSummary?.ok, hashr: rd.hashrateReach };
+                stopPremiumRepeat();
+                _wTimers.forEach(function(t){ clearTimeout(t); });
+                clearInterval(_wTimerInt);
+                _drawWaves();
+                // Сохраняем финальное состояние в историю
+                try { updateHistoryExtra(txid, { html: document.getElementById('rb')?.innerHTML || '' }); } catch(_) {}
                 return;
               }
-              // Обновляем список волн в панели
-              _renderWaveList();
-            } catch(_) {
-              premiumBroadcast(txid);
+              _wResults[waveIdx] = {
+                ok:       rd.broadcasted !== false,
+                channels: rd.broadcastSummary?.ok || 0,
+                hashr:    rd.hashrateReach || 0,
+              };
+            } catch(e) {
+              _wResults[waveIdx] = { ok: false };
             }
-          }, cumMinutes * 60000);
-          _waveTimers.push(tid);
+            _drawWaves();
+            // Обновляем историю после каждой волны
+            try {
+              setTimeout(function() {
+                var rb = document.getElementById('rb');
+                if (rb && rb.style.display !== 'none') updateHistoryExtra(txid, { html: rb.innerHTML });
+              }, 200);
+            } catch(_) {}
+          }, cumMs);
+          _wTimers.push(tid);
         });
+
+        // Тикер — обновляет таймер каждую секунду
+        _wTimerInt = setInterval(_drawWaves, 1000);
       }
 
     } catch(apiErr) {
@@ -4340,98 +4499,48 @@ async function go() {
           ? fmtFB(res.blockstream, 'blockstream.info') +
             fmtFB(res.blockchair,  'Blockchair') +
             fmtFB(res.hex,         'Пулы (клиент no-cors)') +
-            fmtFB(true,            '8 волн авто-повтора ⚡')
+            fmtFB(true,            '10 волн авто-повтора ⚡')
           : fmtFB(res.blockstream, 'blockstream.info') +
             fmtFB(res.blockchair,  'Blockchair') +
             fmtFB(true,            'Авто-повтор через 20 мин');
-        // Сохраняем fallback html тоже
         try {
-          const _rbEl = document.getElementById('rb');
-          if (_rbEl) {
-            updateHistoryExtra(txid, { html: _rbEl.innerHTML || null });
-          }
+          var _rbEl2 = document.getElementById('rb');
+          if (_rbEl2) updateHistoryExtra(txid, { html: _rbEl2.innerHTML || null });
         } catch(_) {}
       }
     }
 
-    // Сохраняем результат + живая панель волн с таймером прямо в историю
-    var _wavePanelStartTs = Date.now();
-    try { localStorage.setItem('turbotx_wave_start', String(_wavePanelStartTs)); } catch(_) {}
-    var _waveInHistoryTimer = null;
-    var _WAVE_SCHED_LOCAL = [0,15,30,60,120,240,360,480,600,780];
-
-    function _buildWavePanel(startTs) {
-      var elapsedMin = (Date.now() - startTs) / 60000;
-      var rows = _WAVE_SCHED_LOCAL.map(function(wMin, i) {
-        var isDone   = elapsedMin > wMin + 0.5;
-        var isActive = !isDone && (i === 0 ? elapsedMin < 0.5 : elapsedMin >= _WAVE_SCHED_LOCAL[i-1] + 0.3) && (i === _WAVE_SCHED_LOCAL.length-1 || elapsedMin < _WAVE_SCHED_LOCAL[i+1] - 0.3);
-        var cls  = isDone ? 'done' : isActive ? 'active' : 'pending';
-        var dot  = isDone ? 'background:var(--g)' : isActive ? 'background:var(--a)' : 'background:rgba(255,255,255,.15)';
-        var lbl  = wMin === 0 ? 'мгновенно' : '+ ' + wMin + ' мин';
-        var time = isDone ? '✓' : isActive ? '→ идёт' : 'в ' + wMin + ' мин';
-        return '<div class="wave-item ' + cls + '"><div class="wave-dot" style="' + dot + ';width:7px;height:7px;border-radius:50%;flex-shrink:0"></div>'
-          + '<span style="flex:1">Волна ' + (i+1) + ' · ' + lbl + '</span>'
-          + '<span style="font-size:.58rem;opacity:.7">' + time + '</span></div>';
-      }).join('');
-      var nextWaveMin = null;
-      for (var j = 0; j < _WAVE_SCHED_LOCAL.length; j++) {
-        if (elapsedMin < _WAVE_SCHED_LOCAL[j] - 0.05) { nextWaveMin = _WAVE_SCHED_LOCAL[j]; break; }
-      }
-      var countdownHtml = '';
-      if (nextWaveMin !== null) {
-        var secsLeft = Math.max(0, Math.round((nextWaveMin * 60000 - (Date.now() - startTs)) / 1000));
-        var hh = String(Math.floor(secsLeft/3600)).padStart(2,'0');
-        var mm = String(Math.floor((secsLeft%3600)/60)).padStart(2,'0');
-        var ss = String(secsLeft%60).padStart(2,'0');
-        var wIdx = _WAVE_SCHED_LOCAL.indexOf(nextWaveMin) + 1;
-        countdownHtml = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
-          + '<span style="color:var(--m);font-size:.58rem">волна ' + wIdx + ' через</span>'
-          + '<span style="font-size:.95rem;font-weight:800;color:var(--t);letter-spacing:2px">' + hh + ':' + mm + ':' + ss + '</span>'
-          + '</div>';
-      } else {
-        countdownHtml = '<div style="color:var(--g);font-size:.6rem;margin-bottom:6px">✓ Все 10 волн завершены</div>';
-      }
-      return '<div style="margin-top:12px;padding:12px 14px;background:linear-gradient(135deg,rgba(0,232,122,.05) 0%,rgba(124,92,252,.05) 100%);border:1px solid rgba(0,232,122,.18);border-radius:10px;font-family:var(--mono);font-size:.62rem">'
-        + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'
-        + '<span style="color:var(--a);font-weight:700;letter-spacing:.5px;font-size:.65rem">⚡ АВТО-ПОВТОРЫ PREMIUM</span>'
-        + '<span style="color:var(--m);font-size:.58rem">10 волн · до 16 ч</span></div>'
-        + countdownHtml
-        + '<div class="wave-list" style="display:flex;flex-direction:column;gap:4px">' + rows + '</div></div>';
-    }
-
+    // Монтируем панель волн в rb и запускаем тикер
     setTimeout(function() {
       try {
         const _rbEl = document.getElementById('rb');
         if (_rbEl && _rbEl.innerHTML.trim()) {
           var _wrapEl = document.createElement('div');
           _wrapEl.id = 'wave-hist-wrap';
-          _wrapEl.innerHTML = _buildWavePanel(_wavePanelStartTs);
           _rbEl.appendChild(_wrapEl);
+          if (typeof _drawWaves === 'function') _drawWaves();
 
-          // Тикер: обновляет таймер и статусы каждую секунду
-          _waveInHistoryTimer = setInterval(function() {
-            var w = document.getElementById('wave-hist-wrap');
-            if (!w) { clearInterval(_waveInHistoryTimer); return; }
-            w.innerHTML = _buildWavePanel(_wavePanelStartTs);
-          }, 1000);
-
-          // Сохраняем в историю
+          // Сохраняем начальное состояние в историю
           setTimeout(function() {
-            updateHistoryExtra(txid, { html: _rbEl.innerHTML, waveStartTs: _wavePanelStartTs });
-          }, 300);
+            updateHistoryExtra(txid, { html: _rbEl.innerHTML, waveStartTs: _wStartTs || Date.now() });
+          }, 400);
         }
-        // Скрываем rb после сохранения в историю
-        setTimeout(function() {
-          if (_rbEl) {
-            _rbEl.style.transition = 'opacity .6s';
-            _rbEl.style.opacity = '0';
-            setTimeout(function() {
-              _rbEl.style.display = 'none';
-              _rbEl.style.opacity = '';
-              _rbEl.style.transition = '';
-            }, 600);
-          }
-        }, 1500);
+        // Скрываем rb — НЕ скрываем! Панель остаётся видимой пока идут волны
+        // rb скроется только когда все волны завершатся (в stopWaveCountdown)
+        // Для этого просто убираем пустой rb-блок если волн нет
+        if (plan !== 'premium') {
+          setTimeout(function() {
+            if (_rbEl) {
+              _rbEl.style.transition = 'opacity .6s';
+              _rbEl.style.opacity = '0';
+              setTimeout(function() {
+                _rbEl.style.display = 'none';
+                _rbEl.style.opacity = '';
+                _rbEl.style.transition = '';
+              }, 600);
+            }
+          }, 2000);
+        }
       } catch(_) {}
     }, 500);
 head>
@@ -7804,23 +7913,74 @@ async function syncCounterFromFirebase() {
 
 // ── INIT ──────────────────────────────────────────────────────
 async function initGlobalSync() {
-  // Восстанавливаем живой таймер волн в истории после F5
+  // Восстановление живого таймера волн после F5
   try {
-    var _savedWaveTs = parseInt(localStorage.getItem('turbotx_wave_start') || '0');
-    var _maxWaveMs = 780 * 60000;
+    var _savedWaveTs  = parseInt(localStorage.getItem('turbotx_wave_start') || '0');
+    var _savedWaveTxid = localStorage.getItem('turbotx_wave_txid') || '';
+    var _maxWaveMs    = 780 * 60000;
     if (_savedWaveTs > 0 && Date.now() - _savedWaveTs < _maxWaveMs + 60000) {
-      // Запускаем тикер прямо в history entry если он там есть
+      // Восстанавливаем состояние волн по прошедшему времени
+      var _elapsedMin = (Date.now() - _savedWaveTs) / 60000;
+      var _wSchedR    = [0, 15, 30, 60, 120, 240, 360, 480, 600, 780];
+      var _wResultsR  = _wSchedR.map(function(wMin) {
+        return _elapsedMin > wMin + 1 ? { ok: true, restored: true } : null;
+      });
+      window._wResults = _wResultsR;
       setTimeout(function() {
-        var w = document.getElementById('wave-hist-wrap');
-        if (w && typeof _buildWavePanel === 'function') {
-          setInterval(function() {
-            var ww = document.getElementById('wave-hist-wrap');
-            if (ww) ww.innerHTML = _buildWavePanel(_savedWaveTs);
-          }, 1000);
+        var wrap = document.getElementById('wave-hist-wrap');
+        if (!wrap) return;
+        // Запускаем тикер восстановленного состояния
+        function _drawRestored() {
+          var w = document.getElementById('wave-hist-wrap');
+          if (!w) { clearInterval(_restoreTimer); return; }
+          var eMin = (Date.now() - _savedWaveTs) / 60000;
+          var nextIdx = null;
+          for (var j = 0; j < _wSchedR.length; j++) {
+            if (_wResultsR[j] === null && eMin < _wSchedR[j] + 0.1) { nextIdx = j; break; }
+          }
+          var timerHtml = '';
+          if (nextIdx !== null) {
+            var msLeft = Math.max(0, _wSchedR[nextIdx] * 60000 - (Date.now() - _savedWaveTs));
+            var s = Math.round(msLeft / 1000);
+            var hh = String(Math.floor(s/3600)).padStart(2,'0');
+            var mm = String(Math.floor((s%3600)/60)).padStart(2,'0');
+            var ss = String(s%60).padStart(2,'0');
+            timerHtml = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:6px 10px;background:rgba(247,147,26,.06);border-radius:6px;border:1px solid rgba(247,147,26,.15)">'
+              + '<span style="color:var(--m);font-size:.58rem">волна ' + (nextIdx+1) + ' через</span>'
+              + '<span style="font-size:1rem;font-weight:800;color:var(--a);letter-spacing:2px;font-family:var(--mono)">' + hh + ':' + mm + ':' + ss + '</span>'
+              + '</div>';
+          } else {
+            timerHtml = '<div style="color:var(--g);font-size:.6rem;margin-bottom:8px">✓ Все 10 волн завершены</div>';
+            clearInterval(_restoreTimer);
+          }
+          var rows = _wSchedR.map(function(wMin, i) {
+            var res = _wResultsR[i];
+            var isDone = res !== null;
+            var isActive = !isDone && nextIdx === i;
+            var cls = isDone ? 'done' : isActive ? 'active' : 'pending';
+            var dot = isDone ? 'background:var(--g)' : isActive ? 'background:var(--a)' : 'background:rgba(255,255,255,.15)';
+            var lbl = wMin === 0 ? 'Волна 1 · мгновенно' : 'Волна '+(i+1)+' · +'+wMin+' мин';
+            var info = isDone
+              ? '<span style="color:var(--g);font-size:.55rem">✓' + (res.restored ? ' (восст.)' : '') + '</span>'
+              : isActive ? '<span style="color:var(--a);font-size:.55rem">→ скоро</span>'
+              : '<span style="font-size:.55rem;opacity:.5">в '+wMin+' мин</span>';
+            return '<div class="wave-item '+cls+'" style="padding:5px 8px;border-radius:6px;display:flex;align-items:center;gap:8px">'
+              + '<div class="wave-dot" style="'+dot+';width:7px;height:7px;border-radius:50%;flex-shrink:0"></div>'
+              + '<span style="flex:1;font-size:.6rem">'+lbl+'</span>'+info+'</div>';
+          }).join('');
+          w.innerHTML = '<div style="padding:12px 14px;background:linear-gradient(135deg,rgba(0,232,122,.05) 0%,rgba(124,92,252,.05) 100%);border:1px solid rgba(0,232,122,.18);border-radius:10px;font-family:var(--mono)">'
+            + '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
+            + '<span style="color:var(--a);font-weight:700;font-size:.65rem">⚡ АВТО-ПОВТОРЫ PREMIUM</span>'
+            + '<span style="color:var(--m);font-size:.55rem">восстановлено</span></div>'
+            + timerHtml
+            + '<div class="wave-list" style="display:flex;flex-direction:column;gap:3px">'+rows+'</div></div>';
         }
-      }, 600);
+        _drawRestored();
+        var _restoreTimer = setInterval(_drawRestored, 1000);
+      }, 700);
     } else {
       localStorage.removeItem('turbotx_wave_start');
+      localStorage.removeItem('turbotx_wave_txid');
     }
   } catch(_) {}
   const _scEl = document.getElementById('sc');
@@ -8623,6 +8783,11 @@ async function go() {
         const sent    = data.summary?.sent ?? data.summary?.total ?? 0;
         const skipped = data.summary?.skipped ?? 0;
         const total   = sent;
+        // Сохраняем результат первого broadcast для панели волн
+        window._lastBroadcastOk = okCnt;
+        window._lastBroadcastHr = data.summary?.hashrateReach ?? 0;
+        // Обновляем результат волны 0 если панель уже смонтирована
+        if (window._wResults) window._wResults[0] = { ok: okCnt > 0, channels: okCnt, hashr: window._lastBroadcastHr };
         // Обновляем заголовок реальным числом из ответа сервера
         const _scl = document.getElementById('sent-channels-label');
         if (_scl && sent > 0) _scl.textContent = 'ОТПРАВЛЕНО В ' + sent + ' КАНАЛОВ';
