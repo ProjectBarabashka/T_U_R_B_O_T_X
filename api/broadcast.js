@@ -47,6 +47,32 @@ import { CORS, getIp, sj, sleep, checkPremiumAuth } from './_shared.js';
 import { incBroadcast } from './router.js'; // счётчики статистики /api/stats
 
 
+// ─── FIREBASE WAVE JOB (v14.2) ──────────────────────────────
+// Сохраняем факт premium broadcast в Firebase.
+// Клиент (client-api.js) использует localStorage для трекинга волн.
+// Firebase хранит метаданные для диагностики и будущей server-side поддержки.
+const _FB_DB = process.env.FIREBASE_DB_URL || '';
+async function saveWaveJobFb(txid, startedAt) {
+  if (!_FB_DB) return; // без Firebase — просто пропускаем
+  try {
+    const WAVE_MINS = [15,15,30,60,120,120,120,120,180,180];
+    const payload = {
+      txid, startedAt, totalWaves: WAVE_MINS.length,
+      wavesDone: 0, active: true,
+      nextWaveAt: startedAt + WAVE_MINS[0] * 60_000,
+      createdAt: Date.now(),
+    };
+    const url = `${_FB_DB}/waves/${txid}.json`;
+    const ac = new AbortController();
+    const t  = setTimeout(() => ac.abort(), 4000);
+    await fetch(url, {
+      method: 'PUT', signal: ac.signal,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    }).finally(() => clearTimeout(t));
+  } catch {}
+}
+
 // ─── USER-AGENT ROTATION ──────────────────────────────────────
 // Разные UA — меньше шанс блокировки по одному паттерну
 const UA_POOL = [
@@ -1187,6 +1213,11 @@ export default async function handler(req, res) {
 
   // BUG FIX: обновляем счётчик статистики (был 0 всегда)
   try { incBroadcast(effectivePlan, uniqueHr, !!hex); } catch {}
+
+  // v14.2: сохраняем wave job в Firebase для server-side трекинга
+  if (effectivePlan === 'premium' && okCount > 0) {
+    saveWaveJobFb(txid, Date.now()).catch(()=>{});
+  }
 
   return res.status(200).json({
     ok: okCount>0, results, summary, analysis, waveStrategy,

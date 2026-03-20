@@ -226,8 +226,11 @@ export default async function handler(req, res) {
 
     cleanInvoices();
     const inv = await fbGet(hash);
+    // FIX v14.2: возвращаем 200 (не 404) — клиент обрабатывает notFound
+    // без крашей в консоли. 404 возникало при Vercel cold start (in-memory
+    // инвойс терялся). Клиент останавливает polling и предлагает новый инвойс.
     if (!inv)
-      return res.status(404).json({ ok:false, error:'Invoice not found or expired' });
+      return res.status(200).json({ ok:false, paid:false, notFound:true, error:'Invoice not found. Possibly expired after server restart — please create a new invoice.' });
 
     if (inv.paid) {
       const secret = process.env.PREMIUM_SECRET;

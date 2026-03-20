@@ -36,7 +36,30 @@ import { CORS, ft, getIp, sj, sleep, makeRl, checkPremiumAuth } from './_shared.
 
 
 // ─── RATE LIMITER ─────────────────────────────────────────────
-const checkRl = makeRl(30, 3_600_000); // 30 repeat-запросов / час с одного IP
+// v14.2: 60 запросов / час (было 30 — при 10 волнах на несколько TX могло срабатывать)
+const checkRl = makeRl(60, 3_600_000);
+
+// ─── FIREBASE WAVE STATE UPDATE (v14.2) ──────────────────────
+// Обновляем метаданные волны в Firebase после каждого выполнения
+const _FB_DB_R = process.env.FIREBASE_DB_URL || '';
+async function updateWaveJobFb(txid, waveNum, nextWaveAt, done = false) {
+  if (!_FB_DB_R) return;
+  try {
+    const url = `${_FB_DB_R}/waves/${txid}.json`;
+    const ac  = new AbortController();
+    const t   = setTimeout(() => ac.abort(), 3000);
+    await fetch(url, {
+      method: 'PATCH', signal: ac.signal,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        wavesDone: waveNum,
+        nextWaveAt: nextWaveAt || null,
+        active: !done,
+        lastWaveAt: Date.now(),
+      }),
+    }).finally(() => clearTimeout(t));
+  } catch {}
+}
 
 
 
@@ -361,6 +384,10 @@ export default async function handler(req, res) {
       if (oldest) _waveHistory.delete(oldest[0]);
     }
   }
+
+  // v14.2: обновляем состояние волны в Firebase
+  const isDone = waveNum >= MAX_WAVES;
+  updateWaveJobFb(txid, waveNum, nextWaveMs ? Date.now() + nextWaveMs : null, isDone).catch(()=>{});
 
   return res.status(200).json({
     ok: !broadcastError,
