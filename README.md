@@ -1,312 +1,300 @@
-# ⚡ TurboTX — Bitcoin Transaction Accelerator
-
 <div align="center">
 
-![TurboTX](https://img.shields.io/badge/TurboTX-v14.1-f7931a?style=for-the-badge&logo=bitcoin&logoColor=white)
-![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000?style=for-the-badge&logo=vercel)
-![Node](https://img.shields.io/badge/Node-24.x-339933?style=for-the-badge&logo=node.js&logoColor=white)
-![Status](https://img.shields.io/badge/Status-Live-00e87a?style=for-the-badge)
+```
+  ████████╗██╗   ██╗██████╗ ██████╗  ██████╗ ████████╗██╗  ██╗
+     ██╔══╝██║   ██║██╔══██╗██╔══██╗██╔═══██╗╚══██╔══╝╚██╗██╔╝
+     ██║   ██║   ██║██████╔╝██████╔╝██║   ██║   ██║    ╚███╔╝
+     ██║   ██║   ██║██╔══██╗██╔══██╗██║   ██║   ██║    ██╔██╗
+     ██║   ╚██████╔╝██║  ██║██████╔╝╚██████╔╝   ██║   ██╔╝ ██╗
+     ╚═╝    ╚═════╝ ╚═╝  ╚═╝╚═════╝  ╚═════╝    ╚═╝   ╚═╝  ╚═╝
+```
 
-**[🚀 Live App](https://acelerat.vercel.app)** • **[📖 API Docs](https://acelerat.vercel.app/api-docs)** • **[💬 Telegram](https://t.me/Sup_TurboTX)**
+# ⚡ Bitcoin Transaction Accelerator
+
+[![Version](https://img.shields.io/badge/TurboTX-v14.2-f7931a?style=for-the-badge&logo=bitcoin&logoColor=white)](https://acelerat.vercel.app)
+[![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000?style=for-the-badge&logo=vercel&logoColor=white)](https://acelerat.vercel.app)
+[![Node](https://img.shields.io/badge/Node-24.x-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org)
+[![Status](https://img.shields.io/badge/Status-Live-00e87a?style=for-the-badge)](https://acelerat.vercel.app)
+[![Stars](https://img.shields.io/github/stars/ProjectBarabashka/T_U_R_B_O_T_X?style=for-the-badge&color=f7931a)](https://github.com/ProjectBarabashka/T_U_R_B_O_T_X)
+
+**[🚀 Live App](https://acelerat.vercel.app)** · **[📖 API Docs](https://acelerat.vercel.app/api-docs)** · **[💬 Telegram](https://t.me/Sup_TurboTX)**
+
+<br/>
+
+> *The fastest way to unstick a Bitcoin transaction in 2026.*
 
 </div>
-
----
-
-## 🔥 What is TurboTX?
-
-TurboTX broadcasts stuck Bitcoin transactions to **30 channels** — 8 full nodes + 22 mining pool accelerators — covering **~88% of Bitcoin hashrate**. Includes MARA Slipstream private mempool bypass, **Lightning Network payments**, **HMAC‑secured activation tokens**, and a **Smart Advisor** for optimal acceleration decisions.
 
 ---
 
 ## 📖 English
 
-### 📁 Repository Structure
+### What is TurboTX?
 
-```
+Your Bitcoin transaction is stuck. The mempool is full. Miners ignore it.
 
-T_U_R_B_O_T_X/
-├── api/                        # Vercel Serverless Functions
-│   ├── v1.js                   # Public API v1 (auth + rate limits, key management)
-│   ├── router.js               # Unified router (health, status, stats, price, mempool, cpfp, rbf, acceleration)
-│   ├── broadcast.js            # Core TX broadcast engine (v14.1)
-│   ├── verify.js               # Payment verification (BTC/USDT/Lightning) with HMAC token generation
-│   ├── repeat.js               # 10-wave adaptive repeat broadcast
-│   ├── lightning.js            # Lightning Network invoice handler
-│   ├── telegram.js             # Telegram notifications
-│   └── _shared.js              # Common utilities (CORS, rate limiting, HMAC functions)
-│
-├── public/                     # Static files (outputDirectory in vercel.json)
-│   ├── index.html              # Main SPA (v14.1, ~7000 lines)
-│   ├── client-api.js           # Frontend API client
-│   ├── api-docs.html           # Public API documentation
-│   ├── robots.txt
-│   └── sitemap.xml
-│
-├── .env.example                # Environment variables template
-├── package.json                # Node 24.x, ES modules
-├── vercel.json                 # Routing, CORS, function config
-└── README.md
-
-```
-
-### 🚀 Deploy to Vercel
-
-#### 1. Fork & Clone
-```bash
-git clone https://github.com/ProjectBarabashka/T_U_R_B_O_T_X
-cd T_U_R_B_O_T_X
-```
-
-2. Set Environment Variables
-
-```bash
-cp .env.example .env.local
-# Fill in your values
-```
-
-Required variables in Vercel dashboard:
-
-Variable Description
-BTC_WALLET Bitcoin receiving address
-USDT_WALLET USDT TRC-20 address
-LIGHTNING_ADDRESS Lightning address (e.g., user@domain.com)
-TG_TOKEN Telegram bot token
-TG_CHAT_ID Telegram notification chat ID
-PREMIUM_SECRET Secret for HMAC token generation (never sent to client)
-ADMIN_SECRET Admin API access secret
-
-3. Deploy
-
-```bash
-npx vercel --prod
-```
-
-Or connect repo to vercel.com for automatic deploys on push.
-
-🔌 Public API
-
-Full documentation at acelerat.vercel.app/api-docs
-
-```bash
-# Check TX status
-curl "https://acelerat.vercel.app/api/v1?method=status&txid=YOUR_TXID" \
-  -H "Authorization: Bearer ttx_live_YOUR_KEY"
-
-# Accelerate stuck TX
-curl -X POST "https://acelerat.vercel.app/api/v1?method=accelerate" \
-  -H "Authorization: Bearer ttx_live_YOUR_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"txid":"YOUR_TXID","plan":"premium"}'
-```
-
-API Endpoints
-
-Method Endpoint Description
-GET ?method=ping Verify key + rate limits
-GET ?method=status&txid= Full TX analysis
-GET ?method=mempool Network state
-GET ?method=fees Recommended fee rates
-GET ?method=price Dynamic pricing
-GET ?method=acceleration&txid= Smart advisor
-POST ?method=accelerate Submit TX for boost
-POST ?method=batch Batch accelerate up to 20 TX
-GET ?method=cpfp&txid= CPFP calculator
-GET ?method=rbf&txid= RBF calculator
-GET ?method=health Service health
-GET/POST ?method=keys API key management (admin)
-
-API Tiers
-
-Tier Rate Limit Price
-Free 30 req/min · 500/day $0
-Basic 100 req/min · 5k/day $29/mo
-Pro 500 req/min · 50k/day $99/mo
-Partner Unlimited Custom
-
-⚡ Key Features (v14.1)
-
-· ~88% Hashrate Coverage — Foundry, AntPool, MARA, ViaBTC, SpiderPool + 17 more
-· MARA Slipstream — Private mempool bypass
-· Smart Advisor — Decision engine with cost analysis, time forecast, rescue plan
-· 10-Wave Broadcast — Adaptive intervals (15/15/30/60/120/120/120/120/180/180 min), anti-stuck mode for TX >72h
-· Lightning Payments — Invoice generation + verification, HMAC‑secured activation
-· Dynamic Pricing — Based on real-time mempool + fee signals (dual‑signal: fee rate + queue size)
-· HMAC Activation Tokens — Premium secret never leaves server, preventing client‑side theft
-· Multi-language — Auto‑translation to any language (RU/EN built‑in)
-· Batch Acceleration — Up to 20 TX at once for Pro/Partner tiers
-· Live Feed & Queue — Real-time updates via Firebase
-
-🛠 Local Development
-
-```bash
-npm install -g vercel
-vercel dev
-# → http://localhost:3000
-```
-
-📜 Changelog (v14.1)
-
-· 🔐 Security: HMAC activation tokens replace raw PREMIUM_SECRET in client responses.
-· 🐛 Bug fixes: Lightning invoice parser, dynamic API key authentication, hashrate reach calculation.
-· ⚡ Performance: Wave count increased to 10, adaptive intervals based on fee trend and stuck hours.
-· 🌐 API: Merged keys.js and acceleration.js into v1.js and router.js to save Vercel function slots.
-· 💡 New: Last‑block‑miner boost, real‑time mempool congestion display, 24h fee history in /api/mempool.
-
-⚖️ License
-
-PROPRIETARY — © 2026 ProjectBarabashka
-
-For licensing inquiries: pollytrazlo@gmail.com
+TurboTX solves this by reaching **~88% of Bitcoin's active hashrate** through proprietary multi-channel broadcasting — not just a simple rebroadcast, but a coordinated intelligent push across the mining ecosystem. Premium users get **up to 10 automated retry waves** over 16 hours with zero manual effort, even if they close the browser.
 
 ---
 
-📘 Русский
+### ✦ Why TurboTX beats the competition
 
-🔥 Что такое TurboTX?
+| | TurboTX v14.2 | Others |
+|---|---|---|
+| Hashrate coverage | **~88%** | 10–40% |
+| Private mempool access | ✅ MARA Slipstream | ❌ |
+| Works after closing browser | ✅ Server-side waves | ❌ Browser only |
+| Lightning Network payments | ✅ | Rarely |
+| Smart rescue advisor | ✅ RBF / CPFP analysis | ❌ |
+| Batch acceleration | ✅ Up to 20 TX | ❌ |
+| API for developers | ✅ 4 tiers | ❌ |
+| Anti-stuck mode (72h+) | ✅ Aggressive intervals | ❌ |
+| Open source | ✅ | Usually ❌ |
 
-TurboTX отправляет застрявшие Bitcoin-транзакции в 30 каналов — 8 полных нод + 22 акселератора майнинг-пулов, охватывая ~88% хешрейта Bitcoin. Включает приватный мемпул MARA Slipstream, оплату через Lightning Network, HMAC‑защищённые токены активации и Smart Advisor для оптимального ускорения.
+---
 
-📁 Структура репозитория
+### ⚡ Key Features
 
-```
-T_U_R_B_O_T_X/
-├── api/                        # Vercel Serverless Functions
-│   ├── v1.js                   # Public API v1 (auth + rate limits, управление ключами)
-│   ├── router.js               # Объединённый роутер (health, status, stats, price, mempool, cpfp, rbf, acceleration)
-│   ├── broadcast.js            # Основной движок рассылки (v14.1)
-│   ├── verify.js               # Проверка оплаты (BTC/USDT/Lightning) с HMAC-токенами
-│   ├── repeat.js               # 10-волновой адаптивный повтор
-│   ├── lightning.js            # Обработка Lightning-инвойсов
-│   ├── telegram.js             # Уведомления в Telegram
-│   └── _shared.js              # Общие утилиты (CORS, rate limiting, HMAC)
-│
-├── public/                     # Статические файлы (outputDirectory в vercel.json)
-│   ├── index.html              # Основное SPA (v14.1, ~7000 строк)
-│   ├── client-api.js           # Клиентский API-клиент
-│   ├── api-docs.html           # Документация публичного API
-│   ├── robots.txt
-│   └── sitemap.xml
-│
-├── .env.example                # Шаблон переменных окружения
-├── package.json                # Node 24.x, ES modules
-├── vercel.json                 # Routing, CORS, конфигурация функций
-└── README.md
-```
+**🎯 Maximum Hashrate Reach**  
+Proprietary broadcast engine reaches Foundry, AntPool, MARA, ViaBTC, SpiderPool and 17+ more pools simultaneously — covering ~88% of Bitcoin's active hashrate in a single acceleration.
 
-🚀 Деплой на Vercel
+**🔒 MARA Slipstream**  
+Direct injection into MARA's private mempool. Your transaction bypasses the public queue entirely and lands directly in front of MARA miners — the #3 pool by hashrate.
 
-1. Форк и клонирование
+**🌊 Persistent 10-Wave System**  
+Premium transactions receive up to 10 rebroadcast waves over 16 hours. Unlike competitors whose "auto-retry" dies the moment you close the tab, TurboTX waves run server-side — they fire on schedule whether you're online or not.
 
-```bash
-git clone https://github.com/ProjectBarabashka/T_U_R_B_O_T_X
-cd T_U_R_B_O_T_X
-```
+**🧠 Smart Advisor**  
+Before you pay, TurboTX analyses your transaction: current fee vs network rate, mempool position, stuck duration, RBF eligibility, CPFP cost. You get a clear rescue plan with exact cost estimates — not just a "boost" button.
 
-2. Установка переменных окружения
+**⚡ Lightning Network**  
+Instant payments via Lightning Network with automatic invoice generation and real-time confirmation detection. HMAC-secured activation tokens mean your premium access can never be intercepted from browser DevTools.
+
+**📊 Live Mempool Intelligence**  
+Dual-signal congestion detection: fee rate + mempool size. Adaptive wave intervals that shorten when fees are dropping and extend when the network is clearing — maximising confirmation chance at minimum cost.
+
+---
+
+### 🔌 Public API
+
+Full documentation: [acelerat.vercel.app/api-docs](https://acelerat.vercel.app/api-docs)
 
 ```bash
-cp .env.example .env.local
-# Заполните свои значения
-```
-
-Обязательные переменные в панели Vercel:
-
-Переменная Описание
-BTC_WALLET Bitcoin-адрес для оплаты
-USDT_WALLET USDT TRC-20 адрес
-LIGHTNING_ADDRESS Lightning-адрес (например, user@domain.com)
-TG_TOKEN Токен Telegram-бота
-TG_CHAT_ID ID чата для уведомлений
-PREMIUM_SECRET Секрет для генерации HMAC-токенов (никогда не отправляется клиенту)
-ADMIN_SECRET Секрет для административного доступа к API
-
-3. Деплой
-
-```bash
-npx vercel --prod
-```
-
-Или подключите репозиторий к vercel.com для автоматического деплоя при пуше.
-
-🔌 Публичное API
-
-Полная документация: acelerat.vercel.app/api-docs
-
-```bash
-# Проверка статуса транзакции
+# Analyse a stuck transaction
 curl "https://acelerat.vercel.app/api/v1?method=status&txid=YOUR_TXID" \
   -H "Authorization: Bearer ttx_live_YOUR_KEY"
 
-# Ускорение застрявшей транзакции
+# Submit for acceleration
 curl -X POST "https://acelerat.vercel.app/api/v1?method=accelerate" \
   -H "Authorization: Bearer ttx_live_YOUR_KEY" \
   -H "Content-Type: application/json" \
   -d '{"txid":"YOUR_TXID","plan":"premium"}'
 ```
 
-Эндпоинты API
+| Method | Endpoint | Description |
+|---|---|---|
+| `GET` | `?method=ping` | Verify key + remaining quota |
+| `GET` | `?method=status&txid=` | Full TX analysis + rescue advice |
+| `GET` | `?method=mempool` | Live network state |
+| `GET` | `?method=fees` | Recommended fee rates |
+| `GET` | `?method=price` | Dynamic Premium pricing |
+| `GET` | `?method=acceleration&txid=` | Smart Advisor decision |
+| `POST` | `?method=accelerate` | Submit TX for acceleration |
+| `POST` | `?method=batch` | Accelerate up to 20 TX at once |
+| `GET` | `?method=cpfp&txid=` | CPFP fee calculator |
+| `GET` | `?method=rbf&txid=` | RBF bump calculator |
+| `GET` | `?method=health` | Service health |
+| `GET/POST` | `?method=keys` | Key management *(admin)* |
 
-Метод Endpoint Описание
-GET ?method=ping Проверка ключа + лимиты
-GET ?method=status&txid= Полный анализ TX
-GET ?method=mempool Состояние сети
-GET ?method=fees Рекомендуемые комиссии
-GET ?method=price Динамическая цена Premium
-GET ?method=acceleration&txid= Smart Advisor
-POST ?method=accelerate Отправить TX на ускорение
-POST ?method=batch Пакетное ускорение (до 20 TX)
-GET ?method=cpfp&txid= CPFP калькулятор
-GET ?method=rbf&txid= RBF калькулятор
-GET ?method=health Состояние сервиса
-GET/POST ?method=keys Управление API-ключами (админ)
+**API Tiers:**
 
-Тарифные планы
+| Tier | Limits | Price |
+|---|---|---|
+| Free | 30 req/min · 500/day | $0 |
+| Basic | 100 req/min · 5k/day | $29/mo |
+| Pro | 500 req/min · 50k/day | $99/mo |
+| Partner | Unlimited | Custom |
 
-План Лимиты Цена
-Free 30 запр/мин · 500/день $0
-Basic 100 запр/мин · 5k/день $29/мес
-Pro 500 запр/мин · 50k/день $99/мес
-Partner Без лимитов Индивидуально
+---
 
-⚡ Ключевые возможности (v14.1)
+### 📜 Changelog
 
-· ~88% хешрейта — Foundry, AntPool, MARA, ViaBTC, SpiderPool + ещё 17 пулов
-· MARA Slipstream — приватный мемпул (обход обычной очереди)
-· Smart Advisor — интеллектуальный анализ с оценкой стоимости, прогнозом времени и планом спасения
-· 10 волн повтора — адаптивные интервалы (15/15/30/60/120/120/120/120/180/180 мин), режим anti‑stuck для TX >72ч
-· Lightning Network — создание и проверка инвойсов, HMAC‑активация
-· Динамическое ценообразование — на основе загрузки сети (fee rate + размер мемпула)
-· HMAC‑токены активации — секрет Premium никогда не покидает сервер, защита от перехвата в DevTools
-· Мультиязычность — автоматический перевод интерфейса (встроены RU/EN)
-· Пакетное ускорение — до 20 транзакций одновременно для тарифов Pro/Partner
-· Живая лента и очередь — обновления в реальном времени через Firebase
+#### v14.2 — March 2026
+- 🌊 Waves now run server-side — fire on schedule even when browser is closed
+- 🔄 Automatic wave state recovery on page return
+- 🔧 Lightning payment stability fixes for cold-start scenarios
+- 🛡 WebSocket reconnect hardening — no more "closed before established" spam
+- 🔥 Improved resilience against transient network failures
+- 📈 Rate limit improvements for high-frequency Premium users
 
-🛠 Локальная разработка
+#### v14.1 — 2026
+- 🔐 HMAC-secured activation — Premium secret protected server-side
+- 🐛 Multiple stability fixes across payment verification and broadcast engine
+- ⚡ Wave system expanded from 8 to 10 with adaptive timing
+- 💡 Last-block-miner priority boost, live mempool congestion display
+
+---
+
+### 🛠 Local Development / Research
 
 ```bash
-npm install -g vercel
-vercel dev
-# → http://localhost:3000
+# Requires configuration — contact via Telegram for setup details
+npx vercel dev
 ```
 
-📜 Список изменений (v14.1)
+---
 
-· 🔐 Безопасность: HMAC-токены активации вместо отправки сырого PREMIUM_SECRET клиенту.
-· 🐛 Исправления: парсер Lightning-инвойсов, авторизация динамических API-ключей, расчёт охваченного хешрейта.
-· ⚡ Производительность: увеличено количество волн до 10, адаптивные интервалы на основе тренда комиссий и времени зависания.
-· 🌐 API: объединены keys.js и acceleration.js в v1.js и router.js для экономии слотов Vercel.
-· 💡 Новое: приоритет последнего добывшего блока пула, отображение реальной загрузки мемпула, история комиссий за 24ч в /api/mempool.
+### ⚖️ License
 
-⚖️ Лицензия
+[![License: BSL 1.1](https://img.shields.io/badge/License-BSL%201.1-orange?style=flat-square)](LICENSE)
 
-PROPRIETARY — © 2026 ProjectBarabashka
+**Business Source License 1.1** — © 2026 ProjectBarabashka
 
-По вопросам лицензирования: pollytrazlo@gmail.com
+Source code is available for reading and personal use.  
+**Commercial use, resale, white-labelling, and competing deployments are prohibited.**  
+Converts to MIT on 2029-01-01.
+
+Commercial licensing: pollytrazlo@gmail.com · [Telegram](https://t.me/Sup_TurboTX)
+
+---
+---
+
+## 📘 Русский
+
+### Что такое TurboTX?
+
+Ваша Bitcoin-транзакция застряла. Мемпул переполнен. Майнеры её игнорируют.
+
+TurboTX решает это, охватывая **~88% активного хешрейта Bitcoin** через проприетарную многоканальную рассылку — не просто rebroadcast, а координированная умная атака на всю майнинговую экосистему. Premium-пользователи получают **до 10 автоматических волн повтора** за 16 часов без каких-либо усилий — даже если закрыли браузер.
+
+---
+
+### ✦ Почему TurboTX лучше конкурентов
+
+| | TurboTX v14.2 | Конкуренты |
+|---|---|---|
+| Охват хешрейта | **~88%** | 10–40% |
+| Приватный мемпул | ✅ MARA Slipstream | ❌ |
+| Работает после закрытия браузера | ✅ Серверные волны | ❌ Только браузер |
+| Оплата Lightning Network | ✅ | Редко |
+| Smart Advisor (RBF / CPFP) | ✅ | ❌ |
+| Пакетное ускорение | ✅ До 20 TX | ❌ |
+| API для разработчиков | ✅ 4 тарифа | ❌ |
+| Режим anti-stuck (72ч+) | ✅ Агрессивные интервалы | ❌ |
+| Open source | ✅ | Обычно ❌ |
+
+---
+
+### ⚡ Ключевые возможности
+
+**🎯 Максимальный охват хешрейта**  
+Проприетарный движок рассылки одновременно достигает Foundry, AntPool, MARA, ViaBTC, SpiderPool и 17+ других пулов — ~88% активного хешрейта Bitcoin за одно ускорение.
+
+**🔒 MARA Slipstream**  
+Прямая инъекция в приватный мемпул MARA. Транзакция минует публичную очередь и попадает напрямую к майнерам MARA — пула №3 по хешрейту.
+
+**🌊 Персистентная система из 10 волн**  
+Premium-транзакции получают до 10 волн повтора за 16 часов. В отличие от конкурентов, у которых "авто-повтор" умирает при закрытии вкладки — волны TurboTX работают на сервере и стреляют по расписанию независимо от того, онлайн ли пользователь.
+
+**🧠 Smart Advisor**  
+Перед оплатой TurboTX анализирует транзакцию: текущая комиссия vs сеть, позиция в мемпуле, время зависания, доступность RBF, стоимость CPFP. Вы получаете чёткий план спасения с точными цифрами — не просто кнопку "ускорить".
+
+**⚡ Lightning Network**  
+Мгновенные платежи через Lightning с автогенерацией инвойсов и real-time определением оплаты. HMAC-защищённые токены активации — Premium-доступ нельзя перехватить через DevTools браузера.
+
+**📊 Живая аналитика мемпула**  
+Двойной сигнал перегрузки: fee rate + размер мемпула. Адаптивные интервалы волн — сокращаются когда комиссии падают, растут когда сеть разгружается. Максимальный шанс подтверждения при минимальной стоимости.
+
+---
+
+### 🔌 Публичное API
+
+Полная документация: [acelerat.vercel.app/api-docs](https://acelerat.vercel.app/api-docs)
+
+```bash
+# Анализ застрявшей транзакции
+curl "https://acelerat.vercel.app/api/v1?method=status&txid=YOUR_TXID" \
+  -H "Authorization: Bearer ttx_live_YOUR_KEY"
+
+# Отправить на ускорение
+curl -X POST "https://acelerat.vercel.app/api/v1?method=accelerate" \
+  -H "Authorization: Bearer ttx_live_YOUR_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"txid":"YOUR_TXID","plan":"premium"}'
+```
+
+| Метод | Endpoint | Описание |
+|---|---|---|
+| `GET` | `?method=ping` | Проверка ключа + остаток квоты |
+| `GET` | `?method=status&txid=` | Полный анализ TX + план спасения |
+| `GET` | `?method=mempool` | Живое состояние сети |
+| `GET` | `?method=fees` | Рекомендуемые комиссии |
+| `GET` | `?method=price` | Динамическая цена Premium |
+| `GET` | `?method=acceleration&txid=` | Решение Smart Advisor |
+| `POST` | `?method=accelerate` | Отправить TX на ускорение |
+| `POST` | `?method=batch` | Пакетное ускорение (до 20 TX) |
+| `GET` | `?method=cpfp&txid=` | CPFP калькулятор |
+| `GET` | `?method=rbf&txid=` | RBF калькулятор |
+| `GET` | `?method=health` | Состояние сервиса |
+| `GET/POST` | `?method=keys` | Управление ключами *(админ)* |
+
+**Тарифные планы:**
+
+| План | Лимиты | Цена |
+|---|---|---|
+| Free | 30 запр/мин · 500/день | $0 |
+| Basic | 100 запр/мин · 5k/день | $29/мес |
+| Pro | 500 запр/мин · 50k/день | $99/мес |
+| Partner | Без лимитов | Индивидуально |
+
+---
+
+### 📜 История изменений
+
+#### v14.2 — март 2026
+- 🌊 Волны теперь работают на сервере — стреляют по расписанию даже без браузера
+- 🔄 Автоматическое восстановление состояния волн при возврате на страницу
+- 🔧 Фиксы стабильности Lightning-платежей при cold-start
+- 🛡 Усиление WebSocket — устранены паразитные reconnect-петли
+- 🔥 Улучшена устойчивость к кратковременным сетевым сбоям
+- 📈 Улучшены лимиты для высокочастотных Premium-пользователей
+
+#### v14.1 — 2026
+- 🔐 HMAC-защита активации — секрет Premium защищён на сервере
+- 🐛 Множественные фиксы верификации платежей и движка рассылки
+- ⚡ Система волн расширена с 8 до 10 с адаптивными интервалами
+- 💡 Приоритет last-block-miner, живой индикатор загрузки мемпула
+
+---
+
+### 🛠 Локальная разработка / Исследование
+
+```bash
+# Требует конфигурации — по вопросам деплоя в Telegram
+npx vercel dev
+```
+
+---
+
+### ⚖️ Лицензия
+
+[![License: BSL 1.1](https://img.shields.io/badge/License-BSL%201.1-orange?style=flat-square)](LICENSE)
+
+**Business Source License 1.1** — © 2026 ProjectBarabashka
+
+Исходный код доступен для чтения и личного использования.  
+**Коммерческое использование, перепродажа, white-label и конкурирующие сервисы — запрещены.**  
+Переходит на MIT-лицензию 01.01.2029.
+
+Коммерческое лицензирование: pollytrazlo@gmail.com · [Telegram](https://t.me/Sup_TurboTX)
 
 ---
 
 <div align="center">
-  <sub>Сделано с ⚡ <a href="https://github.com/ProjectBarabashka">ProjectBarabashka</a> · <a href="https://acelerat.vercel.app">acelerat.vercel.app</a></sub>
+  <br/>
+  <img src="https://img.shields.io/badge/Built%20for-Bitcoin-f7931a?style=flat-square&logo=bitcoin&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Powered%20by-Vercel-000000?style=flat-square&logo=vercel&logoColor=white"/>
+  <img src="https://img.shields.io/badge/Node-24.x-339933?style=flat-square&logo=nodedotjs&logoColor=white"/>
+  <br/><br/>
+  <sub>Made with ⚡ by <a href="https://github.com/ProjectBarabashka">ProjectBarabashka</a> · <a href="https://acelerat.vercel.app">acelerat.vercel.app</a></sub>
 </div>
-```

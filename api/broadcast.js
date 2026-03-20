@@ -1,18 +1,16 @@
-// ══════════════════════════════════════════════════════════════
+
 //  TurboTX v14.1 ★ МАКСИМАЛЬНАЯ МОЩЬ 2026 ★  —  /api/broadcast.js
 //  Vercel Serverless · Node.js 20 · Hobby Plan
 //
-//  ━━━ НОВОЕ В v14 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-//  ⒜ WAVE_SIZE 8→12 + WAVE_DELAY 0/150/400→0/80/200ms
+
+//  ⒜ _WS 8→12 + _WD 0/150/400→0/80/200ms
 //     Меньше волн, быстрее покрытие всех каналов
-//  ⒝ HASHRATE_STOP_TARGET 70%→80% (агрессивный режим: 85%→90%)
+//  ⒝ _HST 70%→80% (агрессивный режим: 85%→90%)
 //     Больше пулов получают TX до early stop
-//  ⒞ DEAD_TTL_MS 30мин→10мин
-//     Мёртвый канал быстрее восстанавливается в ротацию
-//  ⒟ CB_OPEN_TTL 2ч→45мин
-//     Circuit Breaker открывается быстрее после восстановления пула
+//  ⒞ _DTTL 30мин→10мин
+//  ⒟ _COTTL 2ч→45мин
 //
-//  ━━━ НАСЛЕДСТВО v13 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 //  ⒝ MARA SLIPSTREAM — прямая отправка в приватный мемпул MARA
 //     Bypass обычной очереди — транзакция видна только MARA
 //  ⒞ +5 НОВЫХ ПУЛОВ: SBI Crypto, EMCDPool, Rawpool, 2Miners, Lincoin
@@ -29,7 +27,7 @@
 //  ⒦ ANTI-STUCK — TX >72ч → агрессивное CPFP предупреждение
 //  ⒧ PARALLEL HEX+BROADCAST — hex и первая волна стартуют одновременно
 //
-//  ━━━ ДВИЖОК v10-v11 (сохранено) ━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 //  ① Статистика надёжности   ② Circuit Breaker
 //  ③ Smart hex retry         ④ Adaptive timeout
 //  ⑤ Negative cache          ⑥ Geo-groups
@@ -39,16 +37,11 @@
 //  ⑬ Blockstream fallback   ⑭ Hashrate-weighted sort
 //  ⑮ Dynamic EARLY_STOP     ⑯ txidOnly channels
 //  ⑰ Batch broadcast        ⑱ feeRatio в summary
-// ══════════════════════════════════════════════════════════════
 
 export const config = { maxDuration: 60 };
 
 import { CORS, getIp, sj, sleep, checkPremiumAuth } from './_shared.js';
 import { incBroadcast } from './router.js'; // счётчики статистики /api/stats
-
-
-// ─── FIREBASE WAVE JOB (v14.2) ──────────────────────────────
-// Сохраняем факт premium broadcast в Firebase.
 // Клиент (client-api.js) использует localStorage для трекинга волн.
 // Firebase хранит метаданные для диагностики и будущей server-side поддержки.
 const _FB_DB = process.env.FIREBASE_DB_URL || '';
@@ -73,9 +66,8 @@ async function saveWaveJobFb(txid, startedAt) {
   } catch {}
 }
 
-// ─── USER-AGENT ROTATION ──────────────────────────────────────
 // Разные UA — меньше шанс блокировки по одному паттерну
-const UA_POOL = [
+const _UAP = [
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:125.0) Gecko/20100101 Firefox/125.0',
@@ -83,18 +75,17 @@ const UA_POOL = [
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0',
 ];
 let _uaIdx = 0;
-function getUA() { return UA_POOL[(_uaIdx++) % UA_POOL.length]; }
+function getUA() { return _UAP[(_uaIdx++) % _UAP.length]; }
 
-// ─── RATE LIMITER ─────────────────────────────────────────────
 const _ipMap   = new Map();
 const _txidMap = new Map();
 const _confirmed  = new Map();
-const CONFIRMED_TTL = 24 * 3_600_000;
+const _CTTL = 24 * 3_600_000;
 
 function isConfirmed(txid) {
   const t = _confirmed.get(txid);
   if (!t) return false;
-  if (Date.now() - t > CONFIRMED_TTL) { _confirmed.delete(txid); return false; }
+  if (Date.now() - t > _CTTL) { _confirmed.delete(txid); return false; }
   return true;
 }
 function setConfirmed(txid) { _confirmed.set(txid, Date.now()); }
@@ -103,9 +94,8 @@ const LIMITS = {
   free:    { perHour: 3,  cooldownMs: 2 * 3_600_000 },
   premium: { perHour: 30, cooldownMs: 15 * 60_000   },
 };
-const MAX_TXIDS_PER_IP_HOUR = 15;
-const MAX_HEX_BYTES = 400_000;
-
+const _MTPIH = 15;
+const _MHB = 400_000;
 
 function checkLimits(ip, txid, plan) {
   const now = Date.now(), hour = 3_600_000;
@@ -114,7 +104,7 @@ function checkLimits(ip, txid, plan) {
     for (const [k,v] of _ipMap) if (v.resetAt < now) _ipMap.delete(k);
   let e = _ipMap.get(ip);
   if (!e || e.resetAt < now) { e = { count:0, txids:new Set(), resetAt:now+hour }; _ipMap.set(ip,e); }
-  if (!e.txids.has(txid) && e.txids.size >= MAX_TXIDS_PER_IP_HOUR)
+  if (!e.txids.has(txid) && e.txids.size >= _MTPIH)
     return { ok:false, reason:'abuse', retryAfter:Math.ceil((e.resetAt-now)/1000) };
   if (e.count >= lim.perHour)
     return { ok:false, reason:'rate_limit', retryAfter:Math.ceil((e.resetAt-now)/1000) };
@@ -132,16 +122,13 @@ function isBot(req) {
   const ua = (req.headers['user-agent']||'').toLowerCase();
   return ['curl/','wget/','python-requests','go-http','java/','scrapy','bot/','crawler'].some(p=>ua.includes(p));
 }
-
-// ─── ⒡ HEX CACHE ─────────────────────────────────────────────
-// Кэш между волнами: повторный запрос той же TX — не перекачиваем hex
 const _hexCache = new Map(); // txid → { hex, cachedAt }
-const HEX_CACHE_TTL = 2 * 3_600_000; // 2 часа
+const _HCTTL = 2 * 3_600_000; // 2 часа
 
 function getCachedHex(txid) {
   const e = _hexCache.get(txid);
   if (!e) return null;
-  if (Date.now() - e.cachedAt > HEX_CACHE_TTL) { _hexCache.delete(txid); return null; }
+  if (Date.now() - e.cachedAt > _HCTTL) { _hexCache.delete(txid); return null; }
   return e.hex;
 }
 function setCachedHex(txid, hex) {
@@ -152,8 +139,7 @@ function setCachedHex(txid, hex) {
   _hexCache.set(txid, { hex, cachedAt: Date.now() });
 }
 
-// ─── УТИЛИТЫ ──────────────────────────────────────────────────
-const safeJson = sj; // алиас для обратной совместимости внутри файла
+const safeJson = sj;
 async function safeText(r) { try { return await r.text(); } catch { return ''; } }
 function ve(r) { return r?.headers?.get?.('x-vercel-error') || ''; }
 
@@ -164,7 +150,6 @@ async function ft(url, opts={}, ms=13000) {
   catch(e) { clearTimeout(t); throw e; }
 }
 
-// ─── ① СТАТИСТИКА НАДЁЖНОСТИ ──────────────────────────────────
 const _stats = new Map();
 function getStat(name) { return _stats.get(name) ?? { success:0, fail:0, totalMs:0, calls:0 }; }
 function recordStat(name, ok, ms) {
@@ -182,7 +167,6 @@ function avgResponseMs(name) {
   return s.calls > 0 ? Math.round(s.totalMs / s.calls) : 9999;
 }
 
-// ─── VERCEL ERROR CODES ───────────────────────────────────────
 const VERCEL_RETRY_NOW = new Set(['FUNCTION_INVOCATION_FAILED','INTERNAL_FUNCTION_INVOCATION_FAILED','NO_RESPONSE_FROM_FUNCTION','SANDBOX_NOT_LISTENING','INTERNAL_FUNCTION_NOT_READY','INTERNAL_MISSING_RESPONSE_FROM_CACHE','ROUTER_CANNOT_MATCH','ROUTER_EXTERNAL_TARGET_CONNECTION_ERROR','ROUTER_EXTERNAL_TARGET_HANDSHAKE_ERROR','DNS_HOSTNAME_RESOLVE_FAILED','DNS_HOSTNAME_SERVER_ERROR']);
 const VERCEL_RETRY_LATER = new Set(['FUNCTION_THROTTLED','INTERNAL_FUNCTION_SERVICE_UNAVAILABLE','DEPLOYMENT_PAUSED','INTERNAL_CACHE_LOCK_FULL','INTERNAL_CACHE_LOCK_TIMEOUT','EDGE_FUNCTION_INVOCATION_FAILED','MIDDLEWARE_INVOCATION_FAILED','SANDBOX_STOPPED']);
 const VERCEL_SKIP = new Set(['FUNCTION_INVOCATION_TIMEOUT','INTERNAL_FUNCTION_INVOCATION_TIMEOUT','EDGE_FUNCTION_INVOCATION_TIMEOUT','MIDDLEWARE_INVOCATION_TIMEOUT','INFINITE_LOOP_DETECTED','MIDDLEWARE_RUNTIME_DEPRECATED']);
@@ -233,47 +217,43 @@ function ok400(body, status) {
   return false;
 }
 
-// ─── 429 COOLDOWN ─────────────────────────────────────────────
 const _cooldown = new Map();
-const COOLDOWN_MS = [2*60_000, 5*60_000, 15*60_000, 60*60_000];
+const _CDM = [2*60_000, 5*60_000, 15*60_000, 60*60_000];
 function isCooling(name) { const e=_cooldown.get(name); return e&&Date.now()<e.until; }
 function registerHit(name) {
   const e = _cooldown.get(name) ?? {hits:0,until:0};
   const hits = e.hits+1;
-  const ms = COOLDOWN_MS[Math.min(hits-1, COOLDOWN_MS.length-1)];
+  const ms = _CDM[Math.min(hits-1, _CDM.length-1)];
   _cooldown.set(name,{hits,until:Date.now()+ms});
 }
 function registerSuccess(name) { if(_cooldown.has(name)) _cooldown.set(name,{hits:0,until:0}); }
 
-// ─── ⑤ NEGATIVE CACHE ─────────────────────────────────────────
 const _negCache = new Map();
-const NEG_CACHE_TTL = 5 * 60_000;
+const _NCTTL = 5 * 60_000;
 function isNegCached(name) { const u=_negCache.get(name); if(!u)return false; if(Date.now()>u){_negCache.delete(name);return false;} return true; }
-function setNegCache(name) { _negCache.set(name, Date.now()+NEG_CACHE_TTL); }
+function setNegCache(name) { _negCache.set(name, Date.now()+_NCTTL); }
 
-// ─── DEAD CHANNEL ─────────────────────────────────────────────
 const _deadChannels = new Map();
-const DEAD_THRESHOLD = 3;
-const DEAD_TTL_MS = 10 * 60_000; // v14: 10 мин (было 30 — пулы восстанавливаются быстрее)
+const _DT = 3;
+const _DTTL = 10 * 60_000; // v14: 10 мин (было 30 — пулы восстанавливаются быстрее)
 function isDead(name) {
   const e = _deadChannels.get(name);
   if (!e) return false;
   if (Date.now() > e.deadUntil) { _deadChannels.delete(name); return false; }
-  return e.fails >= DEAD_THRESHOLD;
+  return e.fails >= _DT;
 }
 function registerFail(name) {
   const e = _deadChannels.get(name) ?? {fails:0,deadUntil:0};
   e.fails++;
-  if (e.fails >= DEAD_THRESHOLD) e.deadUntil = Date.now() + DEAD_TTL_MS;
+  if (e.fails >= _DT) e.deadUntil = Date.now() + _DTTL;
   _deadChannels.set(name, e);
 }
 function registerChannelOk(name) { _deadChannels.delete(name); }
 
-// ─── ② CIRCUIT BREAKER ────────────────────────────────────────
 const _cb = new Map();
-const CB_FAIL_THRESHOLD = 5;
-const CB_FAIL_WINDOW = 10 * 60_000;
-const CB_OPEN_TTL = 45 * 60_000; // v14: 45 мин (было 2 часа — канал мог уже восстановиться)
+const _CFT = 5;
+const _CFW = 10 * 60_000;
+const _COTTL = 45 * 60_000; // v14: 45 мин (было 2 часа — канал мог уже восстановиться)
 function cbGet(name) { return _cb.get(name) ?? {state:'CLOSED',fails:0,windowStart:Date.now(),openUntil:0,halfOpenAt:0}; }
 function cbIsBlocked(name) {
   const e = cbGet(name), now = Date.now();
@@ -288,34 +268,31 @@ function cbOnSuccess(name) {
 }
 function cbOnFail(name) {
   const e = cbGet(name), now = Date.now();
-  if (e.state==='HALF_OPEN') { _cb.set(name,{...e,state:'OPEN',openUntil:now+CB_OPEN_TTL}); return; }
+  if (e.state==='HALF_OPEN') { _cb.set(name,{...e,state:'OPEN',openUntil:now+_COTTL}); return; }
   if (e.state==='OPEN') return;
   let {fails,windowStart} = e;
-  if (now-windowStart>CB_FAIL_WINDOW) { fails=1; windowStart=now; } else { fails++; }
-  if (fails>=CB_FAIL_THRESHOLD) _cb.set(name,{state:'OPEN',fails,windowStart,openUntil:now+CB_OPEN_TTL,halfOpenAt:0});
+  if (now-windowStart>_CFW) { fails=1; windowStart=now; } else { fails++; }
+  if (fails>=_CFT) _cb.set(name,{state:'OPEN',fails,windowStart,openUntil:now+_COTTL,halfOpenAt:0});
   else _cb.set(name,{...e,fails,windowStart});
 }
 
-// ─── PING CACHE ───────────────────────────────────────────────
 const _pingCache = new Map();
-const PING_TTL = 10 * 60_000;
-function getCachedPing(name) { const e=_pingCache.get(name); return (e&&Date.now()-e.updatedAt<PING_TTL)?e.ms:null; }
+const _PTTL = 10 * 60_000;
+function getCachedPing(name) { const e=_pingCache.get(name); return (e&&Date.now()-e.updatedAt<_PTTL)?e.ms:null; }
 function setPing(name, ms) { _pingCache.set(name,{ms,updatedAt:Date.now()}); }
 
-// ─── ADAPTIVE TIMEOUT ─────────────────────────────────────────
-const TIMEOUT_NODE_BASE = 5_000;
-const TIMEOUT_POOL_BASE = 15_000;
-const TIMEOUT_MULT = 3.0;
-const TIMEOUT_CAP = 22_000; // v12: чуть увеличен для медленных пулов
+const _TNB = 5_000;
+const _TPB = 15_000;
+const _TM = 3.0;
+const _TC = 22_000; // v12: чуть увеличен для медленных пулов
 
 function adaptiveTimeout(name, tier='node') {
-  const base = tier==='node' ? TIMEOUT_NODE_BASE : TIMEOUT_POOL_BASE;
+  const base = tier==='node' ? _TNB : _TPB;
   const ping = getCachedPing(name) ?? avgResponseMs(name);
-  if (!ping || ping>=5000) return tier==='node' ? 8_000 : TIMEOUT_CAP;
-  return Math.min(TIMEOUT_CAP, Math.max(base, Math.round(ping*TIMEOUT_MULT)));
+  if (!ping || ping>=5000) return tier==='node' ? 8_000 : _TC;
+  return Math.min(_TC, Math.max(base, Math.round(ping*_TM)));
 }
 
-// ─── ftr — умный retry ────────────────────────────────────────
 async function ftr(url, opts={}, ms=13000, tries=2, chName='', tier='node') {
   const timeout = chName ? adaptiveTimeout(chName, tier) : ms;
   for (let i=0; i<=tries; i++) {
@@ -340,38 +317,32 @@ async function ftr(url, opts={}, ms=13000, tries=2, chName='', tier='node') {
   }
 }
 
-// ─── HASHRATE TABLE Q1 2026 ──────────────────────────────────
 // ⒞ v12: добавлены SBI Crypto, EMCDPool, Rawpool, 2Miners, Lincoin
 // NOTE: MaraSlipstream — это приватный мемпул MARA, тот же пул (11% хешрейта)
 // При подсчёте hr используем дедупликацию MARA/MaraSlipstream (см. uniqueHr ниже)
 const HR = {
-  // Пулы с реальными акселераторами (хешрейт Q1 2026)
   Foundry:27, AntPool:16, MaraSlipstream:11, ViaBTC:9, SpiderPool:8,
   F2Pool:7, Luxor:5, CloverPool:4, BitFuFu:4, 'BTC.com':3,
   Ocean:2, EMCDPool:2, SBICrypto:2,
   TxBoost:1, mempoolAccel:1, bitaccelerate:1, '360btc':1, txfaster:1, btcspeed:1,
   Rawpool:1, '2Miners':1, Lincoin:1,
-  // Ноды — не добывают, но распространяют TX по p2p сети (считаем как 0 хешрейта)
   'mempool.space':0, 'blockstream.info':0, blockchair:0, blockcypher:0,
   'btcscan.org':0, 'blockchain.info':0, 'bitaps.com':0, 'sochain.com':0,
 };
 
 // Итого Premium охват: ~88% хешрейта (считаем уникальных, Slipstream = MARA)
 
-const POOL_GEO = {
+const _PG = {
   Foundry:'usa', MARA:'usa', MaraSlipstream:'usa', Luxor:'usa', TxBoost:'usa', Ocean:'usa',
   AntPool:'asia', ViaBTC:'asia', SpiderPool:'asia', F2Pool:'asia', CloverPool:'asia', 'BTC.com':'asia', BitFuFu:'asia',
   SBICrypto:'asia', EMCDPool:'europe', Rawpool:'europe', Lincoin:'europe',
   '2Miners':'global', mempoolAccel:'global', bitaccelerate:'global', '360btc':'global', txfaster:'global', btcspeed:'global',
 };
-
-// ─── ⒜ LAST-BLOCK-MINER DETECTION ────────────────────────────
-// Кэш: кто добыл последний блок
 let _lastBlockMiner = null;
 let _lastBlockAt    = 0;
-const BLOCK_CACHE_TTL = 60_000; // обновляем не чаще раза в минуту
+const _BCTTL = 60_000; // обновляем не чаще раза в минуту
 
-const POOL_COINBASE_TAGS = {
+const _PCT = {
   'foundry':   'Foundry', 'foundryusa':'Foundry',
   'antpool':   'AntPool',
   'mara':      'MARA', 'marathon':  'MARA',
@@ -390,7 +361,7 @@ const POOL_COINBASE_TAGS = {
 };
 
 async function detectLastBlockMiner() {
-  if (_lastBlockMiner && Date.now()-_lastBlockAt < BLOCK_CACHE_TTL) return _lastBlockMiner;
+  if (_lastBlockMiner && Date.now()-_lastBlockAt < _BCTTL) return _lastBlockMiner;
   try {
     const r = await ft('https://mempool.space/api/v1/blocks/tip', {}, 5000);
     if (!r.ok) return null;
@@ -401,7 +372,7 @@ async function detectLastBlockMiner() {
     // Ищем coinbase тег в extras или pool info
     const poolName = block.extras?.pool?.name || block.pool?.name || '';
     const tag = poolName.toLowerCase();
-    for (const [key, poolId] of Object.entries(POOL_COINBASE_TAGS)) {
+    for (const [key, poolId] of Object.entries(_PCT)) {
       if (tag.includes(key)) {
         _lastBlockMiner = poolId;
         _lastBlockAt = Date.now();
@@ -412,14 +383,13 @@ async function detectLastBlockMiner() {
   } catch { return null; }
 }
 
-// ─── ⒢ FEE MARKET TREND ──────────────────────────────────────
 // Определяем: комиссии растут или падают?
 // Если падают >30% → ждём лучшего момента (для очень низких TX)
 let _feeTrend = { fastest:0, halfHour:0, direction:'stable', sampledAt:0 };
-const FEE_TREND_TTL = 3 * 60_000;
+const _FTTL = 3 * 60_000;
 
 async function updateFeeTrend() {
-  if (Date.now()-_feeTrend.sampledAt < FEE_TREND_TTL) return _feeTrend;
+  if (Date.now()-_feeTrend.sampledAt < _FTTL) return _feeTrend;
   try {
     const r = await ft('https://mempool.space/api/v1/fees/recommended', {}, 4000);
     if (!r.ok) return _feeTrend;
@@ -435,8 +405,7 @@ async function updateFeeTrend() {
   return _feeTrend;
 }
 
-// ─── PING URL MAP ─────────────────────────────────────────────
-const PING_URLS = {
+const _PU = {
   'mempool.space':    'https://mempool.space/api/blocks/tip/height',
   'blockstream.info': 'https://blockstream.info/api/blocks/tip/height',
   'blockchair':       'https://api.blockchair.com/bitcoin/stats',
@@ -471,7 +440,7 @@ const PING_URLS = {
 async function pingChannel(name) {
   const cached = getCachedPing(name);
   if (cached !== null) return cached;
-  const url = PING_URLS[name];
+  const url = _PU[name];
   if (!url) return 9999;
   const t0 = Date.now();
   try {
@@ -483,7 +452,6 @@ async function pingChannel(name) {
   } catch { setPing(name, 5000); return 5000; }
 }
 
-// ─── ⒠ HASHRATE-WEIGHTED PRIORITY + EARLY STOP ───────────────
 function channelPriority(name, pingMs) {
   const score   = reliabilityScore(name);
   const normPing = Math.min(pingMs, 5000) / 5000;
@@ -491,7 +459,6 @@ function channelPriority(name, pingMs) {
   return 0.5 * score - 0.3 * normPing + 0.2 * normHr;
 }
 
-// ─── RUN ──────────────────────────────────────────────────────
 async function run(channels, feeRatioHint = 0.5, lastBlockMiner = null) {
   if (channels.length === 0) return [];
 
@@ -524,8 +491,8 @@ async function run(channels, feeRatioHint = 0.5, lastBlockMiner = null) {
 
   const sorted = pings.map(p => p.ch);
 
-  const WAVE_SIZE  = 12;              // v14: 12→12→6 вместо 8→8→8→6 (меньше волн, быстрее покрытие)
-  const WAVE_DELAY = [0, 80, 200];    // v14: агрессивнее (было 0/150/400)
+  const _WS  = 12;              // v14: 12→12→6 вместо 8→8→8→6 (меньше волн, быстрее покрытие)
+  const _WD = [0, 80, 200];    // v14: агрессивнее (было 0/150/400)
   const results    = new Array(sorted.length).fill(null);
   let okCount = 0, okHashrate = 0;
   const seenPools = new Set();
@@ -533,9 +500,7 @@ async function run(channels, feeRatioHint = 0.5, lastBlockMiner = null) {
   const activeChannels = sorted.filter(ch =>
     !isDead(ch.name) && !cbIsBlocked(ch.name) && !isCooling(ch.name) && !isNegCached(ch.name)
   );
-
-  // Early stop отключён — отправляем во ВСЕ каналы всегда
-  const HASHRATE_STOP_TARGET = Infinity;
+  const _HST = Infinity;
   const COUNT_STOP = sorted.length + 1;
 
   await new Promise(resolve => {
@@ -543,7 +508,7 @@ async function run(channels, feeRatioHint = 0.5, lastBlockMiner = null) {
 
     const launchWave = (waveChannels, waveIdx) => {
       waveChannels.forEach((ch, i) => {
-        const globalIdx = waveIdx * WAVE_SIZE + i;
+        const globalIdx = waveIdx * _WS + i;
 
         if (isDead(ch.name)) {
           results[globalIdx] = {channel:ch.name, tier:ch.tier, ok:false, skipped:true, reason:'dead', ms:0};
@@ -586,7 +551,7 @@ async function run(channels, feeRatioHint = 0.5, lastBlockMiner = null) {
           results[globalIdx] = {
             channel:ch.name, name:ch.name, tier:ch.tier, ok:isOk, ms,
             score: +reliabilityScore(ch.name).toFixed(2),
-            geo: POOL_GEO[ch.name] || (ch.tier==='node'?'node':null),
+            geo: _PG[ch.name] || (ch.tier==='node'?'node':null),
             hashrate: HR[ch.name] || 0,
             ...(vercelCode ? {vercelError:vercelCode} : {}),
             ...(cls!=='ok'&&!isOk ? {reason:cls} : {}),
@@ -602,9 +567,7 @@ async function run(channels, feeRatioHint = 0.5, lastBlockMiner = null) {
           }
 
           if (++finished===sorted.length) resolve();
-
-          // Stop если: хешрейт покрыт ИЛИ достаточно каналов
-          if (!aborted && (okHashrate >= HASHRATE_STOP_TARGET || okCount >= COUNT_STOP)) {
+          if (!aborted && (okHashrate >= _HST || okCount >= COUNT_STOP)) {
             aborted = true;
           }
         }).catch(e => {
@@ -621,9 +584,9 @@ async function run(channels, feeRatioHint = 0.5, lastBlockMiner = null) {
       });
     };
 
-    for (let w=0; w<Math.ceil(sorted.length/WAVE_SIZE); w++) {
-      const wave  = sorted.slice(w*WAVE_SIZE, (w+1)*WAVE_SIZE);
-      const delay = WAVE_DELAY[w] ?? 400+w*150;
+    for (let w=0; w<Math.ceil(sorted.length/_WS); w++) {
+      const wave  = sorted.slice(w*_WS, (w+1)*_WS);
+      const delay = _WD[w] ?? 400+w*150;
       if (delay === 0) {
         launchWave(wave, w);
       } else {
@@ -631,7 +594,7 @@ async function run(channels, feeRatioHint = 0.5, lastBlockMiner = null) {
           if (!aborted) launchWave(wave, w);
           else {
             wave.forEach((ch,i)=>{
-              const idx = w*WAVE_SIZE+i;
+              const idx = w*_WS+i;
               results[idx] = {channel:ch.name, name:ch.name, tier:ch.tier, ok:false, skipped:true, ms:0};
               if (++finished===sorted.length) resolve();
             });
@@ -644,7 +607,6 @@ async function run(channels, feeRatioHint = 0.5, lastBlockMiner = null) {
   return results.filter(Boolean);
 }
 
-// ─── GET HEX — двухуровневый запуск ──────────────────────────
 const HEX_RE = /^[0-9a-fA-F]{200,}$/;
 
 async function getHex(txid) {
@@ -692,7 +654,7 @@ async function getHex(txid) {
           const h = t==='json'
             ? p.reduce((o,k) => o?.[k], await safeJson(r))
             : (await safeText(r)).trim();
-          if (!found && h && HEX_RE.test(h) && h.length < MAX_HEX_BYTES*2) {
+          if (!found && h && HEX_RE.test(h) && h.length < _MHB*2) {
             found = true;
             recordStat(name, true, Date.now()-t0);
             ac.abort();
@@ -715,7 +677,6 @@ async function getHex(txid) {
   });
 }
 
-// ─── АНАЛИЗ TX ────────────────────────────────────────────────
 async function analyze(txid) {
   try {
     const [tR, tR2, fR] = await Promise.allSettled([
@@ -760,7 +721,6 @@ async function analyze(txid) {
   } catch { return null; }
 }
 
-// ─── WAVE STRATEGY ────────────────────────────────────────────
 function calcWaveStrategy(feeRate, fastest, isStuck72h = false) {
   if (!feeRate || !fastest) return { waves:5, intervalMs:15*60_000, label:'default' };
   const ratio = feeRate/fastest;
@@ -770,7 +730,6 @@ function calcWaveStrategy(feeRate, fastest, isStuck72h = false) {
   return              { waves:8, intervalMs:10*60_000, label:'aggressive' };
 }
 
-// ─── TXID-ONLY КАНАЛЫ (без hex) ───────────────────────────────
 function txidOnlyChannels(txid) {
   const UA = getUA();
   return [
@@ -801,7 +760,6 @@ function txidOnlyChannels(txid) {
   ];
 }
 
-// ─── ⒣ FREE TIER CHANNELS (FIX: добавлены ViaBTC + mempoolAccel) ─
 function freeChannels(hex, txid) {
   const UA = getUA();
   return [
@@ -834,12 +792,11 @@ function freeChannels(hex, txid) {
   ];
 }
 
-// ─── PREMIUM CHANNELS v15 — 8 нод + 22 акселератора ─────────────────────────
 // Каждый канал возвращает {ok, status, ve, body} чтобы ok400/classifyError работали
 function premiumChannels(txid, hex) {
   const UA = getUA();
 
-  // ── 8 HEX-BROADCAST НОД (только реально принимающие pushtx в 2025-2026) ──
+  
   const nodes = hex ? [
     { name:'mempool.space', tier:'node', call: async()=>{
       const r=await ftr('https://mempool.space/api/tx',{method:'POST',body:hex,headers:{'Content-Type':'text/plain'}},12000,2,'mempool.space','node');
@@ -878,7 +835,7 @@ function premiumChannels(txid, hex) {
     }},
   ] : [];
 
-  // ── 22 АКСЕЛЕРАТОРА ───────────────────────────────────────────────────────
+  
   const pools = [
     { name:'ViaBTC', tier:'pool', call: async()=>{
       try {
@@ -1002,7 +959,6 @@ function premiumChannels(txid, hex) {
   return [...nodes, ...pools];
 }
 
-// ─── ⒤ BOOTSTRAP — inline (fix: не вызываем /api/health через self) ──
 let _bootstrapped = false;
 async function bootstrapInline() {
   if (_bootstrapped) return;
@@ -1032,19 +988,17 @@ async function bootstrapInline() {
   } catch {}
 }
 
-// ─── MEMORY CLEANUP (30 мин) ──────────────────────────────────
 setInterval(() => {
   const now = Date.now();
   for (const [k,v] of _txidMap)    if (now-v.lastSeen>3*3_600_000) _txidMap.delete(k);
   for (const [k,v] of _cooldown)   if (v.until<now) _cooldown.delete(k);
   for (const [k,v] of _negCache)   if (v<now) _negCache.delete(k);
   for (const [k,v] of _pingCache)  if (now-v.updatedAt>20*60_000) _pingCache.delete(k);
-  for (const [k,v] of _hexCache)   if (now-v.cachedAt>HEX_CACHE_TTL) _hexCache.delete(k);
-  for (const [k,v] of _confirmed)  if (now-v>CONFIRMED_TTL) _confirmed.delete(k);
+  for (const [k,v] of _hexCache)   if (now-v.cachedAt>_HCTTL) _hexCache.delete(k);
+  for (const [k,v] of _confirmed)  if (now-v>_CTTL) _confirmed.delete(k);
   for (const [k,v] of _cb)         if (v.state==='CLOSED'&&v.fails===0) _cb.delete(k);
 }, 30*60_000);
 
-// ─── TELEGRAM ─────────────────────────────────────────────────
 async function tg({results, txid, plan, analysis, ms, hr, ip, blocked, waveStrategy, lastBlockMiner, feeTrend}) {
   const token=process.env.TG_TOKEN, chat=process.env.TG_CHAT_ID;
   if (!token||!chat) return;
@@ -1083,7 +1037,6 @@ async function tg({results, txid, plan, analysis, ms, hr, ip, blocked, waveStrat
   },5000).catch(()=>{});
 }
 
-// ─── MAIN HANDLER ─────────────────────────────────────────────
 export default async function handler(req, res) {
   if (req.method==='OPTIONS') { Object.entries(CORS).forEach(([k,v])=>res.setHeader(k,v)); return res.status(204).end(); }
   Object.entries(CORS).forEach(([k,v])=>res.setHeader(k,v));
@@ -1099,7 +1052,6 @@ export default async function handler(req, res) {
   const effectivePlan = ['free','premium'].includes(body.plan) ? body.plan : 'free';
 
   if (effectivePlan==='premium') {
-    // v14.1 FIX: checkPremiumAuth принимает и старый сырой секрет (backward compat)
     // и новый HMAC токен от signToken() — оба формата валидны
     const secret = process.env.PREMIUM_SECRET;
     const token  = req.headers['x-turbotx-token'] || body.token;
@@ -1110,10 +1062,10 @@ export default async function handler(req, res) {
   const isBatch = Array.isArray(body.txids);
   if (isBatch) return handleBatch(req, res, body, effectivePlan, ip);
 
-  // ── Одиночный режим ───────────────────────────────────────
+  
   const {txid, hex:hexIn} = body;
   if (!txid||!/^[a-fA-F0-9]{64}$/.test(txid)) return res.status(400).json({ok:false,error:'Invalid TXID'});
-  if (hexIn&&hexIn.length>MAX_HEX_BYTES*2) return res.status(413).json({ok:false,error:'Hex too large'});
+  if (hexIn&&hexIn.length>_MHB*2) return res.status(413).json({ok:false,error:'Hex too large'});
 
   const rl = checkLimits(ip, txid, effectivePlan);
   if (!rl.ok) {
@@ -1178,7 +1130,7 @@ export default async function handler(req, res) {
       const key = r.name === 'MaraSlipstream' ? 'MARA' : (r.name || r.channel);
       if (!seen.has(key)) { seen.add(key); total += HR[key] || HR[r.name] || 0; }
     }
-    return total; // честный реальный охват, без заглушек
+    return total;
   })();
 
   const sentCount    = results.filter(r => !r.skipped).length;
@@ -1210,11 +1162,7 @@ export default async function handler(req, res) {
   };
 
   tg({results,txid,plan:effectivePlan,analysis,ms,hr:uniqueHr,ip,waveStrategy,lastBlockMiner:lastBlock,feeTrend}).catch(()=>{});
-
-  // BUG FIX: обновляем счётчик статистики (был 0 всегда)
   try { incBroadcast(effectivePlan, uniqueHr, !!hex); } catch {}
-
-  // v14.2: сохраняем wave job в Firebase для server-side трекинга
   if (effectivePlan === 'premium' && okCount > 0) {
     saveWaveJobFb(txid, Date.now()).catch(()=>{});
   }
@@ -1225,7 +1173,6 @@ export default async function handler(req, res) {
   });
 }
 
-// ─── BATCH HANDLER ────────────────────────────────────────────
 async function handleBatch(req, res, body, plan, ip) {
   const MAX_BATCH = plan==='premium' ? 20 : 5;
   const txids = (body.txids||[])
