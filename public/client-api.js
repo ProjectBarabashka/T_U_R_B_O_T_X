@@ -1,23 +1,66 @@
 // ══════════════════════════════════════════════════════════════
-//  TurboTX v14 — client-api.js
-//  Вставляется в index.html перед </body>
+//  TurboTX v14.2 — client-api.js
 //
-//  ✦ serverBroadcast    — одиночный broadcast через /api/broadcast
-//  ✦ batchBroadcast     — пакетный broadcast (массив txids)
-//  ✦ startServerRepeat  — волны повтора с wave recovery
-//  ✦ fetchDynamicPrice  — цена с кэшем 3 мин + sats для Lightning
-//  ✦ createLightningInvoice / checkLightningPayment — LN оплата
-//  ✦ applyDynamicPrice  — обновляет UI элементы
+//  ИЗМЕНЕНИЯ v14.2:
+//  🔧 CRITICAL FIX: Волны переписаны с нуля.
+//     Старая система: 10× setTimeout → умирали при закрытии вкладки.
+//     Новая система: setInterval (2 мин) + localStorage — волны
+//     выживают после закрытия/обновления вкладки, автоматически
+//     восстанавливаются при возврате пользователя.
+//  🔧 CRITICAL FIX: checkLightningPayment — теперь корректно
+//     обрабатывает notFound (инвойс не найден из-за cold start
+//     Vercel) без крашей в консоли.
+//  🆕 recoverPendingWaves() — вызывается при DOMContentLoaded,
+//     подхватывает незаконченные волны из localStorage.
+//  🆕 visibilitychange listener — мгновенно запускает просроченные
+//     волны когда пользователь возвращается во вкладку.
 // ══════════════════════════════════════════════════════════════
 
 const _API = ''; // тот же origin (acelerat.vercel.app)
+
+// ─── WAVE STATE PERSISTENCE ───────────────────────────────────
+// Волны хранятся в localStorage → выживают между сессиями браузера
+const WAVE_KEY_PREFIX   = 'ttx_wave_v2_';
+// Интервалы ДОЛЖНЫ совпадать с repeat.js BASE_INTERVALS (критично!)
+const WAVE_MINS         = [15, 15, 30, 60, 120, 120, 120, 120, 180, 180];
+const MAX_WAVES         = WAVE_MINS.length; // 10 волн
+// Интервал проверки: каждые 2 минуты
+const CHECK_INTERVAL_MS = 2 * 60_000;
+// TTL хранилища: 3 дня
+const WAVE_JOB_TTL_MS   = 3 * 24 * 3600 * 1000;
+
+function _waveKey(txid) { return WAVE_KEY_PREFIX + txid; }
+
+function saveWaveState(txid, state) {
+  try { localStorage.setItem(_waveKey(txid), JSON.stringify(state)); } catch {}
+}
+
+function loadWaveState(txid) {
+  try {
+    const raw = localStorage.getItem(_waveKey(txid));
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    if (Date.now() - s.startedAt > WAVE_JOB_TTL_MS) {
+      localStorage.removeItem(_waveKey(txid));
+      return null;
+    }
+    return s;
+  } catch { return null; }
+}
+
+function clearWaveState(txid) {
+  try { localStorage.removeItem(_waveKey(txid)); } catch {}
+}
+
+// ─── ACTIVE REPEATS MAP ───────────────────────────────────────
+// txid → intervalId (setInterval, не setTimeout!)
+const _activeRepeats = new Map();
 
 // ─── BROADCAST ────────────────────────────────────────────────
 async function serverBroadcast(txid, plan, token) {
   try {
     const headers = { 'Content-Type': 'application/json' };
     if (token) headers['X-TurboTX-Token'] = token;
-
     const r = await fetch(`${_API}/api/broadcast`, {
       method:  'POST',
       headers,
@@ -27,7 +70,6 @@ async function serverBroadcast(txid, plan, token) {
     return r.json();
   } catch(e) {
     console.warn('[TurboTX] Server broadcast failed:', e.message);
-    // Fallback на клиентский broadcast если есть
     if (typeof freeBroadcast === 'function' && plan !== 'premium')
       return freeBroadcast(txid);
     throw e;
@@ -35,12 +77,10 @@ async function serverBroadcast(txid, plan, token) {
 }
 
 // ─── BATCH BROADCAST ──────────────────────────────────────────
-// Уникально для TurboTX v14 — ни один конкурент не умеет
 async function batchBroadcast(txids, token) {
   if (!Array.isArray(txids) || txids.length === 0) throw new Error('txids array required');
   const headers = { 'Content-Type': 'application/json' };
   if (token) headers['X-TurboTX-Token'] = token;
-
   const r = await fetch(`${_API}/api/broadcast`, {
     method:  'POST',
     headers,
@@ -48,101 +88,178 @@ async function batchBroadcast(txids, token) {
   });
   if (!r.ok) throw new Error(`HTTP ${r.status}`);
   return r.json();
-  // → { ok, batch:true, total, succeeded, failed, ms, items:[...] }
 }
 
-// ─── АВТО-ПОВТОРЫ ─────────────────────────────────────────────
-// Планируем волны через setTimeout, передаём startedAt для wave recovery
-// Даже если пользователь закроет вкладку — сервер уже знает когда запускать
+// ─── WAVE CORE ────────────────────────────────────────────────
+// Читает localStorage, проверяет время и стреляет волну если пора.
+// Вызывается каждые 2 мин через setInterval + при visibility change.
+async function checkAndFireWave(txid, onWave) {
+  const state = loadWaveState(txid);
+  if (!state) { stopServerRepeat(txid); return; }
+  if (state.nextWave > MAX_WAVES) {
+    stopServerRepeat(txid);
+    clearWaveState(txid);
+    return;
+  }
 
-const _activeRepeats = new Map(); // txid → [timerIds]
+  const now = Date.now();
+  if (now < state.nextWaveAt) return; // ещё не время
 
+  try {
+    const headers = { 'Content-Type': 'application/json' };
+    if (state.token) headers['X-TurboTX-Token'] = state.token;
+
+    const r = await fetch(`${_API}/api/repeat`, {
+      method:  'POST',
+      headers,
+      body: JSON.stringify({
+        txid,
+        wave:           state.nextWave,
+        startedAt:      state.startedAt,
+        waveIntervalMs: WAVE_MINS[state.nextWave - 1] * 60_000,
+      }),
+    });
+    const data = await r.json();
+
+    // TX подтверждена — останавливаем всё
+    if (data.confirmed) {
+      stopServerRepeat(txid);
+      clearWaveState(txid);
+      console.log(`[TurboTX] TX подтверждена на волне ${state.nextWave}`);
+      if (typeof onWave === 'function') onWave({ confirmed: true, wave: state.nextWave, data });
+      return;
+    }
+
+    const firedWave = state.nextWave;
+    const nextWave  = firedWave + 1;
+
+    if (nextWave > MAX_WAVES) {
+      stopServerRepeat(txid);
+      clearWaveState(txid);
+      console.log('[TurboTX] Все 10 волн завершены');
+    } else {
+      // Используем адаптивный интервал с сервера или базовый
+      const msToNext = data.recommendedNextWaveMs || (WAVE_MINS[nextWave - 1] * 60_000);
+      saveWaveState(txid, { ...state, nextWave, nextWaveAt: now + msToNext });
+      console.log(`[TurboTX] Волна ${firedWave} отправлена. Следующая ${nextWave} через ${Math.round(msToNext / 60000)} мин`);
+    }
+
+    if (typeof onWave === 'function') onWave({ confirmed: false, wave: firedWave, data });
+
+  } catch(e) {
+    console.warn(`[TurboTX] Ошибка волны ${state.nextWave}:`, e.message);
+  }
+}
+
+// ─── START SERVER REPEAT ──────────────────────────────────────
+// Запускает или продолжает волновую систему для txid.
+// Состояние в localStorage → переживает закрытие/перезагрузку вкладки.
 function startServerRepeat(txid, token, onWave) {
-  stopServerRepeat(txid);
+  stopServerRepeat(txid); // чистим предыдущий interval если был
 
-  const startedAt     = Date.now();
-  const waveSchedule  = [15, 15, 30,  60, 120, 120, 120, 120, 180, 180]; // минуты (v14: 10 волн) BUG FIX: синхронизировано с repeat.js BASE_INTERVALS
-  const timers        = [];
+  // Загружаем существующее состояние или создаём новое
+  let state = loadWaveState(txid);
+  if (!state) {
+    state = {
+      txid,
+      token:      token || '',
+      startedAt:  Date.now(),
+      nextWave:   1,
+      nextWaveAt: Date.now() + WAVE_MINS[0] * 60_000,
+    };
+    saveWaveState(txid, state);
+    console.log(`[TurboTX] Запланированы ${MAX_WAVES} волн для ${txid.slice(0, 8)}…`);
+  } else {
+    // Обновляем токен если пришёл новый
+    if (token && token !== state.token) {
+      state.token = token;
+      saveWaveState(txid, state);
+    }
+    const minsLeft = Math.max(0, Math.round((state.nextWaveAt - Date.now()) / 60_000));
+    console.log(`[TurboTX] Wave job восстановлен: волна ${state.nextWave}/${MAX_WAVES}, через ${minsLeft} мин`);
+  }
 
-  let cumulativeMs = 0;
-  waveSchedule.forEach((mins, i) => {
-    cumulativeMs += mins * 60_000;
-    const waveIntervalMs = mins * 60_000;
+  // Основной таймер: каждые 2 минуты проверяем, не пора ли стрелять волну
+  const intervalId = setInterval(() => checkAndFireWave(txid, onWave), CHECK_INTERVAL_MS);
+  _activeRepeats.set(txid, intervalId);
 
-    const tid = setTimeout(async () => {
-      try {
-        const headers = { 'Content-Type': 'application/json' };
-        if (token) headers['X-TurboTX-Token'] = token;
-
-        const r = await fetch(`${_API}/api/repeat`, {
-          method:  'POST',
-          headers,
-          body: JSON.stringify({
-            txid,
-            wave:          i + 1,
-            startedAt,           // для wave recovery на сервере
-            waveIntervalMs,
-          }),
-        });
-        const data = await r.json();
-
-        if (data.confirmed) {
-          console.log(`[TurboTX] ✅ TX confirmed at wave ${i+1}`);
-          stopServerRepeat(txid);
-          if (typeof onWave === 'function') onWave({ confirmed: true, wave: i+1, data });
-        } else if (data.broadcasted) {
-          console.log(`[TurboTX] ⚡ Wave ${i+1}: ${data.broadcastSummary?.ok}/${data.broadcastSummary?.total} ok`);
-          if (typeof onWave === 'function') onWave({ confirmed: false, wave: i+1, data });
-        }
-      } catch(e) {
-        console.warn(`[TurboTX] Wave ${i+1} error:`, e.message);
-      }
-    }, cumulativeMs);
-
-    timers.push(tid);
-  });
-
-  _activeRepeats.set(txid, timers);
-  console.log(`[TurboTX] Scheduled ${waveSchedule.length} waves for ${txid.slice(0,8)}…`);
+  // Если волна уже просрочена — стреляем через секунду, не ждём 2 мин
+  if (Date.now() >= state.nextWaveAt) {
+    setTimeout(() => checkAndFireWave(txid, onWave), 1000);
+  }
 }
 
 function stopServerRepeat(txid) {
-  const timers = _activeRepeats.get(txid);
-  if (timers) {
-    timers.forEach(t => clearTimeout(t));
+  const intervalId = _activeRepeats.get(txid);
+  if (intervalId !== undefined) {
+    clearInterval(intervalId);
     _activeRepeats.delete(txid);
   }
 }
 
-// ─── ЦЕНА ─────────────────────────────────────────────────────
+// ─── ВОССТАНОВЛЕНИЕ ВОЛН ─────────────────────────────────────
+// Вызывается при DOMContentLoaded.
+// Подхватывает все незаконченные волновые задания из localStorage
+// и возобновляет их. Работает даже после полного закрытия браузера.
+function recoverPendingWaves() {
+  try {
+    const toRecover = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key?.startsWith(WAVE_KEY_PREFIX)) continue;
+      const txid  = key.slice(WAVE_KEY_PREFIX.length);
+      const state = loadWaveState(txid);
+      if (state && state.nextWave <= MAX_WAVES && !_activeRepeats.has(txid)) {
+        toRecover.push(state);
+      }
+    }
+    if (toRecover.length > 0) {
+      console.log(`[TurboTX] Восстанавливаем ${toRecover.length} wave job(s)...`);
+      for (const state of toRecover) {
+        startServerRepeat(state.txid, state.token, null);
+      }
+    }
+  } catch {}
+}
+
+// ─── VISIBILITY CHANGE ────────────────────────────────────────
+// Когда пользователь возвращается во вкладку — сразу проверяем
+// просроченные волны, не ждём следующего CHECK_INTERVAL.
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  for (const txid of _activeRepeats.keys()) {
+    const state = loadWaveState(txid);
+    if (state && Date.now() >= state.nextWaveAt) {
+      checkAndFireWave(txid, null);
+    }
+  }
+});
+
+// ─── DYNAMIC PRICE ────────────────────────────────────────────
 let _priceCache     = null;
 let _priceFetchedAt = 0;
 
 async function fetchDynamicPrice(forceRefresh = false) {
-  const CLIENT_CACHE_MS = 90_000; // 90 сек
+  const CLIENT_CACHE_MS = 90_000;
   if (!forceRefresh && _priceCache && Date.now() - _priceFetchedAt < CLIENT_CACHE_MS)
     return _priceCache;
   try {
-    // BUG FIX: cache-bust param — обходим Vercel CDN кэш
     const cacheBust = '?_t=' + Math.floor(Date.now() / 60000);
     const ac = new AbortController();
     const _t = setTimeout(() => ac.abort(), 6000);
     const r = await fetch(`${_API}/api/price` + cacheBust, {
-      cache: 'no-store',
-      signal: ac.signal,
+      cache: 'no-store', signal: ac.signal,
     }).finally(() => clearTimeout(_t));
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
     _priceCache     = await r.json();
     _priceFetchedAt = Date.now();
     applyDynamicPrice(_priceCache);
-    // Синхронизируем с _TurboPrice если он инициализирован
-    if (window._TurboPrice?.apply && _priceCache?.usd > 0) {
+    if (window._TurboPrice?.apply && _priceCache?.usd > 0)
       window._TurboPrice.apply(_priceCache);
-    }
     return _priceCache;
   } catch(e) {
     console.warn('[TurboTX] Price fetch failed:', e.message);
-    return _priceCache; // вернём старые данные если есть
+    return _priceCache;
   }
 }
 
@@ -150,20 +267,10 @@ function applyDynamicPrice(p) {
   if (!p) return;
   const { usd, btc, sats, emoji, text, congestion, mempoolCongestion, feeRate } = p;
 
-  // Ценовые элементы
-  document.querySelectorAll('[data-price-usd]').forEach(el => {
-    el.textContent = `$${usd}`;
-  });
-  document.querySelectorAll('[data-price-btc]').forEach(el => {
-    if (btc) el.textContent = `${btc} BTC`;
-  });
-  document.querySelectorAll('[data-price-sats]').forEach(el => {
-    if (sats) el.textContent = `${sats.toLocaleString()} sats`;
-  });
+  document.querySelectorAll('[data-price-usd]').forEach(el => { el.textContent = `$${usd}`; });
+  document.querySelectorAll('[data-price-btc]').forEach(el => { if (btc) el.textContent = `${btc} BTC`; });
+  document.querySelectorAll('[data-price-sats]').forEach(el => { if (sats) el.textContent = `${sats.toLocaleString()} sats`; });
 
-  // ── Индикатор fee-рынка (sat/vB) ──────────────────────────────
-  // BUG FIX v14: congestion теперь корректируется сервером по mp.count,
-  // поэтому цвет/текст будут адекватны даже при низком feeRate + большом мемпуле.
   const netEl = document.getElementById('network-congestion');
   if (netEl) {
     netEl.textContent = `${emoji} ${text} · ${feeRate} sat/vB`;
@@ -171,19 +278,15 @@ function applyDynamicPrice(p) {
                         congestion === 'medium' ? 'var(--a)' : '#ff5555';
   }
 
-  // ── Отдельный индикатор нагрузки мемпула (кол-во TX) ─────────
-  // BUG FIX v14: раньше этого индикатора не было → пользователь не видел
-  // что мемпул забит 41k TX, хотя fee-рынок был "свободен".
   const mpEl = document.getElementById('mempool-congestion');
   if (mpEl && mempoolCongestion) {
-    const mc = mempoolCongestion;
+    const mc    = mempoolCongestion;
     const txStr = mc.txCount != null ? ` · ${mc.txCount.toLocaleString()} TX` : '';
     mpEl.textContent = `${mc.emoji} ${mc.text}${txStr}`;
     mpEl.style.color = mc.level === 'clear' || mc.level === 'low' ? 'var(--g)' :
                        mc.level === 'medium' ? 'var(--a)' : '#ff5555';
   }
 
-  // ── data-атрибуты для мемпула (удобно для кастомного UI) ──────
   document.querySelectorAll('[data-mempool-count]').forEach(el => {
     if (mempoolCongestion?.txCount != null)
       el.textContent = mempoolCongestion.txCount.toLocaleString();
@@ -192,7 +295,6 @@ function applyDynamicPrice(p) {
     if (mempoolCongestion?.level) el.dataset.level = mempoolCongestion.level;
   });
 
-  // Глобальный selBtc для платёжной формы
   if (btc && typeof selBtc !== 'undefined') {
     selBtc = btc;
     const amtEl = document.getElementById('pay-amount');
@@ -201,8 +303,6 @@ function applyDynamicPrice(p) {
 }
 
 // ─── LIGHTNING PAYMENT ────────────────────────────────────────
-// Создаём invoice и запускаем polling до оплаты
-
 async function createLightningInvoice(amountUsd, txid) {
   const r = await fetch(`${_API}/api/lightning`, {
     method:  'POST',
@@ -213,17 +313,22 @@ async function createLightningInvoice(amountUsd, txid) {
   const data = await r.json();
   if (!data.ok) throw new Error(data.error || 'Invoice error');
   return data;
-  // → { invoice, paymentHash, amountSats, lightningUri, expiresAt }
 }
 
+// FIX v14.2: не бросаем исключение при 404/500 — возвращаем safe объект.
+// Сервер теперь возвращает HTTP 200 + { notFound: true } при cold start.
 async function checkLightningPayment(paymentHash) {
-  const r = await fetch(`${_API}/api/lightning?hash=${paymentHash}`);
-  if (!r.ok) throw new Error(`Check failed: ${r.status}`);
-  return r.json();
-  // → { paid, settled, amountSats, activationToken? }
+  try {
+    const r = await fetch(`${_API}/api/lightning?hash=${paymentHash}`);
+    const data = await r.json();
+    return data;
+  } catch(e) {
+    console.warn('[TurboTX] LN check error:', e.message);
+    return { ok: false, paid: false, error: e.message };
+  }
 }
 
-// Polling до оплаты (max 1 час)
+// FIX v14.2: останавливаем polling при notFound (cold start → инвойс потерян)
 function waitForLightningPayment(paymentHash, onStatus) {
   const MAX_MS  = 60 * 60_000;
   const start   = Date.now();
@@ -234,41 +339,37 @@ function waitForLightningPayment(paymentHash, onStatus) {
     try {
       const data = await checkLightningPayment(paymentHash);
       if (typeof onStatus === 'function') onStatus(data);
-      if (data.paid) { stopped = true; return; }
-      if (data.expired) { stopped = true; return; }
+      if (data.paid)     { stopped = true; return; }
+      if (data.expired)  { stopped = true; return; }
+      if (data.notFound) { stopped = true; return; } // cold start — инвойс не найден
     } catch(e) {
       console.warn('[TurboTX] LN poll error:', e.message);
     }
-    if (!stopped) setTimeout(poll, 3000); // polling каждые 3с
+    if (!stopped) setTimeout(poll, 3000);
   };
 
   poll();
-  return () => { stopped = true; }; // возвращаем функцию отмены
+  return () => { stopped = true; };
 }
 
 // ─── ИНИЦИАЛИЗАЦИЯ ────────────────────────────────────────────
-// RT FIX v14: интервал обновления убран отсюда — за реальное время отвечает
-// единая петля fetchMempoolStats в index.html (каждые 20 сек).
-// Здесь только однократная загрузка для Lightning sats и selBtc.
 document.addEventListener('DOMContentLoaded', () => {
   fetchDynamicPrice();
+  recoverPendingWaves(); // FIX v14.2: восстанавливаем незаконченные волны
 });
 
 // ─── ГЛОБАЛЬНЫЙ API ───────────────────────────────────────────
 window._TurboAPI = {
-  // Broadcast
-  broadcast:     serverBroadcast,
+  broadcast:      serverBroadcast,
   batchBroadcast,
-  // Repeat
-  startRepeat:   startServerRepeat,
-  stopRepeat:    stopServerRepeat,
-  // Price
-  fetchPrice:    fetchDynamicPrice,
-  applyPrice:    applyDynamicPrice,
-  // Lightning
-  createInvoice: createLightningInvoice,
-  checkPayment:  checkLightningPayment,
-  waitPayment:   waitForLightningPayment,
+  startRepeat:    startServerRepeat,
+  stopRepeat:     stopServerRepeat,
+  recoverWaves:   recoverPendingWaves,
+  fetchPrice:     fetchDynamicPrice,
+  applyPrice:     applyDynamicPrice,
+  createInvoice:  createLightningInvoice,
+  checkPayment:   checkLightningPayment,
+  waitPayment:    waitForLightningPayment,
 };
 
-console.log('[TurboTX] v14 Server API connected ✓ (broadcast + batch + lightning + waves + acceleration)');
+console.log('[TurboTX] v14.2 Client API loaded (waves: localStorage+interval, lightning: notFound-safe)');

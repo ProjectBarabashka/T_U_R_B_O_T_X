@@ -3079,17 +3079,24 @@ let _fbDead   = false; // true = Firebase недоступен, все SSE ос�
 let _fbSSEErrors = 0;  // глобальный счётчик ошибок SSE
 const FB_SSE_MAX_ERRORS = 2; // после 2 ошибок — навсегда отключаем (было 4)
 
-// Централизованный fetch к Firebase — при timeout сразу убиваем всё
+// Централизованный fetch к Firebase — отключаем только после 3 таймаутов подряд
+let _fbTimeoutCount = 0;
+const FB_TIMEOUT_MAX = 3;
 async function _fbFetch(url, opts, ms) {
   if (_fbDead) return null;
   try {
     const r = await fetch(url, { ...opts, signal: AbortSignal.timeout(ms || 5000) });
+    _fbTimeoutCount = 0; // сброс при успехе
     return r;
   } catch(e) {
     if (e.name === 'AbortError' || e.name === 'TimeoutError' || e.message?.includes('ERR_TIMED_OUT')) {
-      console.debug('[TurboTX] Firebase timeout → отключаем:', url.split('/').slice(-1)[0]);
-      _fbDead  = true;
-      _fbReady = false;
+      _fbTimeoutCount++;
+      console.debug('[TurboTX] Firebase timeout (' + _fbTimeoutCount + '/' + FB_TIMEOUT_MAX + '):', url.split('/').slice(-1)[0]);
+      if (_fbTimeoutCount >= FB_TIMEOUT_MAX) {
+        _fbDead  = true;
+        _fbReady = false;
+        console.debug('[TurboTX] Firebase отключён после ' + FB_TIMEOUT_MAX + ' таймаутов');
+      }
     }
     return null;
   }
@@ -3452,7 +3459,7 @@ async function initGlobalSync() {
     if (_savedWaveTs > 0 && !_waveTxConfirmed && Date.now() - _savedWaveTs < _maxWaveMs + 60000) {
       // Восстанавливаем состояние волн по прошедшему времени
       var _elapsedMin = (Date.now() - _savedWaveTs) / 60000;
-      var _wSchedR    = [0, 15, 30, 60, 120, 240, 360, 480, 600, 780];
+      var _wSchedR    = [0, 15, 30, 60, 120, 240, 360, 480, 600, 780, 960]; // FIX v14.2: +волна 10
       var _wResultsR  = _wSchedR.map(function(wMin) {
         return _elapsedMin > wMin + 1 ? { ok: true, restored: true } : null;
       });
@@ -4457,11 +4464,12 @@ async function go() {
         stopPremiumRepeat();
 
         // ── ЖИВЫЕ ВОЛНЫ: реальный прогресс + таймер ──────────────────────────
-        // Кумулятивные минуты от старта: волна 1=0 (мгновенно), 2=+15, 3=+30 ...
-        var _wSched   = [0, 15, 30, 60, 120, 240, 360, 480, 600, 780];
-        var _wDelays  = [15, 15, 30, 60, 120, 120, 120, 120, 180, 180]; // интервалы между волнами
+        // Кумулятивные минуты от старта (11 шагов: 0=начало + 10 повтора)
+        // FIX v14.2: добавлен 11-й шаг 960 мин для волны 10
+        var _wSched   = [0, 15, 30, 60, 120, 240, 360, 480, 600, 780, 960];
+        var _wDelays  = [15, 15, 30, 60, 120, 120, 120, 120, 180, 180]; // интервалы (не используются в v14.2)
         var _wStartTs = Date.now();
-        var _wResults = new Array(10).fill(null); // null=ждёт, {ok,ch,hr}=выполнена
+        var _wResults = new Array(11).fill(null); // null=ждёт, {ok,ch,hr}=выполнена (11 = 1 начало + 10 повторов)
         var _wDone    = false;
         var _wTick    = null;
         var _wTimers  = [];
@@ -4545,47 +4553,32 @@ async function go() {
             + '<div class="wave-list">' + rows + '</div></div>';
         }
 
-        // Запускаем волны 1-9 через setTimeout
-        _wDelays.forEach(function(delayMin, idx) {
-          var waveIdx = idx + 1;
-          var cumMs   = _wSched[waveIdx] * 60000;
-          var tid = setTimeout(async function() {
-            var token = _PREM_TOKEN || localStorage.getItem('turbotx_prem_token') || '';
-            if (!token) { _wResults[waveIdx] = {ok:false,ch:0,hr:0}; _wDraw(); return; }
-            try {
-              var rr = await fetch('/api/repeat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-TurboTX-Token': token },
-                body: JSON.stringify({ txid: txid, wave: waveIdx, startedAt: _wStartTs }),
-              });
-              var rd = await rr.json();
-              if (rd.confirmed) {
-                _wDone = true;
-                _wDone = true;
-                window._wDone = true;
-                if (window._waves && window._waves[_waveId]) window._waves[_waveId].done = true;
-                _wResults[waveIdx] = {ok:true, ch: rd.broadcastSummary?.ok||0, hr: rd.hashrateReach||0};
-                stopPremiumRepeat();
-                _wTimers.forEach(function(t){ clearTimeout(t); });
-                window._wTimers = [];
-                if (window._waves && window._waves[_waveId]) { window._waves[_waveId].timers = []; }
-                clearInterval(_wTick);
-                window._wTick = null;
-                _wDraw();
-                try { updateHistoryExtra(txid, {html: document.getElementById('rb')?.innerHTML||''}); } catch(_){}
-                return;
-              }
-              _wResults[waveIdx] = {ok: rd.broadcasted!==false, ch: rd.broadcastSummary?.ok||0, hr: rd.hashrateReach||0};
-            } catch(e) {
-              _wResults[waveIdx] = {ok:false, ch:0, hr:0};
+        // FIX v14.2: волны запускаются через localStorage + setInterval (client-api.js)
+        // Они выживают после закрытия/обновления вкладки (в отличие от старых setTimeout)
+        var _waveToken = _PREM_TOKEN || localStorage.getItem('turbotx_prem_token') || '';
+        if (window._TurboAPI && window._TurboAPI.startRepeat) {
+          window._TurboAPI.startRepeat(txid, _waveToken, function(ev) {
+            // ev: { confirmed, wave (1-10), data }
+            var wIdx = ev.wave; // волна 1-10 → индекс 1-10 в _wResults
+            if (wIdx < _wResults.length) {
+              _wResults[wIdx] = {
+                ok: ev.confirmed || (ev.data && ev.data.broadcasted !== false),
+                ch: (ev.data && ev.data.broadcastSummary && ev.data.broadcastSummary.ok) || 0,
+                hr: (ev.data && ev.data.hashrateReach) || 0,
+              };
+            }
+            if (ev.confirmed) {
+              _wDone = true;
+              window._wDone = true;
+              if (window._waves && window._waves[_waveId]) window._waves[_waveId].done = true;
+              stopPremiumRepeat && stopPremiumRepeat();
             }
             _wDraw();
             try { setTimeout(function(){ var rb=document.getElementById('rb'); if(rb&&rb.style.display!=='none') updateHistoryExtra(txid,{html:rb.innerHTML}); },300); } catch(_){}
-          }, cumMs);
-          _wTimers.push(tid);
-        });
+          });
+        }
 
-        // Тикер — каждую секунду обновляет таймер
+        // Тикер — каждую секунду обновляет таймер обратного отсчёта
         _wTick = setInterval(function() {
           if (!document.hidden) _wDraw();
         }, 1000);
@@ -4678,6 +4671,11 @@ function startPremiumRepeat(txid) {
 }
 
 function stopPremiumRepeat() {
+  // FIX v14.2: также останавливаем новую волновую систему (client-api.js)
+  var _stopTxid = localStorage.getItem('turbotx_wave_txid') || '';
+  if (_stopTxid && window._TurboAPI && window._TurboAPI.stopRepeat) {
+    window._TurboAPI.stopRepeat(_stopTxid);
+  }
   if (_premiumRepeatInterval) { clearInterval(_premiumRepeatInterval); _premiumRepeatInterval = null; }
   try { localStorage.removeItem('turbotx_premium_txid'); } catch(e) {}
 }
@@ -4786,7 +4784,10 @@ async function startConfTracker(txid) {
   }
 
   // ── WebSocket (п.5) — мгновенное подтверждение ──────────────
+  var _wsStarting = false; // FIX v14.2: защита от параллельных вызовов startWS
   function startWS() {
+    if (_wsStarting) return; // уже открывается — пропускаем
+    _wsStarting = true;
     // Закрываем предыдущий сокет чисто перед новым
     if (window._confWS) {
       try { window._confWS.onclose = null; window._confWS.close(); } catch(_) {}
@@ -4797,6 +4798,7 @@ async function startConfTracker(txid) {
       window._confWS = ws;
 
       ws.onopen = () => {
+        _wsStarting = false; // FIX v14.2: соединение установлено
         _wsAlive = true;
         _wsAttempts = 0; // сброс при успешном подключении
         // Подписываемся на TX
@@ -4834,20 +4836,22 @@ async function startConfTracker(txid) {
         } catch(_) {}
       };
 
-      ws.onerror = () => { _wsAlive = false; };
+      ws.onerror = () => { _wsAlive = false; _wsStarting = false; };
       ws.onclose = () => {
         _wsAlive = false;
+        _wsStarting = false; // FIX v14.2: сбрасываем флаг при закрытии
         window._confWS = null;
         // Реконнект только если трекер ещё нужен И не больше 5 попыток
         _wsAttempts = (_wsAttempts || 0) + 1;
         if (_confInterval && _wsAttempts <= 5) {
-          // Экспоненциальный backoff: 10, 20, 40, 60, 60 сек
-          const delay = Math.min(10000 * Math.pow(2, _wsAttempts - 1), 60000);
+          // Экспоненциальный backoff: 15, 30, 60, 60, 60 сек (минимум 15с — не сразу!)
+          const delay = Math.min(15000 * Math.pow(2, _wsAttempts - 1), 60000);
           setTimeout(startWS, delay);
         }
         // После 5 попыток — только polling, WS недоступен
       };
     } catch(_) {
+      _wsStarting = false; // FIX v14.2: сбрасываем при исключении
       // WebSocket недоступен — только polling
     }
   }
