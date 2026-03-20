@@ -1347,11 +1347,11 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
 <div id="mempool-bar" style="display:flex;align-items:center;justify-content:center;gap:14px;padding:9px 16px;margin-bottom:20px;background:rgba(255,255,255,.018);border:1px solid rgba(255,255,255,.055);border-radius:var(--r);font-family:var(--mono);font-size:.66rem;color:var(--m2);flex-wrap:wrap">
   <span style="display:flex;align-items:center;gap:5px">
     <span class="net-heart calm no-transition" id="net-pulse-dot"><svg width="18" height="18" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g class="h-flame"><path d="M9 19 Q7 15 9.5 11 Q10.5 15 12 11 Q13.5 15 14.5 11 Q17 15 15 19" fill="#ff6b00" opacity=".85"/><path d="M10.5 20 Q9 17 10.5 14 Q11.5 17 12 14 Q12.5 17 13.5 14 Q15 17 13.5 20" fill="#ffe066" opacity=".7"/></g><path class="h-body" d="M12 20.5C12 20.5 2.5 14 2.5 8C2.5 5.2 4.7 3 7.5 3C9.1 3 10.6 3.8 12 5.2C13.4 3.8 14.9 3 16.5 3C19.3 3 21.5 5.2 21.5 8C21.5 14 12 20.5 12 20.5Z"/><g class="h-ice" stroke="#cff0ff" stroke-width=".9" stroke-linecap="round" fill="none"><line x1="12" y1="5.5" x2="12" y2="8.5"/><line x1="10.4" y1="6.3" x2="13.6" y2="7.7"/><line x1="10.4" y1="7.7" x2="13.6" y2="6.3"/><line x1="7" y1="9.5" x2="7" y2="11.5"/><line x1="6" y1="10.1" x2="8" y2="10.9"/><line x1="17" y1="9.5" x2="17" y2="11.5"/><line x1="16" y1="10.1" x2="18" y2="10.9"/></g></svg></span>
-    <span style="color:var(--m)" id="mp-lbl-mempool">мемпул</span>
+    <span style="color:var(--m)">очередь</span>
     <strong id="tk-stuck" style="color:var(--t)">—</strong>
+    <span style="color:var(--m)">TX</span>
   </span>
   <span style="color:rgba(255,255,255,.1)">|</span>
-  <!-- fast с анимированным долларом -->
   <span style="display:flex;align-items:center;gap:4px">
     <span class="anim-icon flying-dollar">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1359,12 +1359,17 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
         <circle cx="12" cy="12" r="2" fill="var(--a)"/>
       </svg>
     </span>
-    <span style="color:var(--m)">fast</span>
+    <span style="color:var(--m)">комиссия</span>
     <strong id="tk-nextfee" class="ticker-val ok" style="color:var(--t)">—</strong>
-    <span>sat/vB</span>
+    <span style="color:var(--m)">sat/vB</span>
   </span>
   <span style="color:rgba(255,255,255,.1)">|</span>
-  <!-- размер с анимированными файлами -->
+  <span style="display:flex;align-items:center;gap:4px">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--a)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    <span style="color:var(--m)">след. блок</span>
+    <strong id="tk-nextblock" style="color:var(--t)">—</strong>
+  </span>
+  <span style="color:rgba(255,255,255,.1)">|</span>
   <span style="display:flex;align-items:center;gap:4px">
     <span class="anim-icon flying-files">
       <span></span>
@@ -1372,17 +1377,11 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
     </span>
     <span style="color:var(--m)" id="mp-lbl-size">размер</span>
     <strong id="tk-size" class="ticker-val ok" style="color:var(--t)">—</strong>
-    <span>МБ</span>
+    <span style="color:var(--m)">МБ</span>
   </span>
   <span id="tk-minfee" style="display:none">—</span>
 </div>
 
-<!-- ОПТИМАЛЬНОЕ ВРЕМЯ — под мемпул баром -->
-<div id="ni-best-time" style="margin-bottom:12px;background:rgba(255,255,255,.018);border:1px solid rgba(255,255,255,.055);border-radius:var(--r);padding:9px 16px;display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:.63rem;color:var(--m2);flex-wrap:wrap">
-  <span style="color:var(--m);letter-spacing:.5px;flex-shrink:0">⏱ Оптимальное время:</span>
-  <span style="color:var(--t);flex:1;min-width:120px" id="ni-timing">Загрузка…</span>
-  <span style="color:var(--m);font-size:.58rem;white-space:nowrap" id="ni-updated">обновлено —</span>
-</div>
 
 <!-- ГЛОБАЛЬНЫЙ ХЕШРЕЙТ (перенесён вверх) -->
 <div class="hashrate-bar" style="margin-top:0; margin-bottom:12px;">
@@ -5484,27 +5483,9 @@ function updateNetworkIntelligence(priceData, mempoolData) {
   // ── Timing ────────────────────────────────────────────────
   const now = new Date();
   const h = now.getUTCHours();
-  const timingEl = document.getElementById('ni-timing');
-  if (timingEl) {
-    // Реальный факт заменяет статичное расписание если данные есть
-    var _timingText = '';
-    if (feeRate > 0 && mpCount > 0) {
-      // Реальные данные: показываем факт
-      var _nextBlockMins = feeRate >= 50 ? '~5 мин' : feeRate >= 20 ? '~10–15 мин' : feeRate >= 5 ? '~30–60 мин' : 'неопределённо';
-      _timingText = (effectiveLevel === 0 ? '🟢' : effectiveLevel <= 1 ? '🟡' : effectiveLevel <= 2 ? '🟠' : '🔴')
-        + ' ' + mpCount.toLocaleString('ru') + ' TX в очереди · ' + feeRate + ' sat/vB · след. блок ' + _nextBlockMins;
-    } else if (h >= 1 && h <= 7) {
-      _timingText = '🌙 Сейчас ночь UTC — нагрузка обычно низкая, хороший момент';
-    } else if (h >= 13 && h <= 20) {
-      _timingText = '⚡ Пиковые часы США/EU — возможны задержки в сети';
-    } else {
-      _timingText = '🌅 Умеренная активность — ' + (effectiveLevel <= 1 ? 'комиссии в норме' : 'следите за изменениями');
-    }
-    timingEl.textContent = _timingText;
-  }
+  // ni-timing удалён из UI — данные отображаются в mempool-bar
 
-  const updEl = document.getElementById('ni-updated');
-  if (updEl) updEl.textContent = 'обновлено ' + now.toLocaleTimeString('ru', {hour:'2-digit',minute:'2-digit'});
+  // ni-updated удалён из UI
 }
 
 // Хукаемся на существующий applyPrice
@@ -6176,6 +6157,8 @@ function _rtApplyTicker(p) {
     tkStuck.textContent = mpCount.toLocaleString('ru');
     tkStuck.className = 'ticker-val ' + (mpCount > 50000 ? 'hot' : mpCount > 20000 ? 'warm' : 'ok');
   }
+  // Цвет для tk-nextfee label
+  const tkNextLabel = tkNext ? tkNext.parentElement?.querySelector('span[style*="color:var(--m)"]') : null;
 
   // ── ТИКЕР: fast sat/vB ────────────────────────────────────
   const tkNext = document.getElementById('tk-nextfee');
@@ -6189,6 +6172,20 @@ function _rtApplyTicker(p) {
   if (tkSize && mb != null) {
     tkSize.textContent = mb;
     tkSize.className = 'ticker-val ' + (parseFloat(mb) > 200 ? 'hot' : parseFloat(mb) > 100 ? 'warm' : 'ok');
+  }
+
+  // ── ТИКЕР: след. блок — понятно для пользователя ─────────
+  const tkNextBlock = document.getElementById('tk-nextblock');
+  if (tkNextBlock && fast != null) {
+    var _nb;
+    if (fast >= 100) _nb = '~1 мин';
+    else if (fast >= 50) _nb = '~2–5 мин';
+    else if (fast >= 20) _nb = '~10 мин';
+    else if (fast >= 8)  _nb = '~20 мин';
+    else if (fast >= 3)  _nb = '~30–60 мин';
+    else                 _nb = '> 1 часа';
+    tkNextBlock.textContent = _nb;
+    tkNextBlock.style.color = fast >= 20 ? 'var(--g)' : fast >= 5 ? 'var(--a)' : '#ff6b35';
   }
 
   // ── fee-meter-text ────────────────────────────────────────
