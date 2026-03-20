@@ -429,7 +429,7 @@ async function handlePrice(req, res) {
     mpCount > 150000 || mpVsizeMB > 250 ? 4 :   // critical
     mpCount >  80000 || mpVsizeMB > 150 ? 3 :   // extreme
     mpCount >  40000 || mpVsizeMB >  80 ? 2 :   // high
-    mpCount >  25000 || mpVsizeMB >  40 ? 1 :   // medium (поднято с 15k: 13-25k TX = норма 2026)
+    mpCount >  25000 || mpVsizeMB >  40 ? 1 :   // medium (13-25k TX = норма 2026)
                                           0;    // low
 
   // Сигнал 3: среднее время блока (получаем из /api/v1/mining/blocks/timestamps)
@@ -464,8 +464,7 @@ async function handlePrice(req, res) {
 
   // Итоговый тир = максимум из трёх сигналов
   const feeTierIdx = PRICE_TIERS.indexOf(tierByFee);
-  // Если feeRate очень низкий (≤3 sat/vB) — рынок реально пустой,
-  // мемпул не должен поднимать цену (никто не платит больше минимума)
+  // При feeRate≤3 sat/vB рынок пустой — мемпул не поднимает цену
   const effectiveMpTierIdx = feeRate <= 3 ? 0 : mpTierIdx;
   let tier = PRICE_TIERS[Math.max(feeTierIdx, effectiveMpTierIdx, blockTierIdx)];
 
