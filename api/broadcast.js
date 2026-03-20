@@ -783,10 +783,10 @@ function freeChannels(hex, txid) {
         const t=await safeText(r);
         return {ok:r.ok||t.includes('"code":0'), status:r.status, ve:ve(r)};
       }},
-      { name:'btcscan.org', tier:'node', call: async()=>{
-        const r=await ftr('https://btcscan.org/api/tx/push',{method:'POST',body:hex,headers:{'Content-Type':'text/plain','User-Agent':UA}},10000,2,'btcscan.org','node');
-        const b=await safeText(r);
-        return {ok:r.ok||ok400(b,r.status), status:r.status, ve:ve(r)};
+      { name:'sochain.com', tier:'node', call: async()=>{
+        const r=await ftr('https://sochain.com/api/v2/send_tx/BTC',{method:'POST',body:JSON.stringify({tx_hex:hex}),headers:{'Content-Type':'application/json','User-Agent':UA}},10000,2,'sochain.com','node');
+        const j=await safeJson(r);
+        return {ok:j?.status==='success'||ok400(JSON.stringify(j),r.status), status:r.status, ve:ve(r)};
       }},
     ] : []),
   ];
