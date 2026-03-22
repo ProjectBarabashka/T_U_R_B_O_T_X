@@ -112,8 +112,9 @@ async function getActiveJobs() {
     if (job.active === false) continue;
     if (!job.startedAt) continue;
 
-    // Удаляем jobs старше 4 дней
-    if (now - job.startedAt > 4 * 24 * 3600000) {
+    // Удаляем jobs старше 4 дней (startedAt должен быть в мс, проверяем)
+    const startedAtMs = job.startedAt > 1e12 ? job.startedAt : job.startedAt * 1000;
+    if (now - startedAtMs > 4 * 24 * 3600000) {
       await fbPatch(`/waves/${job.txid}.json`, { active: false });
       continue;
     }
@@ -139,6 +140,8 @@ async function fireWave(job) {
   }
 
   if (!PROD_URL) {
+    // FIX: откладываем на 30 мин чтобы не крутиться в цикле при отсутствии конфига
+    await fbPatch(`/waves/${txid}.json`, { nextWaveAt: Date.now() + 30 * 60000 });
     return { txid, ok: false, error: 'PRODUCTION_URL not set' };
   }
 

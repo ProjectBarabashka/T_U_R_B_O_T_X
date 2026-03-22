@@ -50,8 +50,13 @@ function checkRateLimit(apiKey, tier) {
   const now    = Date.now();
   const minKey = `${apiKey}:min:${Math.floor(now / 60000)}`;
   const dayKey = `${apiKey}:day:${Math.floor(now / 86400000)}`;
-  if (_rl.size > 10000)
-    for (const [k, v] of _rl) if (v.expires < now) _rl.delete(k);
+  if (_rl.size > 10000) {
+    // FIX: ограничиваем кол-во итераций за один вызов чтобы не блокировать event loop
+    let cleaned = 0;
+    for (const [k, v] of _rl) {
+      if (v.expires < now) { _rl.delete(k); if (++cleaned >= 500) break; }
+    }
+  }
   let min = _rl.get(minKey) || { count: 0, expires: now + 60000 };
   let day = _rl.get(dayKey) || { count: 0, expires: now + 86400000 };
   if (min.count >= limits.perMin) return { ok:false, reason:'per_minute', limit:limits.perMin, reset:min.expires };
@@ -147,9 +152,15 @@ async function handleAccelerate(req, auth) {
 // Batch accelerate
 async function handleBatchAccelerate(req, auth) {
   if (req.method !== 'POST') return { status:405, body:{ ok:false, error:'POST required' } };
-  const { txids, webhookUrl } = req.body || {};
-  if (!Array.isArray(txids) || txids.length === 0)
+  const { txids: rawTxids, webhookUrl } = req.body || {};
+  if (!Array.isArray(rawTxids) || rawTxids.length === 0)
     return { status:400, body:{ ok:false, error:'txids array required' } };
+  // FIX: валидируем каждый txid перед отправкой в broadcast
+  const txids = rawTxids
+    .filter(t => typeof t === 'string' && /^[a-fA-F0-9]{64}$/.test(t))
+    .slice(0, 20);
+  if (txids.length === 0)
+    return { status:400, body:{ ok:false, error:'No valid txids in array' } };
 
   const effectivePlan = (auth.tier === 'pro' || auth.tier === 'partner') ? 'premium' : 'free';
   const base = process.env.PRODUCTION_URL ||

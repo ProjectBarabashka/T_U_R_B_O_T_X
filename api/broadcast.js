@@ -120,6 +120,7 @@ function checkLimits(ip, txid, plan) {
 
 function isBot(req) {
   const ua = (req.headers['user-agent']||'').toLowerCase();
+  if (!ua || ua.length < 5) return true; // пустой UA — бот
   return ['curl/','wget/','python-requests','go-http','java/','scrapy','bot/','crawler'].some(p=>ua.includes(p));
 }
 const _hexCache = new Map(); // txid → { hex, cachedAt }
@@ -509,6 +510,7 @@ async function run(channels, feeRatioHint = 0.5, lastBlockMiner = null) {
     const launchWave = (waveChannels, waveIdx) => {
       waveChannels.forEach((ch, i) => {
         const globalIdx = waveIdx * _WS + i;
+        if (globalIdx >= results.length) return; // защита от выхода за bounds
 
         if (isDead(ch.name)) {
           results[globalIdx] = {channel:ch.name, tier:ch.tier, ok:false, skipped:true, reason:'dead', ms:0};
@@ -669,8 +671,8 @@ async function getHex(txid) {
     TOP.forEach(trySource);
 
     const fallbackTimer = setTimeout(() => {
-      if (!found) BOTTOM.forEach(trySource);
-      else { total = done + BOTTOM.length; }
+      if (found) return; // hex уже найден — не запускаем fallback
+      BOTTOM.forEach(trySource);
     }, 1000);
 
     ac.signal.addEventListener('abort', () => clearTimeout(fallbackTimer), {once:true});

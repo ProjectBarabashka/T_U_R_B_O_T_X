@@ -48,7 +48,9 @@ function cleanInvoices() {
   const now = Date.now();
   const PAID_GRACE = 24 * 60 * 60_000;
   for (const [k, v] of _invoices) {
-    if (v.paid ? now - v.paidAt > PAID_GRACE : v.expiresAt < now) _invoices.delete(k);
+    // FIX: paid инвойс без paidAt — удаляем через 24ч после createdAt
+    const paidRef = v.paidAt || v.createdAt || 0;
+    if (v.paid ? now - paidRef > PAID_GRACE : v.expiresAt < now) _invoices.delete(k);
   }
 }
 
@@ -298,7 +300,9 @@ export default async function handler(req, res) {
       return res.status(500).json({ ok:false, error:'Could not parse invoice' });
 
     cleanInvoices();
-    const invoiceExpiry = invoiceData.expiry ? invoiceData.expiry * 1000 : INVOICE_TTL;
+    const invoiceExpiry = (invoiceData.expiry && invoiceData.expiry > 0)
+      ? invoiceData.expiry * 1000
+      : INVOICE_TTL; // FIX: expiry=0 означает "не указано", используем TTL по умолчанию
     const expiresAt     = Date.now() + invoiceExpiry;
     await fbSet(paymentHash, {
       amountSats, amountUsd, txid: txid || null,

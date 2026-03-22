@@ -223,8 +223,9 @@ function adaptiveNextInterval(waveNum, txFeeRate, fees, baseInterval, opts = {})
 }
 
 function baseUrl() {
-  return process.env.PRODUCTION_URL ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+  const url = process.env.PRODUCTION_URL ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '');
+  return url;
 }
 
 // ─── ⑥ BROADCAST WITH RETRY ───────────────────────────────────
@@ -337,7 +338,8 @@ export default async function handler(req, res) {
   const cpfpFee   = needCpfp ? Math.max(0, fastest*(vsize+110)-feePaid) : 0;
 
   // ④ Stuck detection
-  const firstSeen  = tx?.firstSeen || tx?.status?.block_time || null;
+  // FIX: block_time — это время подтверждения, для незаподтверждённой TX не используем.
+  const firstSeen  = tx?.firstSeen || null;
   const stuckHours = firstSeen ? Math.round((Date.now()/1000 - firstSeen)/3600) : 0;
   const isStuck72h = stuckHours >= 72;
   const isStuck48h = stuckHours >= 48;
@@ -362,12 +364,17 @@ export default async function handler(req, res) {
   // ─── ⑥ BROADCAST С RETRY ──────────────────────────────────────
   let broadcastData = null;
   let broadcastError = null;
-  try {
-    broadcastData = await broadcastWithRetry(
-      `${baseUrl()}/api/broadcast`, token, txid, lastBlock
-    );
-  } catch(e) {
-    broadcastError = e.message;
+  const _base = baseUrl();
+  if (!_base) {
+    broadcastError = 'PRODUCTION_URL not set';
+  } else {
+    try {
+      broadcastData = await broadcastWithRetry(
+        `${_base}/api/broadcast`, token, txid, lastBlock
+      );
+    } catch(e) {
+      broadcastError = e.message;
+    }
   }
 
   // ③ Сохраняем результат волны

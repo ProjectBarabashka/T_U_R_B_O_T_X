@@ -487,9 +487,8 @@ async function handlePrice(req, res) {
     return{tip:'🔴 Критическая перегрузка. Транзакции застревают. TurboTX поможет ускорить.',quality:'critical'};
   };
   const tip=bestTimeFn(feeRate,allFees);
-  // BUG FIX: confLabel по tier — клиент показывает реальное время подтверждения
-  const CONF_LABELS = { low:'5–10 мин ⚡', medium:'10–15 мин ⚡', high:'10–20 мин ⚡', extreme:'15–30 мин', critical:'20–40 мин' };
-  const confLabel = CONF_LABELS[tier.label] || '10–20 мин ⚡';
+  // FIX: confLabel берём напрямую из tier — единый источник правды (PRICE_TIERS)
+  const confLabel = tier.confLabel || '10–20 мин ⚡';
   // BUG FIX: CDN кэш уменьшен до 60с (был 180с) — цена обновляется чаще
   // _t query param от клиента меняется каждую минуту → cache miss каждую минуту
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
@@ -512,9 +511,10 @@ async function handlePrice(req, res) {
     confLabel,
     bestTime:tip,mempool:mempoolStats,
     // heartLevel и blockIcon для анимаций фронта (v14.2)
+    // FIX: используем итоговый tier (включает mpTier + blockTier), а не только feeRate
     heartLevel: (
-      feeRate > 80  ? 'busy' :
-      feeRate > 20  ? 'mid'  : 'calm'
+      tier.label === 'critical' || tier.label === 'extreme' ? 'busy' :
+      tier.label === 'high'     || tier.label === 'medium'  ? 'mid'  : 'calm'
     ),
     // blockIcon: 4 состояния — источник правды для анимации на фронте
     // fast       = звёзды  (avgBlock < 8 мин   — блоки летят, сеть свободна)
@@ -663,7 +663,7 @@ async function handleRbf(req, res) {
     const getR=s=>s.status==='fulfilled'?s.value:null;
     const txR=getR(txRes),feesR=getR(feesRes),priceP=getR(priceRes);
     if(!txR?.ok) return res.status(404).json({ok:false,error:'TX not found'});
-    const tx=await txR.json(),fees=feesR?.ok?await sj(feesR):{};
+    const tx=await sj(txR),fees=feesR?.ok?await sj(feesR):{};
     if(tx.status?.confirmed) return res.status(200).json({ok:true,rbfPossible:false,reason:'already_confirmed'});
     const vsize=tx.weight?Math.ceil(tx.weight/4):(tx.size||250),feePaid=tx.fee||0,feeRate=feePaid&&vsize?Math.round(feePaid/vsize):0;
     const fastest=fees.fastestFee||50,minRelay=1;
