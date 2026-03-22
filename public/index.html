@@ -6408,32 +6408,15 @@ function _rtApplyTicker(p) {
                         mc.level === 'medium' ? 'var(--a)' : '#ff5555';
   }
 
-  // ── v14.2: heartLevel с сервера ──
-  const heartLevel = p.heartLevel || (
-    p.feeRate > 80 ? 'busy' : p.feeRate > 20 ? 'mid' : 'calm'
-  );
-  // Обновляем цену на кнопках/бейджах через _TurboPrice каждые 20 сек
-  if (p.usd > 0 && window._TurboPrice?.apply) {
-    try { window._TurboPrice.apply(p); } catch(_) {}
-  }
-
+  // ── v14.3: сердца обновляет ТОЛЬКО _TurboPrice.apply → _setNetState ──
+  // Убрана дублирующая forEach: двойной no-transition+rAF в одном тике
+  // вызывал мерцание и рассинхрон с ценой.
   // Сохраняем avgBlockMin для других частей страницы
   if (p.avgBlockMin != null) window._avgBlockMin = p.avgBlockMin;
 
-  ['net-pulse-dot','fee-dot','price-tag-dot','modal-heart-dot','comp-heart-dot'].forEach(function(id) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const hasSm = el.classList.contains('sm');
-    const prevLevel = ['calm','mid','busy'].find(c => el.classList.contains(c));
-    // FIX v14.3: применяем no-transition только при смене уровня — убирает
-    // 0.8s задержку ice/flame fade когда цена уже изменилась (визуальный рассинхрон)
-    if (prevLevel && prevLevel !== heartLevel) {
-      el.className = 'net-heart no-transition ' + heartLevel + (hasSm ? ' sm' : '');
-      requestAnimationFrame(() => el.classList.remove('no-transition'));
-    } else {
-      el.className = 'net-heart ' + heartLevel + (hasSm ? ' sm' : '');
-    }
-  });
+  if (p.usd > 0 && window._TurboPrice?.apply) {
+    try { window._TurboPrice.apply(p); } catch(_) {}
+  }
 
   // Применяем анимацию через единую функцию (blockIcon с сервера — приоритет)
   // Для анимации используем ТОЛЬКО window._avgBlockMin (из fetchLiveStats — самый точный)
