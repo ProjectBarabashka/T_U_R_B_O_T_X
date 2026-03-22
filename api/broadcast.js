@@ -13,7 +13,7 @@
 
 //  ⒝ MARA SLIPSTREAM — прямая отправка в приватный мемпул MARA
 //     Bypass обычной очереди — транзакция видна только MARA
-//  ⒞ +5 НОВЫХ ПУЛОВ: SBI Crypto, EMCDPool, Rawpool, 2Miners, Lincoin
+//  ⒞ +4 ПУЛА: SBI Crypto, EMCDPool, Rawpool, 2Miners + NiceHash (v14.3)
 //     Общий охват хешрейта: ~88% (было ~83%)
 //  ⒟ PACKAGE RELAY (Bitcoin Core 28+) — отправляем TX+Child пакет
 //     напрямую в P2P узлы через submitpackage RPC
@@ -318,15 +318,15 @@ async function ftr(url, opts={}, ms=13000, tries=2, chName='', tier='node') {
   }
 }
 
-// ⒞ v12: добавлены SBI Crypto, EMCDPool, Rawpool, 2Miners, Lincoin
+// ⒞ v12/v14.3: SBI Crypto, EMCDPool, Rawpool, 2Miners, NiceHash
 // NOTE: MaraSlipstream — это приватный мемпул MARA, тот же пул (11% хешрейта)
 // При подсчёте hr используем дедупликацию MARA/MaraSlipstream (см. uniqueHr ниже)
 const HR = {
   Foundry:27, AntPool:16, MaraSlipstream:11, ViaBTC:9, SpiderPool:8,
   F2Pool:7, Luxor:5, CloverPool:4, BitFuFu:4, 'BTC.com':3,
   Ocean:2, EMCDPool:2, SBICrypto:2,
-  TxBoost:1, mempoolAccel:1, bitaccelerate:1, '360btc':1, txfaster:1, btcspeed:1,
-  Rawpool:1, '2Miners':1, Lincoin:1,
+  TxBoost:1, mempoolAccel:1, bitaccelerate:1, NiceHash:2,
+  Rawpool:1, '2Miners':1,
   'mempool.space':0, 'blockstream.info':0, blockchair:0, blockcypher:0,
   'btcscan.org':0, 'blockchain.info':0, 'bitaps.com':0, 'sochain.com':0,
 };
@@ -337,7 +337,7 @@ const _PG = {
   Foundry:'usa', MARA:'usa', MaraSlipstream:'usa', Luxor:'usa', TxBoost:'usa', Ocean:'usa',
   AntPool:'asia', ViaBTC:'asia', SpiderPool:'asia', F2Pool:'asia', CloverPool:'asia', 'BTC.com':'asia', BitFuFu:'asia',
   SBICrypto:'asia', EMCDPool:'europe', Rawpool:'europe', Lincoin:'europe',
-  '2Miners':'global', mempoolAccel:'global', bitaccelerate:'global', '360btc':'global', txfaster:'global', btcspeed:'global',
+  '2Miners':'global', mempoolAccel:'global', bitaccelerate:'global', NiceHash:'global',
 };
 let _lastBlockMiner = null;
 let _lastBlockAt    = 0;
@@ -429,11 +429,11 @@ const _PU = {
   'EMCDPool':   'https://emcd.io/',
   'SBICrypto':  'https://sbicrypto.com/',
   '2Miners':    'https://2miners.com/',
+  'NiceHash':   'https://www.nicehash.com/',
   'Rawpool':    'https://rawpool.com/',
   'TxBoost':    'https://txboost.com/',
   'mempoolAccel':'https://mempool.space/',
   'bitaccelerate':'https://www.bitaccelerate.com/',
-  '360btc':     'https://360btc.net/',
   'txfaster':   'https://txfaster.com/',
   'btcspeed':   'https://btcspeed.org/',
 };
@@ -919,11 +919,12 @@ function premiumChannels(txid, hex) {
       const j=await safeJson(r); const b=JSON.stringify(j);
       return {ok:r.ok||j?.ok===true||ok400(b,r.status),status:r.status,ve:ve(r),body:b};
     }},
-    { name:'Lincoin', tier:'pool', call: async()=>{
-      const r=await ftr('https://lincoin.com/api/accelerate',{method:'POST',body:JSON.stringify({txid}),headers:{'Content-Type':'application/json','User-Agent':UA}},12000,2,'Lincoin','pool');
+    { name:'NiceHash', tier:'pool', call: async()=>{
+      const r=await ftr('https://www.nicehash.com/accelerator',{method:'POST',body:JSON.stringify({txid}),headers:{'Content-Type':'application/json','User-Agent':UA,'Origin':'https://www.nicehash.com','Referer':'https://www.nicehash.com/'}},12000,2,'NiceHash','pool');
       const j=await safeJson(r); const b=JSON.stringify(j);
       return {ok:r.ok||j?.success===true||ok400(b,r.status),status:r.status,ve:ve(r),body:b};
     }},
+
     { name:'Luxor', tier:'pool', call: async()=>{
       const r=await ftr('https://btc.luxor.tech/accelerate',{method:'POST',body:JSON.stringify({tx_hash:txid}),headers:{'Content-Type':'application/json','User-Agent':UA,'Referer':'https://luxor.tech/'}},12000,2,'Luxor','pool');
       const j=await safeJson(r); const b=JSON.stringify(j);
@@ -943,19 +944,9 @@ function premiumChannels(txid, hex) {
       const r=await ftr('https://foundryusapool.com/accelerate',{method:'POST',body:JSON.stringify({txid}),headers:{'Content-Type':'application/json','User-Agent':UA}},14000,2,'Foundry','pool');
       const b=await safeText(r); return {ok:r.ok||ok400(b,r.status),status:r.status,ve:ve(r),body:b};
     }},
-    { name:'txfaster', tier:'pool', call: async()=>{
-      const r=await ftr('https://txfaster.com/api/accelerate',{method:'POST',body:JSON.stringify({txid}),headers:{'Content-Type':'application/json','User-Agent':UA}},10000,2,'txfaster','pool');
-      const j=await safeJson(r); const b=JSON.stringify(j);
-      return {ok:r.ok||j?.success===true||ok400(b,r.status),status:r.status,ve:ve(r),body:b};
-    }},
-    { name:'360btc', tier:'pool', call: async()=>{
-      const r=await ftr('https://360btc.net/accelerate',{method:'POST',body:`txid=${txid}`,headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':UA}},10000,2,'360btc','pool');
-      const t=await safeText(r); return {ok:r.ok||ok400(t,r.status),status:r.status,ve:ve(r),body:t};
-    }},
-    { name:'btcspeed', tier:'pool', call: async()=>{
-      const r=await ftr('https://btcspeed.org/boost',{method:'POST',body:`tx=${txid}`,headers:{'Content-Type':'application/x-www-form-urlencoded','User-Agent':UA}},10000,2,'btcspeed','pool');
-      const t=await safeText(r); return {ok:r.ok||ok400(t,r.status),status:r.status,ve:ve(r),body:t};
-    }},
+
+
+
   ];
 
   return [...nodes, ...pools];
