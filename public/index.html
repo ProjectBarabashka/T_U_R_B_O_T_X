@@ -4467,8 +4467,11 @@ async function go() {
           if (!wrap) return;
           // Проверяем флаг из реестра — checkConf устанавливает через window._waves
           var _ws = window._waves && window._waves[_waveId];
+          // FIX v14.3: убрали проверку localStorage.turbotx_wave_txid —
+          // startConfTracker удаляет этот ключ ДО вызова _wDraw, из-за чего
+          // панель не показывала "✅ подтверждена" и таймер замерзал.
           if (_ws && _ws.done) { _wDone = true; }
-          if (window._wDone && _waveId === localStorage.getItem('turbotx_wave_txid')) { _wDone = true; }
+          if (window._wDone)   { _wDone = true; }
           var nowMs   = Date.now() - _wStartTs;
           var nowMin  = nowMs / 60000;
 
@@ -4487,7 +4490,19 @@ async function go() {
           if (_wDone) {
             topHtml = '<div style="color:var(--g);font-size:.7rem;font-weight:700;padding:6px 0;text-align:center">✅ Транзакция подтверждена!</div>';
           } else if (nextIdx !== null) {
-            var msLeft  = Math.max(0, _wSched[nextIdx] * 60000 - nowMs);
+            // FIX v14.3: используем nextWaveAt из localStorage (точный таймер волны),
+            // а не _wSched (кумулятивное расписание от старта, разъезжается при адаптивных интервалах)
+            var msLeft;
+            try {
+              var _wLsKey = 'ttx_wave_v2_' + _waveId;
+              var _wLsRaw = localStorage.getItem(_wLsKey);
+              var _wLsObj = _wLsRaw ? JSON.parse(_wLsRaw) : null;
+              msLeft = (_wLsObj && _wLsObj.nextWaveAt)
+                ? Math.max(0, _wLsObj.nextWaveAt - Date.now())
+                : Math.max(0, _wSched[nextIdx] * 60000 - nowMs);
+            } catch(_e) {
+              msLeft = Math.max(0, _wSched[nextIdx] * 60000 - nowMs);
+            }
             var sLeft   = Math.round(msLeft / 1000);
             var hh = String(Math.floor(sLeft/3600)).padStart(2,'0');
             var mm = String(Math.floor((sLeft%3600)/60)).padStart(2,'0');
@@ -4813,10 +4828,13 @@ async function startConfTracker(txid) {
         if (typeof _wStop === 'function') _wStop(txid);
         if (typeof _wClear === 'function') _wClear(txid);
         window._wDone = true;
+        // FIX v14.3: помечаем .done ДО удаления localStorage — _wDraw() читает этот флаг
+        if (window._waves && window._waves[txid]) window._waves[txid].done = true;
         if (window._wTimers) { window._wTimers.forEach(function(t){clearTimeout(t);}); window._wTimers=[]; }
         if (window._wTick)   { clearInterval(window._wTick); window._wTick=null; }
         try{localStorage.removeItem('turbotx_wave_start');}catch(e){}
         try{localStorage.removeItem('turbotx_wave_txid');}catch(e){}
+        try{localStorage.removeItem('ttx_wave_v2_'+txid);}catch(e){}
         // Перерисовываем панель этой TX
         var _wDrawFn = window._waves && window._waves[txid] && window._waves[txid].draw;
         if (typeof _wDrawFn === 'function') { try { _wDrawFn(); } catch(e) {} }
@@ -6372,7 +6390,15 @@ function _rtApplyTicker(p) {
     const el = document.getElementById(id);
     if (!el) return;
     const hasSm = el.classList.contains('sm');
-    el.className = 'net-heart ' + heartLevel + (hasSm ? ' sm' : '');
+    const prevLevel = ['calm','mid','busy'].find(c => el.classList.contains(c));
+    // FIX v14.3: применяем no-transition только при смене уровня — убирает
+    // 0.8s задержку ice/flame fade когда цена уже изменилась (визуальный рассинхрон)
+    if (prevLevel && prevLevel !== heartLevel) {
+      el.className = 'net-heart no-transition ' + heartLevel + (hasSm ? ' sm' : '');
+      requestAnimationFrame(() => el.classList.remove('no-transition'));
+    } else {
+      el.className = 'net-heart ' + heartLevel + (hasSm ? ' sm' : '');
+    }
   });
 
   // Применяем анимацию через единую функцию (blockIcon с сервера — приоритет)
@@ -8426,7 +8452,14 @@ window._TurboAPI = {
       const el = document.getElementById(id);
       if (!el) return;
       const hasSm = el.classList.contains('sm');
-      el.className = 'net-heart ' + level + (hasSm ? ' sm' : '');
+      const prevLevel = ['calm','mid','busy'].find(c => el.classList.contains(c));
+      // FIX v14.3: мгновенная смена уровня — убирает рассинхрон price/heart
+      if (prevLevel && prevLevel !== level) {
+        el.className = 'net-heart no-transition ' + level + (hasSm ? ' sm' : '');
+        requestAnimationFrame(() => el.classList.remove('no-transition'));
+      } else {
+        el.className = 'net-heart ' + level + (hasSm ? ' sm' : '');
+      }
     });
     const tagText = document.getElementById('price-tag-text');
     if (tagText) tagText.textContent = text;
