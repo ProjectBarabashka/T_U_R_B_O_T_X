@@ -1568,7 +1568,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
     </div>
     <div style="margin-top:6px;font-family:var(--mono);font-size:.6rem;color:rgba(255,255,255,.28);display:flex;align-items:center;gap:5px"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg><span data-i18n="z20">Найдите TXID в своём кошельке — это 64-символьный хеш транзакции</span></div>
     <div class="batch-area" id="batch-mode"><textarea class="batch-input" id="batch-txids" data-i18n-ph="ph.batch" placeholder="Вставьте по одному TXID на строку&#10;a1b2c3...&#10;9f8e7d...&#10;4c5d6e..." oninput="onBatchInput()"></textarea><div class="batch-count" id="batch-count"><span data-i18n="z21">0 транзакций</span></div></div>
-    <div class="batch-toggle" id="batch-toggle" onclick="toggleBatch()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> Пакетное ускорение (до 20 TX) <span style="margin-left:6px;font-family:var(--mono);font-size:.56rem;background:rgba(247,147,26,.15);border:1px solid rgba(247,147,26,.35);border-radius:4px;padding:1px 6px;color:var(--a);letter-spacing:.5px">PREMIUM</span></div>
+    <div class="batch-toggle" id="batch-toggle" onclick="toggleBatch()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg> <span id="batch-toggle-label">Пакетное ускорение (до 20 TX)</span> <span style="margin-left:6px;font-family:var(--mono);font-size:.56rem;background:rgba(247,147,26,.15);border:1px solid rgba(247,147,26,.35);border-radius:4px;padding:1px 6px;color:var(--a);letter-spacing:.5px">PREMIUM</span></div>
   </div>
 
   <div class="fee-calc" id="fee-calc">
@@ -1583,7 +1583,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
   <div class="fg">
     <div class="fee-calc-lbl" style="font-size:.65rem;letter-spacing:2px;color:var(--m);text-transform:uppercase;font-family:var(--mono);margin-bottom:10px"><span data-i18n="z29">Режим ускорения</span></div>
     <div class="plan-row">
-      <div class="plan-opt on" id="of" onclick="pick('free')"><div class="po-title" style="display:flex;align-items:center;gap:7px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><rect x="2.5" y="10.5" width="19" height="12" rx="3" fill="rgba(247,147,26,0.12)" stroke="#f7931a" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 10.5V7.5a5 5 0 0 1 9.9-1" stroke="#f7931a" stroke-width="1.6" stroke-linecap="round" fill="none"/><circle cx="12" cy="16" r="2" fill="#f7931a" opacity="0.85"/><rect x="11" y="16.8" width="2" height="3" rx="1" fill="#f7931a" opacity="0.7"/></svg> Бесплатный</div><div class="po-desc"><span data-i18n="z31">Rebroadcast в 5 пулов</span></div><div class="po-price"><span data-i18n="z32">$0 — бесплатно</span></div></div>
+      <div class="plan-opt on" id="of" onclick="pick('free')"><div class="po-title" style="display:flex;align-items:center;gap:7px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><rect x="2.5" y="10.5" width="19" height="12" rx="3" fill="rgba(247,147,26,0.12)" stroke="#f7931a" stroke-width="1.6" stroke-linejoin="round"/><path d="M7 10.5V7.5a5 5 0 0 1 9.9-1" stroke="#f7931a" stroke-width="1.6" stroke-linecap="round" fill="none"/><circle cx="12" cy="16" r="2" fill="#f7931a" opacity="0.85"/><rect x="11" y="16.8" width="2" height="3" rx="1" fill="#f7931a" opacity="0.7"/></svg> <span id="plan-opt-free-title">Бесплатный</span></div><div class="po-desc"><span data-i18n="z31">Rebroadcast в 5 пулов</span></div><div class="po-price"><span data-i18n="z32">$0 — бесплатно</span></div></div>
       <div class="plan-opt" id="op" onclick="pick('premium')"><div class="po-title" style="display:flex;align-items:center;gap:7px"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><defs><linearGradient id="cg15" x1="2" y1="5" x2="22" y2="19" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFE566"/><stop offset="45%" stop-color="#F7931A"/><stop offset="100%" stop-color="#FF6B00"/></linearGradient></defs><path d="M3 19h18" stroke="url(#cg15)" stroke-width="2" stroke-linecap="round"/><path d="M3 19L4.5 9.5L9 14L12 6L15 14L19.5 9.5L21 19z" fill="url(#cg15)" stroke="url(#cg15)" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="12" cy="6" r="1.4" fill="#FFE566"/><circle cx="4.5" cy="9.5" r="1.1" fill="#FFE566"/><circle cx="19.5" cy="9.5" r="1.1" fill="#FFE566"/></svg> Premium</div><div class="po-desc"><span data-i18n="z33">30 каналов · ~88%</span></div><div class="po-price" style="color:var(--a);font-weight:700">от <span id="plan-opt-price">…</span></div></div>
     </div>
   </div>
@@ -1597,7 +1597,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
 
   <!-- ИСТОРИЯ УСКОРЕНИЙ -->
   <div id="history-block" style="display:none;margin-top:16px">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div style="font-family:var(--mono);font-size:.58rem;letter-spacing:2px;color:var(--m);text-transform:uppercase;display:flex;align-items:center;gap:6px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Ваши ускорения</div><button onclick="localStorage.removeItem('tx_history');renderHistory()" style="font-family:var(--mono);font-size:.58rem;color:var(--m);background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:4px" onmouseover="this.style.color='var(--err)'" onmouseout="this.style.color='var(--m)'"><span data-i18n="z37">очистить</span></button></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px"><div style="font-family:var(--mono);font-size:.58rem;letter-spacing:2px;color:var(--m);text-transform:uppercase;display:flex;align-items:center;gap:6px"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> <span id="history-header-title">Ваши ускорения</span></div><button onclick="localStorage.removeItem('tx_history');renderHistory()" style="font-family:var(--mono);font-size:.58rem;color:var(--m);background:none;border:none;cursor:pointer;padding:2px 6px;border-radius:4px" onmouseover="this.style.color='var(--err)'" onmouseout="this.style.color='var(--m)'"><span data-i18n="z37">очистить</span></button></div>
     <div id="history-list" style="display:flex;flex-direction:column;gap:4px"></div>
   </div>
 
@@ -3549,7 +3549,11 @@ async function initGlobalSync() {
 
   try {
     var _st = localStorage.getItem('turbotx_tracker_txid');
-    if (_st && /^[a-fA-F0-9]{64}$/.test(_st)) startConfTracker(_st);
+    // FIX v14.3: не восстанавливаем трекер если он старше 4 дней
+    var _stTs = parseInt(localStorage.getItem('turbotx_tracker_ts') || '0');
+    var _stAge = _stTs ? Date.now() - _stTs : 0;
+    if (_st && /^[a-fA-F0-9]{64}$/.test(_st) && _stAge < 4 * 24 * 3600 * 1000) startConfTracker(_st);
+    else if (_st && _stAge >= 4 * 24 * 3600 * 1000) { localStorage.removeItem('turbotx_tracker_txid'); localStorage.removeItem('turbotx_tracker_ts'); }
   } catch(e) {}
   try {
     var _pt = localStorage.getItem('turbotx_premium_txid');
@@ -4796,7 +4800,7 @@ function _setDot(d, state) {
 async function startConfTracker(txid) {
   if (_confInterval) { clearInterval(_confInterval); _confInterval = null; }
   if (window._confWS) { try { window._confWS.close(); } catch(_){} window._confWS = null; }
-  try { localStorage.setItem('turbotx_tracker_txid', txid); } catch(e) {}
+  try { localStorage.setItem('turbotx_tracker_txid', txid); localStorage.setItem('turbotx_tracker_ts', String(Date.now())); } catch(e) {}
 
   const tracker = document.getElementById('conf-tracker');
   if (tracker) {
@@ -4858,11 +4862,15 @@ async function startConfTracker(txid) {
   }
 
   // ── WebSocket (п.5) — мгновенное подтверждение ──────────────
-  var _wsStarting = false; // FIX v14.2: защита от параллельных вызовов startWS
+  // FIX v14.3: глобальный флаг отключения WS после 2 неудач, меньше шума
+  var _wsStarting = false;
+  var _WS_MAX_ATTEMPTS = 2;
+
   function startWS() {
-    if (_wsStarting) return; // уже открывается — пропускаем
+    if (window._wsGlobalDisabled) return;
+    if (_wsStarting) return;
     _wsStarting = true;
-    // Закрываем предыдущий сокет чисто перед новым
+
     if (window._confWS) {
       try { window._confWS.onclose = null; window._confWS.close(); } catch(_) {}
       window._confWS = null;
@@ -4872,10 +4880,9 @@ async function startConfTracker(txid) {
       window._confWS = ws;
 
       ws.onopen = () => {
-        _wsStarting = false; // FIX v14.2: соединение установлено
+        _wsStarting = false;
         _wsAlive = true;
-        _wsAttempts = 0; // сброс при успешном подключении
-        // Подписываемся на TX
+        _wsAttempts = 0;
         ws.send(JSON.stringify({ action: 'want', data: ['blocks'] }));
         ws.send(JSON.stringify({ action: 'track-tx', data: txid }));
         const t = document.getElementById('conf-text');
@@ -4886,47 +4893,40 @@ async function startConfTracker(txid) {
       ws.onmessage = (e) => {
         try {
           const msg = JSON.parse(e.data);
-
-          // TX попала в мемпул
           if (msg.tx && msg.tx.txid === txid) {
             const t = document.getElementById('conf-text');
             if (t) t.innerHTML = '<span style="color:var(--m)">В мемпуле — ожидание блока…</span>';
           }
-
-          // TX подтверждена (входит в блок)
           if (msg.txConfirmed || (msg.block && msg['tracked-txs']?.includes(txid))) {
-            // Останавливаем волны для этой TX через реестр
             var _wsEntry = window._waves && window._waves[txid];
             if (_wsEntry) { _wsEntry.done = true; }
             window._wDone = true;
             stopPremiumRepeat && stopPremiumRepeat();
-            checkConf(); // обновляем UI и перерисовываем
-          }
-
-          // Новый блок → проверяем нашу TX
-          if (msg.block) {
             checkConf();
           }
+          if (msg.block) { checkConf(); }
         } catch(_) {}
       };
 
       ws.onerror = () => { _wsAlive = false; _wsStarting = false; };
       ws.onclose = () => {
         _wsAlive = false;
-        _wsStarting = false; // FIX v14.2: сбрасываем флаг при закрытии
+        _wsStarting = false;
         window._confWS = null;
-        // Реконнект только если трекер ещё нужен И не больше 5 попыток
         _wsAttempts = (_wsAttempts || 0) + 1;
-        if (_confInterval && _wsAttempts <= 5) {
-          // Экспоненциальный backoff: 15, 30, 60, 60, 60 сек (минимум 15с — не сразу!)
-          const delay = Math.min(15000 * Math.pow(2, _wsAttempts - 1), 60000);
+        if (_wsAttempts >= _WS_MAX_ATTEMPTS) {
+          window._wsGlobalDisabled = true;
+          console.debug('[TurboTX] WS unavailable, using polling only');
+          return;
+        }
+        if (_confInterval) {
+          const delay = Math.min(10000 * _wsAttempts, 20000);
           setTimeout(startWS, delay);
         }
-        // После 5 попыток — только polling, WS недоступен
       };
     } catch(_) {
-      _wsStarting = false; // FIX v14.2: сбрасываем при исключении
-      // WebSocket недоступен — только polling
+      _wsStarting = false;
+      window._wsGlobalDisabled = true;
     }
   }
 
@@ -6356,13 +6356,14 @@ function _rtApplyTicker(p) {
   // ── ТИКЕР: след. блок — понятно для пользователя ─────────
   const tkNextBlock = document.getElementById('tk-nextblock');
   if (tkNextBlock && fast != null) {
+    var _en = typeof _currentLang !== 'undefined' && _currentLang === 'en';
     var _nb;
-    if (fast >= 100) _nb = '~1 мин';
-    else if (fast >= 50) _nb = '~2–5 мин';
-    else if (fast >= 20) _nb = '~10 мин';
-    else if (fast >= 8)  _nb = '~20 мин';
-    else if (fast >= 3)  _nb = '~30–60 мин';
-    else                 _nb = '> 1 часа';
+    if (fast >= 100) _nb = '~1 min';
+    else if (fast >= 50) _nb = _en ? '~2–5 min' : '~2–5 мин';
+    else if (fast >= 20) _nb = _en ? '~10 min' : '~10 мин';
+    else if (fast >= 8)  _nb = _en ? '~20 min' : '~20 мин';
+    else if (fast >= 3)  _nb = _en ? '~30–60 min' : '~30–60 мин';
+    else                 _nb = _en ? '> 1 hour' : '> 1 часа';
     tkNextBlock.textContent = _nb;
     tkNextBlock.style.color = fast >= 20 ? 'var(--g)' : fast >= 5 ? 'var(--a)' : '#ff6b35';
   }
@@ -6370,7 +6371,11 @@ function _rtApplyTicker(p) {
   // ── fee-meter-text ────────────────────────────────────────
   const fmtEl = document.getElementById('fee-meter-text');
   if (fmtEl && fast != null && mpCount != null) {
-    fmtEl.innerHTML = 'Комиссия сети: <strong style="color:var(--a)">' + fast + '</strong> sat/vB · очередь <strong style="color:var(--a)">' + mpCount.toLocaleString('ru') + '</strong> TX';
+    var _en = typeof _currentLang !== 'undefined' && _currentLang === 'en';
+    fmtEl.innerHTML = (_en ? 'Network fee: ' : 'Комиссия сети: ')
+      + '<strong style="color:var(--a)">' + fast + '</strong> sat/vB · '
+      + (_en ? 'queue ' : 'очередь ')
+      + '<strong style="color:var(--a)">' + mpCount.toLocaleString('ru') + '</strong> TX';
   }
 
   // ── mempool-tx-count (Network Intelligence) ───────────────
@@ -6386,7 +6391,8 @@ function _rtApplyTicker(p) {
   // ── network-congestion индикатор ──────────────────────────
   const netEl = document.getElementById('network-congestion');
   if (netEl && p.emoji && p.text) {
-    netEl.textContent = p.emoji + ' ' + p.text + (fast ? ' · ' + fast + ' sat/vB' : '');
+    var _en = typeof _currentLang !== 'undefined' && _currentLang === 'en';
+    netEl.textContent = p.emoji + ' ' + (_en && p.textEn ? p.textEn : p.text) + (fast ? ' · ' + fast + ' sat/vB' : '');
     netEl.style.color = p.congestion === 'low'    ? 'var(--g)' :
                         p.congestion === 'medium' ? 'var(--a)' : '#ff5555';
   }
@@ -6395,8 +6401,9 @@ function _rtApplyTicker(p) {
   const mcEl = document.getElementById('mempool-congestion');
   if (mcEl && p.mempoolCongestion) {
     const mc = p.mempoolCongestion;
+    var _en2 = typeof _currentLang !== 'undefined' && _currentLang === 'en';
     const txStr = mc.txCount != null ? ' · ' + mc.txCount.toLocaleString() + ' TX' : '';
-    mcEl.textContent = mc.emoji + ' ' + mc.text + txStr;
+    mcEl.textContent = mc.emoji + ' ' + (_en2 && mc.textEn ? mc.textEn : mc.text) + txStr;
     mcEl.style.color = (mc.level === 'clear' || mc.level === 'low') ? 'var(--g)' :
                         mc.level === 'medium' ? 'var(--a)' : '#ff5555';
   }
@@ -7497,11 +7504,14 @@ function _applyLang(lang) {
   // --- Карта id → перевод ---
   var ru = lang === 'ru';
   var idMap = {
+    // Plan selector + batch + history
+    'plan-opt-free-title': ru ? 'Бесплатный'                        : 'Free',
+    'batch-toggle-label':  ru ? 'Пакетное ускорение (до 20 TX)'     : 'Batch acceleration (up to 20 TX)',
+    'history-header-title': ru ? 'Ваши ускорения'                   : 'Your accelerations',
     // Mempool bar labels
     'mp-lbl-queue':       ru ? 'очередь'       : 'queue',
     'mp-lbl-fee':         ru ? 'комиссия'       : 'fee',
     'mp-lbl-nextblock':   ru ? 'след. блок'     : 'next block',
-    'mp-lbl-size':        ru ? 'размер'         : 'size',
     'mp-lbl-mb':          ru ? 'МБ'             : 'MB',
     'mp-lbl-hashrate':    ru ? 'Глобальный хешрейт сети:' : 'Global network hashrate:',
     // Pools section
