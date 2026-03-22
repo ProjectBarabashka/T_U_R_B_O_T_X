@@ -1529,7 +1529,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
       </svg>
     </span>
     <span class="stat-num" id="pools-online" style="color:var(--g);opacity:.3;animation:skeletonPulse 1.6s ease-in-out infinite">—</span>
-    <div class="stat-lbl">каналов активно · p2p: <span id="p2p-count" style="font-weight:700;color:#ffd166">—</span></div>
+    <div class="stat-lbl">каналов активно</div>
   </a>
 </div>
 
@@ -2867,10 +2867,13 @@ async function fetchHealthOnline(force) {
       if (el2 && d.summary) {
         const nodesOk = d.summary.nodes?.ok ?? 0;
         const poolsOk = d.summary.pools?.ok ?? 0;
-        const totalOk = nodesOk + poolsOk;
+        const totalOk    = nodesOk + poolsOk;
+        const totalNodes = d.summary.nodes?.total ?? 8;
+        const totalPools = d.summary.pools?.total ?? 23;
+        const totalAll   = totalNodes + totalPools;
         el2.style.opacity = '';
         el2.style.animation = 'none';
-        el2.textContent = totalOk + ' / 30';
+        el2.textContent = totalOk + ' / ' + totalAll;
         el2.style.color = totalOk >= 28 ? 'var(--g)' : totalOk >= 20 ? 'var(--a)' : '#ff5555';
       }
     }
