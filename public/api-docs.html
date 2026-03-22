@@ -221,7 +221,7 @@ footer a:hover{text-decoration:underline}
   <a class="sb-logo" href="https://acelerat.vercel.app">
     <div class="sb-icon">TX</div>
     <span class="sb-name">TurboTX</span>
-    <span class="sb-ver">v14.1</span>
+    <span class="sb-ver">v14.3</span>
   </a>
   <div class="nav-grp">
     <div class="nav-grp-title">Getting Started</div>
@@ -246,6 +246,9 @@ footer a:hover{text-decoration:underline}
     <a class="nav-a" href="#v1-accelerate"><span class="nb post">POST</span>?method=accelerate</a>
     <a class="nav-a" href="#v1-batch"><span class="nb post">POST</span>?method=batch</a>
     <a class="nav-a" href="#v1-keys"><span class="nb get">GET</span>?method=keys</a>
+    <a class="nav-a" href="#v1-status"><span class="nb get">GET</span>?method=status</a>
+    <a class="nav-a" href="#v1-fees"><span class="nb get">GET</span>?method=fees</a>
+    <a class="nav-a" href="#r-cron"><span class="nb get">GET</span>/api/cron</a>
   </div>
   <div class="nav-grp">
     <div class="nav-grp-title">Reference</div>
@@ -267,7 +270,7 @@ footer a:hover{text-decoration:underline}
     <div class="stat"><span class="stat-n">~88%</span><span class="stat-l">Hashrate</span></div>
     <div class="stat"><span class="stat-n">30</span><span class="stat-l">Channels</span></div>
     <div class="stat"><span class="stat-n">&lt;200ms</span><span class="stat-l">Avg latency</span></div>
-    <div class="stat"><span class="stat-n">v14.1</span><span class="stat-l">API version</span></div>
+    <div class="stat"><span class="stat-n">v14.3</span><span class="stat-l">API version</span></div>
   </div>
 </div>
 
@@ -376,9 +379,12 @@ console.<span class="f">log</span>(d.summary.hashrateReach); <span class="c">// 
     <div class="ep-body"><div class="ep-inner">
       <p style="font-size:.8rem;color:var(--m);margin-bottom:14px">Price dynamically calculated from fee rate + mempool queue. Updates every minute.</p>
       <div class="cb"><div class="ch"><span class="cl">Response 200</span><button class="ccb" onclick="copyCode(this)">Copy</button></div><pre>{
-  <span class="p">"ok"</span>: <span class="k">true</span>, <span class="p">"usd"</span>: <span class="n">7</span>, <span class="p">"btc"</span>: <span class="n">0.000082</span>, <span class="p">"sats"</span>: <span class="n">8200</span>,
-  <span class="p">"btcPrice"</span>: <span class="n">85420</span>, <span class="p">"feeRate"</span>: <span class="n">32</span>, <span class="p">"congestion"</span>: <span class="s">"high"</span>,
-  <span class="p">"emoji"</span>: <span class="s">"🔴"</span>, <span class="p">"text"</span>: <span class="s">"Высокая загрузка"</span>, <span class="p">"confLabel"</span>: <span class="s">"10–20 мин ⚡"</span>
+  <span class="p">"ok"</span>: <span class="k">true</span>, <span class="p">"usd"</span>: <span class="n">5</span>, <span class="p">"btc"</span>: <span class="n">0.000059</span>, <span class="p">"sats"</span>: <span class="n">5900</span>,
+  <span class="p">"btcPrice"</span>: <span class="n">84200</span>, <span class="p">"feeRate"</span>: <span class="n">8</span>, <span class="p">"congestion"</span>: <span class="s">"medium"</span>,
+  <span class="p">"emoji"</span>: <span class="s">"🟡"</span>, <span class="p">"text"</span>: <span class="s">"Умеренная нагрузка"</span>, <span class="p">"textEn"</span>: <span class="s">"Moderate load"</span>,
+  <span class="p">"confLabel"</span>: <span class="s">"10–20 мин ⚡"</span>, <span class="p">"heartLevel"</span>: <span class="s">"mid"</span>,
+  <span class="p">"mempoolCongestion"</span>: { <span class="p">"level"</span>: <span class="s">"low"</span>, <span class="p">"txCount"</span>: <span class="n">24965</span>, <span class="p">"textEn"</span>: <span class="s">"Mempool normal"</span> },
+  <span class="p">"bestTime"</span>: { <span class="p">"quality"</span>: <span class="s">"good"</span>, <span class="p">"tip"</span>: <span class="s">"✅ Good time for a transaction"</span> }
 }</pre></div>
       <div class="lt">
         <div class="lt-title">Live Test</div>
@@ -400,7 +406,7 @@ console.<span class="f">log</span>(d.summary.hashrateReach); <span class="c">// 
   <span class="p">"ok"</span>: <span class="k">true</span>,
   <span class="p">"fees"</span>: { <span class="p">"fastest"</span>: <span class="n">45</span>, <span class="p">"halfHour"</span>: <span class="n">30</span>, <span class="p">"hour"</span>: <span class="n">20</span>, <span class="p">"economy"</span>: <span class="n">8</span> },
   <span class="p">"mempool"</span>: { <span class="p">"count"</span>: <span class="n">28400</span>, <span class="p">"vsizeMB"</span>: <span class="n">28.4</span> },
-  <span class="p">"congestion"</span>: { <span class="p">"level"</span>: <span class="s">"medium"</span>, <span class="p">"emoji"</span>: <span class="s">"🟡"</span>, <span class="p">"text"</span>: <span class="s">"Средняя загрузка"</span> },
+  <span class="p">"congestion"</span>: <span class="s">"medium"</span>, <span class="p">"congestionText"</span>: <span class="s">"Умеренная нагрузка"</span>,
   <span class="p">"history24h"</span>: { <span class="p">"min"</span>: <span class="n">8</span>, <span class="p">"max"</span>: <span class="n">62</span>, <span class="p">"avg"</span>: <span class="n">24</span> },
   <span class="p">"timestamp"</span>: <span class="n">1710000000000</span>
 }</pre></div>
@@ -588,7 +594,7 @@ console.<span class="f">log</span>(d.summary.hashrateReach); <span class="c">// 
           <tr><td class="pn">webhookUrl</td><td class="ptype">string</td><td><span class="opt">optional</span></td><td>POST callback when acceleration starts</td></tr>
         </tbody>
       </table>
-      <div class="ib green"><span class="ib-icon">⚡</span><span>Premium adaptive waves: <b>3 waves</b> (fee ratio ≥ 0.8) · <b>5 waves</b> (≥ 0.4) · <b>8 waves</b> (stuck). Includes MARA Slipstream private mempool.</span></div>
+      <div class="ib green"><span class="ib-icon">⚡</span><span>Premium adaptive waves: <b>3 waves</b> (fee ratio ≥ 0.8) · <b>5 waves</b> (≥ 0.4) · <b>10 waves</b> (stuck). Includes MARA Slipstream private mempool.</span></div>
       <div class="cb"><div class="ch"><span class="cl">Response 200</span><button class="ccb" onclick="copyCode(this)">Copy</button></div><pre>{
   <span class="p">"ok"</span>: <span class="k">true</span>,
   <span class="p">"results"</span>: [
@@ -596,7 +602,7 @@ console.<span class="f">log</span>(d.summary.hashrateReach); <span class="c">// 
     { <span class="p">"name"</span>: <span class="s">"AntPool"</span>,       <span class="p">"ok"</span>: <span class="k">true</span>, <span class="p">"ms"</span>: <span class="n">380</span>, <span class="p">"tier"</span>: <span class="s">"pool"</span> }
   ],
   <span class="p">"summary"</span>: { <span class="p">"ok"</span>: <span class="n">28</span>, <span class="p">"total"</span>: <span class="n">30</span>, <span class="p">"hashrateReach"</span>: <span class="n">88</span>, <span class="p">"ms"</span>: <span class="n">4200</span> },
-  <span class="p">"waveStrategy"</span>: { <span class="p">"waves"</span>: <span class="n">8</span>, <span class="p">"label"</span>: <span class="s">"aggressive"</span> },
+  <span class="p">"waveStrategy"</span>: { <span class="p">"waves"</span>: <span class="n">10</span>, <span class="p">"label"</span>: <span class="s">"aggressive"</span> },
   <span class="p">"jobId"</span>: <span class="s">"a1b2c3d4_1710000000000"</span>
 }</pre></div>
     </div></div>
@@ -633,6 +639,56 @@ X-Admin-Token: your_admin_secret
       <div class="ib warn"><span class="ib-icon">⚠</span><span>The key is shown <b>only once</b> in the create response — save it immediately.</span></div>
     </div></div>
   </div>
+</section>
+
+<!-- CRON + V1 STATUS/FEES -->
+<span class="anchor" id="r-cron"></span>
+<section class="section">
+  <div class="sh">Server Cron + Additional v1 Methods <span class="tag">#cron</span></div>
+
+  <div class="ep" id="ep-cron">
+    <div class="ep-hdr" onclick="toggleEp('ep-cron')">
+      <span class="ep-met get">GET</span><span class="ep-path">/api/cron</span>
+      <span class="ep-ds">Server-side wave runner — requires X-Cron-Secret header (cron-job.org)</span><span class="ep-chev">▾</span>
+    </div>
+    <div class="ep-body"><div class="ep-inner">
+      <p style="font-size:.8rem;color:var(--m);margin-bottom:14px">Called every minute by cron-job.org. Reads active wave jobs from Firebase, fires due waves via <code style="font-family:var(--mono)">/api/repeat</code>. Fires even when user's browser is closed.</p>
+      <div class="ib tip"><span class="ib-icon">⚙️</span><span>Setup: cron-job.org → GET <code style="font-family:var(--mono)">https://acelerat.vercel.app/api/cron</code> every 1 min, header <code style="font-family:var(--mono)">X-Cron-Secret: &lt;CRON_SECRET&gt;</code></span></div>
+      <div class="cb"><div class="ch"><span class="cl">Response 200</span><button class="ccb" onclick="copyCode(this)">Copy</button></div><pre>{
+  <span class="p">"ok"</span>: <span class="k">true</span>, <span class="p">"processed"</span>: <span class="n">2</span>, <span class="p">"succeeded"</span>: <span class="n">2</span>,
+  <span class="p">"confirmed"</span>: <span class="n">0</span>, <span class="p">"ms"</span>: <span class="n">894</span>,
+  <span class="p">"jobs"</span>: [{ <span class="p">"txid"</span>: <span class="s">"abc..."</span>, <span class="p">"ok"</span>: <span class="k">true</span>, <span class="p">"wave"</span>: <span class="n">2</span>, <span class="p">"nextWaveIn"</span>: <span class="s">"30 мин"</span> }]
+}</pre></div>
+    </div></div>
+  </div>
+
+  <span class="anchor" id="v1-status"></span>
+  <div class="ep" id="ep-v1status">
+    <div class="ep-hdr" onclick="toggleEp('ep-v1status')">
+      <span class="ep-met get">GET</span><span class="ep-path">/api/v1<em>?method=status&amp;txid=&lt;hex&gt;</em></span>
+      <span class="ep-ds">Full TX status via v1 API (same as /api/status, with _meta wrapper)</span><span class="ep-chev">▾</span>
+    </div>
+    <div class="ep-body"><div class="ep-inner">
+      <p style="font-size:.8rem;color:var(--m)">Returns identical payload to <code style="font-family:var(--mono)">/api/status</code> with additional <code style="font-family:var(--mono)">_meta</code> object containing tier, remaining limits, requestId.</p>
+    </div></div>
+  </div>
+
+  <span class="anchor" id="v1-fees"></span>
+  <div class="ep" id="ep-v1fees">
+    <div class="ep-hdr" onclick="toggleEp('ep-v1fees')">
+      <span class="ep-met get">GET</span><span class="ep-path">/api/v1<em>?method=fees</em></span>
+      <span class="ep-ds">Current fee market — fastest/halfHour/hour/economy + congestion + mempool</span><span class="ep-chev">▾</span>
+    </div>
+    <div class="ep-body"><div class="ep-inner">
+      <div class="cb"><div class="ch"><span class="cl">Response 200</span><button class="ccb" onclick="copyCode(this)">Copy</button></div><pre>{
+  <span class="p">"ok"</span>: <span class="k">true</span>,
+  <span class="p">"fees"</span>: { <span class="p">"fastest"</span>: <span class="n">8</span>, <span class="p">"halfHour"</span>: <span class="n">5</span>, <span class="p">"hour"</span>: <span class="n">4</span>, <span class="p">"economy"</span>: <span class="n">2</span> },
+  <span class="p">"congestion"</span>: <span class="s">"low"</span>,
+  <span class="p">"mempool"</span>: { <span class="p">"count"</span>: <span class="n">24965</span>, <span class="p">"vsizeMB"</span>: <span class="n">19.4</span> }
+}</pre></div>
+    </div></div>
+  </div>
+
 </section>
 
 <!-- RATE LIMITS -->
@@ -699,6 +755,29 @@ X-RateLimit-Remaining-Day:    49997</pre></div>
 <section class="section">
   <div class="sh">Changelog <span class="tag">#changelog</span></div>
   <div class="cl-item">
+    <div class="cl-d"><span class="cl-v">v14.3</span> — March 2026</div>
+    <div class="cl-title">heartLevel sync + i18n + wave timer fixes</div>
+    <ul class="cl-list">
+      <li>heartLevel now synced with price tier (feeRate + mpCount + blockTime) — no more mismatch between price and heart animation</li>
+      <li>Removed duplicate heart update in _rtApplyTicker — was causing flicker</li>
+      <li>Full i18n for NI cards, FAQ answers, modal header, pool grid, mempool bar</li>
+      <li class="fx">Wave history timer: confirmed TX shows "✅ confirmed" instead of frozen countdown</li>
+      <li class="fx">WebSocket: max 2 retries + session-level disable flag — no more console spam</li>
+      <li class="fx">Smart Advisor text had broken ternary — fixed lang-aware output</li>
+    </ul>
+  </div>
+  <div class="cl-item">
+    <div class="cl-d"><span class="cl-v">v14.2</span> — March 2026</div>
+    <div class="cl-title">Server-side waves + localStorage rewrite</div>
+    <ul class="cl-list">
+      <li>Wave system rewritten: localStorage + setInterval replaces 10× setTimeout — survives tab close/refresh</li>
+      <li>Server-side wave cron via cron-job.org + Firebase Realtime DB — waves fire even when browser closed</li>
+      <li>Wave state key: <code style="font-family:var(--mono);color:var(--a)">ttx_wave_v2_&lt;txid&gt;</code> with nextWaveAt, wavesDone, active</li>
+      <li class="fx">Wave countdown in history detail reads actual nextWaveAt from localStorage</li>
+      <li class="fx">Client PRICE_TIERS synced with router.js: low=5–10min, medium=10–15min, high=10–20min</li>
+    </ul>
+  </div>
+  <div class="cl-item">
     <div class="cl-d"><span class="cl-v">v14.1</span> — March 2026</div>
     <div class="cl-title">Security hardening + bug fixes</div>
     <ul class="cl-list">
@@ -741,7 +820,7 @@ X-RateLimit-Remaining-Day:    49997</pre></div>
 </div>
 
 <footer>
-  <span>TurboTX API v14.1 · 2026</span>
+  <span>TurboTX API v14.3 · 2026</span>
   <span><a href="https://acelerat.vercel.app">acelerat.vercel.app</a> · <a href="https://t.me/Sup_TurboTX">Telegram</a></span>
 </footer>
 

@@ -5264,7 +5264,7 @@ function lnResetToInit() {
   const btn = document.getElementById('ln-create-btn');
   if (btn) {
     btn.disabled = false; btn.style.opacity = '';
-    btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10" fill="#ffd600"/></svg> Создать Lightning Invoice</span>';
+    btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10" fill="#ffd600"/></svg> ' + (typeof _currentLang !== 'undefined' && _currentLang === 'en' ? 'Create Lightning Invoice' : 'Создать Lightning Invoice') + '</span>';
   }
 }
 
@@ -5272,7 +5272,7 @@ function lnShowError(msg) {
   const errEl = document.getElementById('ln-init-error');
   if (errEl) { errEl.textContent = '⚠ ' + msg; errEl.style.display = 'block'; }
   const btn = document.getElementById('ln-create-btn');
-  if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.textContent = ''; btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10" fill="#ffd600"/></svg> Попробовать снова</span>'; }
+  if (btn) { btn.disabled = false; btn.style.opacity = ''; btn.textContent = ''; btn.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10" fill="#ffd600"/></svg> ' + (typeof _currentLang !== 'undefined' && _currentLang === 'en' ? 'Try again' : 'Попробовать снова') + '</span>'; }
 }
 
 async function lnCreateInvoice() {
@@ -7246,6 +7246,10 @@ en: {
   'z33': "30 channels · ~88%",
   'z34': "from",
   'z35': "ACCELERATE TRANSACTION",
+  'z_ln_wallets':         'Wallets:',
+  'z_ln_create':          'Create Lightning Invoice',
+  'z_ln_remaining':       'Time left:',
+  'z_ln_open_wallet':     'Open in LN wallet',
   'z36': "Your accelerations",
   'z37': "clear",
   'z38': "Recent accelerations",
@@ -8842,12 +8846,12 @@ window._TurboAPI = {
         <div style="font-family:var(--mono);font-size:.63rem;color:var(--m2);margin-top:5px;line-height:1.6"><span data-i18n="z221">Мгновенная оплата без ожидания подтверждений.</span><br><span data-i18n="z222">Совместимо с любым LN-кошельком.</span></div>
       </div>
       <div style="background:rgba(255,214,0,.05);border:1px solid rgba(255,214,0,.15);border-radius:10px;padding:11px 14px;margin:4px 0 14px;font-family:var(--mono);font-size:.65rem;color:var(--m2);line-height:1.8">
-        <span style="color:#ffd600;font-weight:700">Кошельки: </span>Wallet of Satoshi · Phoenix · Breez · Muun · Zeus · BlueWallet · любой LN
+        <span style="color:#ffd600;font-weight:700"><span data-i18n="z_ln_wallets">Кошельки:</span> </span>Wallet of Satoshi · Phoenix · Breez · Muun · Zeus · BlueWallet · любой LN
       </div>
       <button class="okbtn" id="ln-create-btn" onclick="lnCreateInvoice()" style="background:linear-gradient(135deg,rgba(255,214,0,.18),rgba(247,147,26,.18));border:1px solid rgba(255,214,0,.35);color:#ffd600">
         <span style="display:inline-flex;align-items:center;gap:8px">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10" fill="#ffd600"/></svg>
-          Создать Lightning Invoice
+          <span data-i18n="z_ln_create">Создать Lightning Invoice</span>
         </span>
       </button>
       <div id="ln-init-error" style="display:none;margin-top:10px;font-family:var(--mono);font-size:.7rem;color:var(--err);text-align:center"></div>
@@ -8876,7 +8880,7 @@ window._TurboAPI = {
       <!-- Таймер -->
       <div class="ln-timer" style="margin-bottom:10px">
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        Осталось: <strong id="ln-timer-text" style="color:var(--t)">60:00</strong>
+        <span data-i18n="z_ln_remaining">Осталось:</span> <strong id="ln-timer-text" style="color:var(--t)">60:00</strong>
         <div class="ln-timer-bar"><div class="ln-timer-fill" id="ln-timer-fill" style="width:100%"></div></div>
       </div>
 
@@ -8897,7 +8901,7 @@ window._TurboAPI = {
       <button id="ln-open-wallet-btn" onclick="lnOpenWallet()" style="width:100%;margin-bottom:8px;background:linear-gradient(135deg,rgba(255,214,0,.18),rgba(247,147,26,.18));border:1px solid rgba(255,214,0,.35);border-radius:8px;padding:10px;font-family:var(--mono);font-size:.7rem;color:#ffd600;cursor:pointer;display:none">
         <span style="display:inline-flex;align-items:center;justify-content:center;gap:7px">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none"><polygon points="13,2 3,14 12,14 11,22 21,10 12,10" fill="#ffd600"/></svg>
-          Открыть в LN-кошельке
+          <span data-i18n="z_ln_open_wallet">Открыть в LN-кошельке</span>
         </span>
       </button>
 
