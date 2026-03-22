@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src 'self' https://acelerat.vercel.app; img-src 'self' data:; frame-ancestors 'none'">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TurboTX API — Developer Docs v14.1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#080810;--bg2:#0c0c16;--bg3:#11111e;--bg4:#16162a;--b:rgba(255,255,255,.06);--b2:rgba(255,255,255,.1);--b3:rgba(255,255,255,.15);--t:#eeeef5;--m:rgba(238,238,245,.45);--m2:rgba(238,238,245,.28);--a:#f7931a;--a2:rgba(247,147,26,.15);--a3:rgba(247,147,26,.08);--g:#00e87a;--g2:rgba(0,232,122,.12);--bl:#38c5ff;--bl2:rgba(56,197,255,.12);--pu:#a78bfa;--err:#ff4455;--mono:'JetBrains Mono',monospace;--sans:'Syne',sans-serif;--r:10px;--sidebar:258px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--t);font-family:var(--sans);line-height:1.6;overflow-x:hidden}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(247,147,26,.2);border-radius:2px}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:var(--sidebar) 1fr;min-height:100vh}
+
+/* SIDEBAR */
+.sidebar{position:sticky;top:0;height:100vh;overflow-y:auto;background:var(--bg2);border-right:1px solid var(--b);display:flex;flex-direction:column}
+.sb-logo{padding:22px 18px 18px;border-bottom:1px solid var(--b);margin-bottom:10px;display:flex;align-items:center;gap:10px;text-decoration:none}
+.sb-icon{width:28px;height:28px;background:linear-gradient(135deg,#f7931a,#ff6b00);border-radius:7px;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.6rem;font-weight:700;color:#000;flex-shrink:0}
+.sb-name{font-family:var(--mono);font-size:.7rem;font-weight:700;letter-spacing:2px;color:var(--a);text-transform:uppercase}
+.sb-ver{font-family:var(--mono);font-size:.46rem;color:var(--m);background:var(--a3);border:1px solid rgba(247,147,26,.2);padding:1px 5px;border-radius:3px;margin-left:auto}
+.nav-grp{padding:2px 0 6px}
+.nav-grp-title{font-family:var(--mono);font-size:.46rem;letter-spacing:2.5px;color:var(--m2);text-transform:uppercase;padding:7px 18px 3px}
+.nav-a{display:flex;align-items:center;gap:7px;font-family:var(--mono);font-size:.66rem;color:var(--m);padding:5px 18px;text-decoration:none;border-left:2px solid transparent;transition:all .13s}
+.nav-a:hover{color:var(--t);background:rgba(247,147,26,.04);border-left-color:rgba(247,147,26,.3)}
+.nav-a.active{color:var(--a);border-left-color:var(--a);background:var(--a3)}
+.nb{display:inline-flex;align-items:center;justify-content:center;font-size:.43rem;font-weight:700;padding:1px 5px;border-radius:3px;letter-spacing:.4px;flex-shrink:0}
+.get{background:rgba(0,232,122,.15);color:var(--g)}
+.post{background:rgba(247,147,26,.15);color:var(--a)}
+
+/* MAIN */
+.main{padding:44px 56px 100px;max-width:880px}
+
+/* HERO */
+.hero{margin-bottom:52px}
+.hero-ey{font-family:var(--mono);font-size:.56rem;letter-spacing:3px;color:var(--a);text-transform:uppercase;margin-bottom:12px;display:flex;align-items:center;gap:10px}
+.hero-ey::before{content:'';width:24px;height:1px;background:var(--a);display:block}
+.hero h1{font-size:2.4rem;font-weight:800;letter-spacing:-1px;line-height:1.1;margin-bottom:12px}
+.hero h1 em{color:var(--a);font-style:normal}
+.hero-sub{font-size:.88rem;color:var(--m);max-width:520px;line-height:1.75;margin-bottom:28px}
+.stats{display:flex;gap:20px;flex-wrap:wrap}
+.stat{background:var(--bg3);border:1px solid var(--b2);border-radius:var(--r);padding:12px 16px;display:flex;flex-direction:column;gap:2px}
+.stat-n{font-family:var(--mono);font-size:1rem;font-weight:700;color:var(--t)}
+.stat-l{font-family:var(--mono);font-size:.46rem;letter-spacing:1.5px;color:var(--m2);text-transform:uppercase}
+
+/* SECTION */
+.section{margin-bottom:60px}
+.anchor{position:relative;top:-72px;display:block;visibility:hidden}
+.sh{font-size:1.3rem;font-weight:800;letter-spacing:-.3px;margin-bottom:6px;display:flex;align-items:center;gap:10px}
+.sh .tag{font-family:var(--mono);font-size:.48rem;color:var(--m2);font-weight:400;background:var(--bg3);border:1px solid var(--b);padding:2px 7px;border-radius:4px}
+.sd{font-size:.84rem;color:var(--m);line-height:1.75;margin-bottom:20px}
+
+/* CARDS */
+.card-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.card{background:var(--bg3);border:1px solid var(--b);border-radius:var(--r);padding:18px}
+.card.hi{border-color:rgba(247,147,26,.25);background:var(--a3)}
+.card-icon{font-size:1rem;margin-bottom:8px}
+.card-title{font-weight:700;font-size:.84rem;margin-bottom:5px}
+.card-url{font-family:var(--mono);font-size:.6rem;color:var(--a);margin-bottom:7px}
+.card-desc{font-size:.76rem;color:var(--m);line-height:1.65}
+
+/* STEPS */
+.steps{display:flex;flex-direction:column;gap:14px}
+.step{display:flex;gap:14px}
+.step-n{width:26px;height:26px;border-radius:50%;flex-shrink:0;background:var(--a2);border:1px solid rgba(247,147,26,.3);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.6rem;font-weight:700;color:var(--a)}
+.step-b{flex:1}
+.step-t{font-weight:700;font-size:.86rem;margin-bottom:7px}
+
+/* AUTH */
+.auth-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:16px}
+.auth-card{background:var(--bg3);border:1px solid var(--b);border-radius:var(--r);padding:13px}
+.auth-card.rec{border-color:rgba(0,232,122,.25);background:var(--g2)}
+.auth-lbl{font-family:var(--mono);font-size:.46rem;letter-spacing:2px;text-transform:uppercase;color:var(--m2);margin-bottom:5px}
+.auth-lbl-rec{color:var(--g)}
+.auth-val{font-family:var(--mono);font-size:.66rem;color:var(--g);word-break:break-all}
+.auth-val-muted{color:var(--m)}
+.warn-box{background:rgba(255,68,85,.07);border:1px solid rgba(255,68,85,.2);border-radius:var(--r);padding:11px 14px;font-size:.76rem;color:var(--err);display:flex;gap:9px;align-items:flex-start}
+
+/* ENDPOINTS */
+.ep{background:var(--bg2);border:1px solid var(--b);border-radius:var(--r);margin-bottom:9px;overflow:hidden;transition:border-color .2s}
+.ep:hover{border-color:var(--b2)}
+.ep.open{border-color:rgba(247,147,26,.2)}
+.ep-hdr{display:flex;align-items:center;gap:11px;padding:13px 17px;cursor:pointer;user-select:none;transition:background .13s}
+.ep-hdr:hover{background:rgba(255,255,255,.02)}
+.ep-met{font-family:var(--mono);font-size:.5rem;font-weight:700;padding:3px 8px;border-radius:4px;letter-spacing:.5px;flex-shrink:0}
+.ep-path{font-family:var(--mono);font-size:.73rem;color:var(--t);flex:1}
+.ep-path em{color:var(--m2);font-style:normal}
+.ep-ds{font-size:.7rem;color:var(--m)}
+.ep-chev{color:var(--m2);font-size:.68rem;transition:transform .2s;flex-shrink:0}
+.ep.open .ep-chev{transform:rotate(180deg)}
+.ep-body{display:none;border-top:1px solid var(--b)}
+.ep.open .ep-body{display:block}
+.ep-inner{padding:18px}
+
+/* PARAMS */
+.pt{font-family:var(--mono);font-size:.5rem;letter-spacing:2px;text-transform:uppercase;color:var(--m2);margin-bottom:7px}
+.ptable{width:100%;border-collapse:collapse;font-size:.74rem;margin-bottom:18px}
+.ptable th{text-align:left;font-family:var(--mono);font-size:.48rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--m2);padding:6px 11px;border-bottom:1px solid var(--b)}
+.ptable td{padding:8px 11px;border-bottom:1px solid var(--b);vertical-align:top}
+.ptable tr:last-child td{border-bottom:none}
+.pn{font-family:var(--mono);font-size:.68rem;color:var(--a)}
+.ptype{font-family:var(--mono);font-size:.6rem;color:var(--bl)}
+.req{background:rgba(255,68,85,.12);border:1px solid rgba(255,68,85,.25);color:var(--err);font-family:var(--mono);font-size:.43rem;padding:1px 5px;border-radius:3px}
+.opt{background:var(--bg3);border:1px solid var(--b);color:var(--m2);font-family:var(--mono);font-size:.43rem;padding:1px 5px;border-radius:3px}
+
+/* CODE */
+.cb{background:var(--bg);border:1px solid var(--b);border-radius:var(--r);overflow:hidden;margin-bottom:14px}
+.ch{display:flex;align-items:center;justify-content:space-between;padding:7px 13px;background:var(--bg3);border-bottom:1px solid var(--b)}
+.cl{font-family:var(--mono);font-size:.48rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--m2)}
+.ccb{background:none;border:1px solid var(--b2);color:var(--m2);font-family:var(--mono);font-size:.48rem;padding:2px 7px;border-radius:4px;cursor:pointer;transition:all .13s}
+.ccb:hover{border-color:var(--a);color:var(--a)}
+pre{padding:14px;overflow-x:auto;font-family:var(--mono);font-size:.68rem;line-height:1.65}
+.k{color:#c792ea}.s{color:#c3e88d}.f{color:#82aaff}.c{color:#546e7a;font-style:italic}.n{color:#f78c6c}.p{color:var(--a)}
+
+/* LIVE TEST */
+.lt{background:var(--bg3);border:1px solid rgba(56,197,255,.15);border-radius:var(--r);padding:15px;margin-top:6px}
+.lt-title{font-family:var(--mono);font-size:.5rem;letter-spacing:2px;text-transform:uppercase;color:var(--bl);margin-bottom:11px;display:flex;align-items:center;gap:7px}
+.lt-title::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--bl);box-shadow:0 0 7px var(--bl);display:inline-block}
+.lt-row{display:flex;gap:7px;margin-bottom:9px;flex-wrap:wrap}
+.lt-row input,.lt-row select{flex:1;min-width:160px;background:var(--bg);border:1px solid var(--b2);color:var(--t);font-family:var(--mono);font-size:.66rem;padding:7px 11px;border-radius:6px;outline:none;transition:border-color .13s}
+.lt-row input:focus,.lt-row select:focus{border-color:rgba(56,197,255,.4)}
+.lt-row input::placeholder{color:var(--m2)}
+.rb{background:var(--bl2);border:1px solid rgba(56,197,255,.3);color:var(--bl);font-family:var(--mono);font-size:.6rem;font-weight:700;letter-spacing:.4px;padding:7px 14px;border-radius:6px;cursor:pointer;transition:all .13s;white-space:nowrap}
+.rb:hover{background:rgba(56,197,255,.2);border-color:rgba(56,197,255,.5)}
+.rb:disabled{opacity:.5;cursor:not-allowed}
+.rb.orange{background:rgba(247,147,26,.1);border-color:rgba(247,147,26,.3);color:var(--a)}
+.rb.orange:hover{background:rgba(247,147,26,.2)}
+.lr{display:none;margin-top:9px}
+.lr.show{display:block}
+.lr pre{max-height:300px;overflow-y:auto;font-size:.63rem;background:var(--bg);border:1px solid var(--b);border-radius:6px}
+.ls{font-family:var(--mono);font-size:.56rem;margin-bottom:5px}
+.ok{color:var(--g)}.er{color:var(--err)}
+
+/* INFO */
+.ib{border-radius:var(--r);padding:11px 15px;font-size:.76rem;margin:14px 0;display:flex;gap:9px;line-height:1.65}
+.ib.tip{background:rgba(56,197,255,.06);border:1px solid rgba(56,197,255,.15);color:var(--bl)}
+.ib.warn{background:rgba(255,212,0,.06);border:1px solid rgba(255,212,0,.2);color:#ffd600}
+.ib.green{background:var(--g2);border:1px solid rgba(0,232,122,.2);color:var(--g)}
+.ib-icon{flex-shrink:0}
+
+/* TIERS */
+.tier-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:18px}
+.tc{background:var(--bg3);border:1px solid var(--b);border-radius:var(--r);padding:15px;display:flex;flex-direction:column;cursor:pointer;transition:border-color .18s,transform .15s;user-select:none}
+.tc:hover{border-color:rgba(247,147,26,.35);transform:translateY(-2px)}
+.tc.feat{border-color:rgba(247,147,26,.3);background:var(--a3)}
+.tc.feat:hover{border-color:rgba(247,147,26,.6)}
+.tc-name{font-family:var(--mono);font-size:.5rem;letter-spacing:2px;text-transform:uppercase;color:var(--m2);margin-bottom:7px}
+.tc-price{font-size:1.15rem;font-weight:800;margin-bottom:3px}
+.tc-price em{font-size:.7rem;font-weight:400;color:var(--m);font-style:normal}
+.tc-lim{font-family:var(--mono);font-size:.58rem;color:var(--m);line-height:1.9;margin-top:7px;flex:1}
+.tc-lim span{color:var(--t)}
+.tc-btn{margin-top:12px;width:100%;padding:8px 0;border:none;border-radius:6px;font-family:var(--mono);font-size:.58rem;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .15s;text-transform:uppercase}
+.tc-btn.free-btn{background:rgba(255,255,255,.06);color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.1)}
+.tc-btn.free-btn:hover{background:rgba(255,255,255,.1);color:var(--t)}
+.tc-btn.paid-btn{background:rgba(247,147,26,.15);color:var(--a);border:1px solid rgba(247,147,26,.3)}
+.tc-btn.paid-btn:hover{background:rgba(247,147,26,.25);border-color:rgba(247,147,26,.6)}
+.tc-btn.partner-btn{background:linear-gradient(135deg,rgba(247,147,26,.2),rgba(255,107,0,.2));color:#ffd580;border:1px solid rgba(247,147,26,.4)}
+.tc-btn.partner-btn:hover{background:linear-gradient(135deg,rgba(247,147,26,.35),rgba(255,107,0,.35))}
+/* KEY MODAL */
+.km-overlay{position:fixed;inset:0;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;z-index:9999;opacity:0;pointer-events:none;transition:opacity .2s}
+.km-overlay.open{opacity:1;pointer-events:all}
+.km-box{background:#0e0e16;border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:28px;max-width:420px;width:92%;position:relative;animation:kmIn .25s cubic-bezier(.34,1.1,.64,1);box-shadow:0 32px 80px rgba(0,0,0,.8)}
+.km-box::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;border-radius:14px 14px 0 0;background:linear-gradient(90deg,transparent,rgba(247,147,26,.4),transparent)}
+@keyframes kmIn{from{opacity:0;transform:scale(.93) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.km-close{position:absolute;top:14px;right:16px;background:none;border:none;color:rgba(255,255,255,.4);font-size:1.1rem;cursor:pointer;padding:4px 8px;border-radius:6px;transition:color .15s}
+.km-close:hover{color:#fff}
+.km-tier-badge{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:.52rem;letter-spacing:2px;text-transform:uppercase;padding:3px 10px;border-radius:20px;margin-bottom:14px}
+.km-price{font-size:1.6rem;font-weight:800;margin-bottom:4px}
+.km-price em{font-size:.8rem;font-weight:400;color:var(--m);font-style:normal}
+.km-steps{margin:16px 0;display:flex;flex-direction:column;gap:10px}
+.km-step{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.06);border-radius:8px}
+.km-step-num{width:20px;height:20px;border-radius:50%;background:rgba(247,147,26,.15);border:1px solid rgba(247,147,26,.3);display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:.55rem;font-weight:700;color:var(--a);flex-shrink:0;margin-top:1px}
+.km-step-text{font-size:.75rem;color:var(--m);line-height:1.6}
+.km-step-text strong{color:var(--t)}
+.km-tg-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px;background:linear-gradient(135deg,#229ED9,#1a8ab5);border:none;border-radius:10px;color:#fff;font-family:var(--mono);font-size:.72rem;font-weight:700;letter-spacing:.5px;cursor:pointer;text-decoration:none;transition:all .18s;margin-top:4px}
+.km-tg-btn:hover{background:linear-gradient(135deg,#2eb5f5,#1e9ed0);transform:translateY(-1px);box-shadow:0 8px 24px rgba(34,158,217,.3)}
+
+/* ERRORS */
+.etable{width:100%;border-collapse:collapse;font-size:.76rem}
+.etable th{text-align:left;font-family:var(--mono);font-size:.48rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--m2);padding:7px 11px;border-bottom:1px solid var(--b)}
+.etable td{padding:9px 11px;border-bottom:1px solid var(--b);vertical-align:top;line-height:1.6}
+.etable tr:last-child td{border-bottom:none}
+.hc{font-family:var(--mono);font-weight:700}
+.c2{color:var(--g)}.c4{color:#ffd600}.c41{color:var(--a)}.c42{color:#ff8c00}.c5{color:var(--err)}
+
+/* CHANGELOG */
+.cl-item{border-left:2px solid var(--b2);padding-left:18px;margin-bottom:26px;position:relative}
+.cl-item::before{content:'';position:absolute;left:-5px;top:5px;width:8px;height:8px;border-radius:50%;background:var(--a);border:2px solid var(--bg)}
+.cl-d{font-family:var(--mono);font-size:.56rem;color:var(--m2);margin-bottom:5px;display:flex;align-items:center;gap:7px}
+.cl-v{font-family:var(--mono);font-size:.62rem;font-weight:700;color:var(--a)}
+.cl-title{font-weight:700;font-size:.86rem;margin-bottom:7px}
+.cl-list{list-style:none;font-size:.76rem;color:var(--m);line-height:2}
+.cl-list li::before{content:'+ ';color:var(--g);font-family:var(--mono)}
+.cl-list li.fx::before{content:'✓ ';color:var(--bl)}
+.cl-list li.wn::before{content:'⚠ ';color:#ffd600}
+
+/* FOOTER */
+footer{padding:20px 56px;border-top:1px solid var(--b);display:flex;justify-content:space-between;align-items:center;font-size:.7rem;color:var(--m2);font-family:var(--mono)}
+footer a{color:var(--a);text-decoration:none}
+footer a:hover{text-decoration:underline}
+
+@media(max-width:860px){
+  .layout{grid-template-columns:1fr}
+  .sidebar{position:relative;height:auto}
+  .main{padding:22px 18px 56px}
+  .tier-grid,.card-grid,.auth-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- SIDEBAR -->
+<nav class="sidebar">
+  <a class="sb-logo" href="https://acelerat.vercel.app">
+    <div class="sb-icon">TX</div>
+    <span class="sb-name">TurboTX</span>
+    <span class="sb-ver">v14.3</span>
+  </a>
+  <div class="nav-grp">
+    <div class="nav-grp-title">Getting Started</div>
+    <a class="nav-a" href="#overview">Overview</a>
+    <a class="nav-a" href="#quickstart">Quick Start</a>
+    <a class="nav-a" href="#auth">Authentication</a>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-title">Router API — no auth</div>
+    <a class="nav-a" href="#r-price"><span class="nb get">GET</span>/api/price</a>
+    <a class="nav-a" href="#r-mempool"><span class="nb get">GET</span>/api/mempool</a>
+    <a class="nav-a" href="#r-status"><span class="nb get">GET</span>/api/status</a>
+    <a class="nav-a" href="#r-acceleration"><span class="nb get">GET</span>/api/acceleration</a>
+    <a class="nav-a" href="#r-cpfp"><span class="nb get">GET</span>/api/cpfp</a>
+    <a class="nav-a" href="#r-rbf"><span class="nb get">GET</span>/api/rbf</a>
+    <a class="nav-a" href="#r-health"><span class="nb get">GET</span>/api/health</a>
+    <a class="nav-a" href="#r-stats"><span class="nb get">GET</span>/api/stats</a>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-title">Partner API v1 — auth</div>
+    <a class="nav-a" href="#v1-ping"><span class="nb get">GET</span>?method=ping</a>
+    <a class="nav-a" href="#v1-accelerate"><span class="nb post">POST</span>?method=accelerate</a>
+    <a class="nav-a" href="#v1-batch"><span class="nb post">POST</span>?method=batch</a>
+    <a class="nav-a" href="#v1-keys"><span class="nb get">GET</span>?method=keys</a>
+    <a class="nav-a" href="#v1-status"><span class="nb get">GET</span>?method=status</a>
+    <a class="nav-a" href="#v1-fees"><span class="nb get">GET</span>?method=fees</a>
+    <a class="nav-a" href="#r-cron"><span class="nb get">GET</span>/api/cron</a>
+  </div>
+  <div class="nav-grp">
+    <div class="nav-grp-title">Reference</div>
+    <a class="nav-a" href="#rate-limits">Rate Limits</a>
+    <a class="nav-a" href="#errors">Error Codes</a>
+    <a class="nav-a" href="#changelog">Changelog</a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-ey">Developer Documentation</div>
+  <h1>TurboTX <em>Public API</em></h1>
+  <p class="hero-sub">Integrate Bitcoin transaction acceleration into any app. Real-time mempool data, smart fee analysis, and instant broadcasting to ~88% of network hashrate.</p>
+  <div class="stats">
+    <div class="stat"><span class="stat-n">~88%</span><span class="stat-l">Hashrate</span></div>
+    <div class="stat"><span class="stat-n">30</span><span class="stat-l">Channels</span></div>
+    <div class="stat"><span class="stat-n">&lt;200ms</span><span class="stat-l">Avg latency</span></div>
+    <div class="stat"><span class="stat-n">v14.3</span><span class="stat-l">API version</span></div>
+  </div>
+</div>
+
+<!-- OVERVIEW -->
+<span class="anchor" id="overview"></span>
+<section class="section">
+  <div class="sh">Overview <span class="tag">#overview</span></div>
+  <div class="sd">TurboTX exposes two API layers. Understanding which to use is essential.</div>
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon">🔓</div>
+      <div class="card-title">Layer 1 — Router API</div>
+      <div class="card-url">acelerat.vercel.app/api/&lt;endpoint&gt;</div>
+      <div class="card-desc">9 public endpoints. No auth. Rate-limited by IP. Perfect for wallets, dashboards, status pages.</div>
+    </div>
+    <div class="card hi">
+      <div class="card-icon">🔑</div>
+      <div class="card-title">Layer 2 — Partner API v1</div>
+      <div class="card-url">acelerat.vercel.app/api/v1?method=…</div>
+      <div class="card-desc">Bearer key auth (<code style="font-family:var(--mono);color:var(--a)">ttx_live_…</code>). TX submission, batch broadcast, tiered rate limits.</div>
+    </div>
+  </div>
+  <div class="ib tip"><span class="ib-icon">💡</span><span>Router endpoints are mirrored in v1: <code style="font-family:var(--mono)">/api/health</code> = <code style="font-family:var(--mono)">/api/v1?method=health</code> — use Router unless you need TX submission or higher rate limits.</span></div>
+</section>
+
+<!-- QUICKSTART -->
+<span class="anchor" id="quickstart"></span>
+<section class="section">
+  <div class="sh">Quick Start <span class="tag">#quickstart</span></div>
+  <div class="sd">Get your first API response in under 2 minutes.</div>
+  <div class="steps">
+    <div class="step">
+      <div class="step-n">1</div>
+      <div class="step-b">
+        <div class="step-t">Check network fees (no auth needed)</div>
+        <div class="cb"><div class="ch"><span class="cl">cURL</span><button class="ccb" onclick="copyCode(this)">Copy</button></div><pre>curl "https://acelerat.vercel.app/api/price"</pre></div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">2</div>
+      <div class="step-b">
+        <div class="step-t">Analyze a stuck transaction</div>
+        <div class="cb"><div class="ch"><span class="cl">JavaScript</span><button class="ccb" onclick="copyCode(this)">Copy</button></div><pre><span class="k">const</span> res = <span class="k">await</span> <span class="f">fetch</span>(<span class="s">'https://acelerat.vercel.app/api/status?txid=YOUR_TXID'</span>);
+<span class="k">const</span> d = <span class="k">await</span> res.<span class="f">json</span>();
+console.<span class="f">log</span>(d.status);            <span class="c">// 'mempool' | 'confirmed'</span>
+console.<span class="f">log</span>(d.feeRate);           <span class="c">// e.g. 12 sat/vB</span>
+console.<span class="f">log</span>(d.accelerationAdvice); <span class="c">// { action, urgency }</span></pre></div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">3</div>
+      <div class="step-b">
+        <div class="step-t">Accelerate via Partner API (requires key)</div>
+        <div class="cb"><div class="ch"><span class="cl">JavaScript</span><button class="ccb" onclick="copyCode(this)">Copy</button></div><pre><span class="k">const</span> res = <span class="k">await</span> <span class="f">fetch</span>(<span class="s">'https://acelerat.vercel.app/api/v1?method=accelerate'</span>, {
+  method: <span class="s">'POST'</span>,
+  headers: { <span class="s">'Authorization'</span>: <span class="s">'Bearer ttx_live_YOUR_KEY'</span>, <span class="s">'Content-Type'</span>: <span class="s">'application/json'</span> },
+  body: <span class="f">JSON.stringify</span>({ txid: <span class="s">'YOUR_64_HEX_TXID'</span>, plan: <span class="s">'premium'</span> })
+});
+<span class="k">const</span> d = <span class="k">await</span> res.<span class="f">json</span>();
+console.<span class="f">log</span>(d.summary.hashrateReach); <span class="c">// 88 (percent)</span></pre></div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-n">4</div>
+      <div class="step-b">
+        <div class="step-t">Get a Partner API key</div>
+        <p style="font-size:.8rem;color:var(--m);line-height:1.75">Contact <a href="https://t.me/Sup_TurboTX" style="color:var(--a)">@Sup_TurboTX</a> on Telegram. Keys look like <code style="font-family:var(--mono);color:var(--a);font-size:.75rem">ttx_live_…</code></p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AUTH -->
+<span class="anchor" id="auth"></span>
+<section class="section">
+  <div class="sh">Authentication <span class="tag">#auth</span></div>
+  <div class="auth-grid">
+    <div class="auth-card rec">
+      <div class="auth-lbl auth-lbl-rec">★ Recommended</div>
+      <div class="auth-val">Authorization: Bearer ttx_live_…</div>
+    </div>
+    <div class="auth-card">
+      <div class="auth-lbl">Header</div>
+      <div class="auth-val auth-val-muted">X-API-Key: ttx_live_…</div>
+    </div>
+    <div class="auth-card">
+      <div class="auth-lbl">Query (dev only)</div>
+      <div class="auth-val auth-val-muted">?apikey=ttx_live_…</div>
+    </div>
+  </div>
+  <div class="warn-box"><span>⚠</span><span>Never expose API keys client-side. Use environment variables or a backend proxy.</span></div>
+</section>
+
+<!-- ROUTER API -->
+<span class="anchor" id="r-price"></span>
+<section class="section">
+  <div class="sh">Router API — No Auth <span class="tag">#router</span></div>
+  <div class="sd">Direct endpoints via <code style="font-family:var(--mono)">api/router.js</code>. No API key required.</div>
+
+  <!-- price -->
+  <div class="ep" id="ep-price">
+    <div class="ep-hdr" onclick="toggleEp('ep-price')">
+      <span class="ep-met get">GET</span><span class="ep-path">/api/price</span>
+      <span class="ep-ds">Dynamic Premium pricing</span><span class="ep-chev">▾</span>
+    </div>
+    <div class="ep-body"><div class="ep-inner">
+      <p style="font-size:.8rem;color:var(--m);margin-bottom:14px">Price dynamically calculated from fee rate + mempool queue. Updates every minute.</p>
+      <div class="cb"><div class="ch"><span class="cl">Response 200</span><button class="ccb" onclick="copyCode(this)">Copy</button></div><pre>{
+  <span class="p">"ok"</span>: <span class="k">true</span>, <span class="p">"usd"</span>: <span class="n">5</span>, <span class="p">"btc"</span>: <span class="n">0.000059</span>, <span class="p">"sats"</span>: <span class="n">5900</span>,
+  <span class="p">"btcPrice"</span>: <span class="n">84200</span>, <span class="p">"feeRate"</span>: <span class="n">8</span>, <span class="p">"congestion"</span>: <span class="s">"medium"</span>,
+  <span class="p">"emoji"</span>: <span class="s">"🟡"</span>, <span class="p">"text"</span>: <span class="s">"Умеренная нагрузка"</span>, <span class="p">"textEn"</span>: <span class="s">"Moderate load"</span>,
+  <span class="p">"confLabel"</span>: <span class="s">"10–20 мин ⚡"</span>, <span class="p">"heartLevel"</span>: <span class="s">"mid"</span>,
+  <span class="p">"mempoolCongestion"</span>: { <span class="p">"level"</span>: <span class="s">"low"</span>, <span class="p">"txCount"</span>: <span class="n">24965</span>, <span class="p">"textEn"</span>: <span class="s">"Mempool normal"</span> },
+  <span class="p">"bestTime"</span>: { <span class="p">"quality"</span>: <span class="s">"good"</span>, <span class="p">"tip"</span>: <span class="s">"✅ Good time for a transaction"</span> }
+}</pre></div>
+      <div class="lt">
+        <div class="lt-title">Live Test</div>
+        <div class="lt-row"><button class="rb" onclick="runTest('price','/api/price',this)">▶ Run</button></div>
+        <div class="lr" id="res-price"></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- mempool -->
+  <span class="anchor" id="r-mempool"></span>
+  <div class="ep" id="ep-mempool">
+    <div class="ep-hdr" onclick="toggleEp('ep-mempool')">
+      <span class="ep-met get">GET</span><span class="ep-path">/api/mempool</span>
+      <span class="ep-ds">Mempool state, fees, congestion</span><span class="ep-chev">▾</span>
+    </div>
+    <div class="ep-body"><div class="ep-inner">
+      <div class="cb"><div class="ch"><span class="cl">Response 200</span><button class="ccb" onclick="copyCode(this)">Copy</button></div><pre>{
+  <span class="p">"ok"</span>: <span class="k">true</span>,
+  <span class="p">"fees"</span>: { <span class="p">"fastest"</span>: <span class="n">45</span>, <span class="p">"halfHour"</span>: <span class="n">30</span>, <span class="p">"hour"</span>: <span class="n">20</span>, <span class="p">"economy"</span>: <span class="n">8</span> },
+  <span class="p">"mempool"</span>: { <span class="p">"count"</span>: <span class="n">28400</span>, <span class="p">"vsizeMB"</span>: <span class="n">28.4</span> },
+  <span class="p">"congestion"</span>: <span class="s">"medium"</span>, <span class="p">"congestionText"</span>: <span class="s">"Умеренная нагрузка"</span>,
+  <span class="p">"history24h"</span>: { <span class="p">"min"</span>: <span class="n">8</span>, <span class="p">"max"</span>: <span class="n">62</span>, <span class="p">"avg"</span>: <span class="n">24</span> },
+  <span class="p">"timestamp"</span>: <span class="n">1710000000000</span>
+}</pre></div>
+      <div class="lt">
+        <div class="lt-title">Live Test</div>
+        <div class="lt-row"><button class="rb" onclick="runTest('mempool','/api/mempool',this)">▶ Run</button></div>
+        <div class="lr" id="res-mempool"></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- status -->
+  <span class="anchor" id="r-status"></span>
+  <div class="ep" id="ep-status">
+    <div class="ep-hdr" onclick="toggleEp('ep-status')">
+      <span class="ep-met get">GET</span><span class="ep-path">/api/status<em>?txid=&lt;64hex&gt;</em></span>
+      <span class="ep-ds">Full TX status &amp; analysis</span><span class="ep-chev">▾</span>
+    </div>
+    <div class="ep-body"><div class="ep-inner">
+      <table class="ptable"><thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody><tr><td class="pn">txid</td><td class="ptype">string</td><td><span class="req">required</span></td><td>64-char hex transaction ID</td></tr></tbody>
+      </table>
+      <div class="cb"><div class="ch"><span class="cl">Response 200</span><button class="ccb" onclick="copyCode(this)">Copy</button></div><pre>{
+  <span class="p">"ok"</span>: <span class="k">true</span>, <span class="p">"status"</span>: <span class="s">"mempool"</span>,
+  <span class="p">"confirmed"</span>: <span class="k">false</span>, <span class="p">"feeRate"</span>: <span class="n">12</span>,
+  <span class="p">"needsBoost"</span>: <span class="k">true</span>, <span class="p">"rbfEnabled"</span>: <span class="k">false</span>,
+  <span class="p">"isStuck"</span>: <span class="k">false</span>, <span class="p">"stuckHours"</span>: <span class="n">3</span>,
+  <span class="p">"accelerationAdvice"</span>: { <span class="p">"action"</span>: <span class="s">"cpfp_or_boost"</span>, <span class="p">"urgency"</span>: <span class="s">"high"</span> }
+}</pre></div>
+      <div class="lt">
+        <div class="lt-title">Live Test</div>
+        <div class="lt-row">
+          <input type="text" id="inp-status" placeholder="64-hex TXID" maxlength="64">
+          <button class="rb" onclick="runTxTest('status','/api/status?txid=','inp-status',this)">▶ Run</button>
+        </div>
+        <div class="lr" id="res-status"></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- acceleration -->
+  <span class="anchor" id="r-acceleration"></span>
+  <div class="ep" id="ep-acc">
+    <div class="ep-hdr" onclick="toggleEp('ep-acc')">
+      <span class="ep-met get">GET</span><span class="ep-path">/api/acceleration<em>?txid=&lt;64hex&gt;</em></span>
+      <span class="ep-ds">Smart Advisor — cost comparison &amp; rescue plan</span><span class="ep-chev">▾</span>
+    </div>
+    <div class="ep-body"><div class="ep-inner">
+      <p style="font-size:.8rem;color:var(--m);margin-bottom:14px">CPFP vs RBF vs TurboTX cost comparison, time forecast, miner detection, cheap-window, rescue plan for stuck TXs (24h+).</p>
+      <div class="lt">
+        <div class="lt-title">Live Test</div>
+        <div class="lt-row">
+          <input type="text" id="inp-acc" placeholder="64-hex TXID" maxlength="64">
+          <button class="rb" onclick="runTxTest('acc','/api/acceleration?txid=','inp-acc',this)">▶ Run</button>
+        </div>
+        <div class="lr" id="res-acc"></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- cpfp -->
+  <span class="anchor" id="r-cpfp"></span>
+  <div class="ep" id="ep-cpfp">
+    <div class="ep-hdr" onclick="toggleEp('ep-cpfp')">
+      <span class="ep-met get">GET</span><span class="ep-path">/api/cpfp<em>?txid=&lt;64hex&gt;</em></span>
+      <span class="ep-ds">CPFP fee calculator</span><span class="ep-chev">▾</span>
+    </div>
+    <div class="ep-body"><div class="ep-inner">
+      <table class="ptable"><thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td class="pn">txid</td><td class="ptype">string</td><td><span class="req">required</span></td><td>Parent transaction ID</td></tr>
+          <tr><td class="pn">target</td><td class="ptype">string</td><td><span class="opt">optional</span></td><td><code style="font-family:var(--mono)">eco|std|fast</code>. Default: <code style="font-family:var(--mono)">fast</code></td></tr>
+        </tbody>
+      </table>
+      <div class="lt">
+        <div class="lt-title">Live Test</div>
+        <div class="lt-row">
+          <input type="text" id="inp-cpfp" placeholder="64-hex TXID" maxlength="64">
+          <select id="sel-cpfp"><option>fast</option><option>std</option><option>eco</option></select>
+          <button class="rb" onclick="runCpfp(this)">▶ Run</button>
+        </div>
+        <div class="lr" id="res-cpfp"></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- rbf -->
+  <span class="anchor" id="r-rbf"></span>
+  <div class="ep" id="ep-rbf">
+    <div class="ep-hdr" onclick="toggleEp('ep-rbf')">
+      <span class="ep-met get">GET</span><span class="ep-path">/api/rbf<em>?txid=&lt;64hex&gt;</em></span>
+      <span class="ep-ds">RBF fee bump calculator</span><span class="ep-chev">▾</span>
+    </div>
+    <div class="ep-body"><div class="ep-inner">
+      <p style="font-size:.8rem;color:var(--m);margin-bottom:14px">Check BIP-125 availability and calculate minimum replacement fee. Compares RBF vs CPFP cost automatically.</p>
+      <div class="lt">
+        <div class="lt-title">Live Test</div>
+        <div class="lt-row">
+          <input type="text" id="inp-rbf" placeholder="64-hex TXID" maxlength="64">
+          <button class="rb" onclick="runTxTest('rbf','/api/rbf?txid=','inp-rbf',this)">▶ Run</button>
+        </div>
+        <div class="lr" id="res-rbf"></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- health -->
+  <span class="anchor" id="r-health"></span>
+  <div class="ep" id="ep-health">
+    <div class="ep-hdr" onclick="toggleEp('ep-health')">
+      <span class="ep-met get">GET</span><span class="ep-path">/api/health</span>
+      <span class="ep-ds">Live health — all 30 channels</span><span class="ep-chev">▾</span>
+    </div>
+    <div class="ep-body"><div class="ep-inner">
+      <div class="lt">
+        <div class="lt-title">Live Test</div>
+        <div class="lt-row">
+          <button class="rb" onclick="runTest('health','/api/health',this)">▶ Run</button>
+          <button class="rb orange" onclick="runTest('health','/api/health?verbose=1',this)">▶ Verbose</button>
+        </div>
+        <div class="lr" id="res-health"></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- stats -->
+  <span class="anchor" id="r-stats"></span>
+  <div class="ep" id="ep-stats">
+    <div class="ep-hdr" onclick="toggleEp('ep-stats')">
+      <span class="ep-met get">GET</span><span class="ep-path">/api/stats</span>
+      <span class="ep-ds">Service &amp; network statistics</span><span class="ep-chev">▾</span>
+    </div>
+    <div class="ep-body"><div class="ep-inner">
+      <div class="lt">
+        <div class="lt-title">Live Test</div>
+        <div class="lt-row"><button class="rb" onclick="runTest('stats','/api/stats',this)">▶ Run</button></div>
+        <div class="lr" id="res-stats"></div>
+      </div>
+    </div></div>
+  </div>
+</section>
+
+<!-- PARTNER API v1 -->
+<section class="section">
+  <div class="sh">Partner API v1 <span class="tag">#v1</span></div>
+  <div class="sd">All requests require <code style="font-family:var(--mono)">Authorization: Bearer ttx_live_…</code></div>
+
+  <!-- ping -->
+  <span class="anchor" id="v1-ping"></span>
+  <div class="ep" id="ep-v1ping">
+    <div class="ep-hdr" onclick="toggleEp('ep-v1ping')">
+      <span class="ep-met get">GET</span><span class="ep-path">/api/v1<em>?method=ping</em></span>
+      <span class="ep-ds">Verify key &amp; check rate limits</span><span class="ep-chev">▾</span>
+    </div>
+    <div class="ep-body"><div class="ep-inner">
+      <div class="cb"><div class="ch"><span class="cl">Response 200</span><button class="ccb" onclick="copyCode(this)">Copy</button></div><pre>{
+  <span class="p">"ok"</span>: <span class="k">true</span>, <span class="p">"message"</span>: <span class="s">"pong"</span>, <span class="p">"apiVersion"</span>: <span class="s">"v1"</span>,
+  <span class="p">"keyInfo"</span>: { <span class="p">"tier"</span>: <span class="s">"pro"</span>, <span class="p">"name"</span>: <span class="s">"YourApp"</span> },
+  <span class="p">"rateLimit"</span>: { <span class="p">"perMin"</span>: <span class="n">500</span>, <span class="p">"perDay"</span>: <span class="n">50000</span> },
+  <span class="p">"remaining"</span>: { <span class="p">"perMin"</span>: <span class="n">499</span>, <span class="p">"perDay"</span>: <span class="n">49999</span> }
+}</pre></div>
+      <div class="lt">
+        <div class="lt-title">Live Test</div>
+        <div class="lt-row">
+          <input type="text" id="inp-apikey" placeholder="ttx_live_your_key">
+          <button class="rb" onclick="runV1('ping','inp-apikey',this)">▶ Test Key</button>
+        </div>
+        <div class="lr" id="res-v1ping"></div>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- accelerate -->
+  <span class="anchor" id="v1-accelerate"></span>
+  <div class="ep" id="ep-v1acc">
+    <div class="ep-hdr" onclick="toggleEp('ep-v1acc')">
+      <span class="ep-met post">POST</span><span class="ep-path">/api/v1<em>?method=accelerate</em></span>
+      <span class="ep-ds">Broadcast TX to 30 channels · ~88% hashrate</span><span class="ep-chev">▾</span>
+    </div>
+    <div class="ep-body"><div class="ep-inner">
+      <table class="ptable"><thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody>
+          <tr><td class="pn">txid</td><td class="ptype">string</td><td><span class="req">required</span></td><td>64-char transaction ID</td></tr>
+          <tr><td class="pn">plan</td><td class="ptype">string</td><td><span class="opt">optional</span></td><td><code style="font-family:var(--mono)">"free"</code> or <code style="font-family:var(--mono)">"premium"</code>. Pro/Partner auto-upgrade.</td></tr>
+          <tr><td class="pn">webhookUrl</td><td class="ptype">string</td><td><span class="opt">optional</span></td><td>POST callback when acceleration starts</td></tr>
+        </tbody>
+      </table>
+      <div class="ib green"><span class="ib-icon">⚡</span><span>Premium adaptive waves: <b>3 waves</b> (fee ratio ≥ 0.8) · <b>5 waves</b> (≥ 0.4) · <b>10 waves</b> (stuck). Includes MARA Slipstream private mempool.</span></div>
+      <div class="cb"><div class="ch"><span class="cl">Response 200</span><button class="ccb" onclick="copyCode(this)">Copy</button></div><pre>{
+  <span class="p">"ok"</span>: <span class="k">true</span>,
+  <span class="p">"results"</span>: [
+    { <span class="p">"name"</span>: <span class="s">"mempool.space"</span>, <span class="p">"ok"</span>: <span class="k">true</span>, <span class="p">"ms"</span>: <span class="n">142</span>, <span class="p">"tier"</span>: <span class="s">"node"</span> },
+    { <span class="p">"name"</span>: <span class="s">"AntPool"</span>,       <span class="p">"ok"</span>: <span class="k">true</span>, <span class="p">"ms"</span>: <span class="n">380</span>, <span class="p">"tier"</span>: <span class="s">"pool"</span> }
+  ],
+  <span class="p">"summary"</span>: { <span class="p">"ok"</span>: <span class="n">28</span>, <span class="p">"total"</span>: <span class="n">30</span>, <span class="p">"hashrateReach"</span>: <span class="n">88</span>, <span class="p">"ms"</span>: <span class="n">4200</span> },
+  <span class="p">"waveStrategy"</span>: { <span class="p">"waves"</span>: <span class="n">10</span>, <span class="p">"label"</span>: <span class="s">"aggressive"</span> },
+  <span class="p">"jobId"</span>: <span class="s">"a1b2c3d4_1710000000000"</span>
+}</pre></div>
+    </div></div>
+  </div>
+
+  <!-- batch -->
+  <span class="anchor" id="v1-batch"></span>
+  <div class="ep" id="ep-v1batch">
+    <div class="ep-hdr" onclick="toggleEp('ep-v1batch')">
+      <span class="ep-met post">POST</span><span class="ep-path">/api/v1<em>?method=batch</em></span>
+      <span class="ep-ds">Batch broadcast — up to 20 TXs</span><span class="ep-chev">▾</span>
+    </div>
+    <div class="ep-body"><div class="ep-inner">
+      <table class="ptable"><thead><tr><th>Param</th><th>Type</th><th>Required</th><th>Description</th></tr></thead>
+        <tbody><tr><td class="pn">txids</td><td class="ptype">string[]</td><td><span class="req">required</span></td><td>Array of 64-hex TXIDs, max 20</td></tr></tbody>
+      </table>
+      <div class="cb"><div class="ch"><span class="cl">Request Body</span><button class="ccb" onclick="copyCode(this)">Copy</button></div><pre>{ <span class="p">"txids"</span>: [<span class="s">"a1b2c3...64hex"</span>, <span class="s">"d4e5f6...64hex"</span>] }</pre></div>
+    </div></div>
+  </div>
+
+  <!-- keys -->
+  <span class="anchor" id="v1-keys"></span>
+  <div class="ep" id="ep-v1keys">
+    <div class="ep-hdr" onclick="toggleEp('ep-v1keys')">
+      <span class="ep-met get">GET</span><span class="ep-path">/api/v1<em>?method=keys</em></span>
+      <span class="ep-ds">API key management (admin)</span><span class="ep-chev">▾</span>
+    </div>
+    <div class="ep-body"><div class="ep-inner">
+      <p style="font-size:.8rem;color:var(--m);margin-bottom:14px">Create, list, revoke API keys. Requires <code style="font-family:var(--mono)">X-Admin-Token</code> header.</p>
+      <div class="cb"><div class="ch"><span class="cl">Create key</span><button class="ccb" onclick="copyCode(this)">Copy</button></div><pre>POST /api/v1?method=keys
+X-Admin-Token: your_admin_secret
+
+{ <span class="p">"action"</span>: <span class="s">"create"</span>, <span class="p">"tier"</span>: <span class="s">"basic"</span>, <span class="p">"name"</span>: <span class="s">"MyApp"</span> }</pre></div>
+      <div class="ib warn"><span class="ib-icon">⚠</span><span>The key is shown <b>only once</b> in the create response — save it immediately.</span></div>
+    </div></div>
+  </div>
+</section>
+
+<!-- CRON + V1 STATUS/FEES -->
+<span class="anchor" id="r-cron"></span>
+<section class="section">
+  <div class="sh">Server Cron + Additional v1 Methods <span class="tag">#cron</span></div>
+
+  <div class="ep" id="ep-cron">
+    <div class="ep-hdr" onclick="toggleEp('ep-cron')">
+      <span class="ep-met get">GET</span><span class="ep-path">/api/cron</span>
+      <span class="ep-ds">Server-side wave runner — requires X-Cron-Secret header (cron-job.org)</span><span class="ep-chev">▾</span>
+    </div>
+    <div class="ep-body"><div class="ep-inner">
+      <p style="font-size:.8rem;color:var(--m);margin-bottom:14px">Called every minute by cron-job.org. Reads active wave jobs from Firebase, fires due waves via <code style="font-family:var(--mono)">/api/repeat</code>. Fires even when user's browser is closed.</p>
+      <div class="ib tip"><span class="ib-icon">⚙️</span><span>Setup: cron-job.org → GET <code style="font-family:var(--mono)">https://acelerat.vercel.app/api/cron</code> every 1 min, header <code style="font-family:var(--mono)">X-Cron-Secret: &lt;CRON_SECRET&gt;</code></span></div>
+      <div class="cb"><div class="ch"><span class="cl">Response 200</span><button class="ccb" onclick="copyCode(this)">Copy</button></div><pre>{
+  <span class="p">"ok"</span>: <span class="k">true</span>, <span class="p">"processed"</span>: <span class="n">2</span>, <span class="p">"succeeded"</span>: <span class="n">2</span>,
+  <span class="p">"confirmed"</span>: <span class="n">0</span>, <span class="p">"ms"</span>: <span class="n">894</span>,
+  <span class="p">"jobs"</span>: [{ <span class="p">"txid"</span>: <span class="s">"abc..."</span>, <span class="p">"ok"</span>: <span class="k">true</span>, <span class="p">"wave"</span>: <span class="n">2</span>, <span class="p">"nextWaveIn"</span>: <span class="s">"30 мин"</span> }]
+}</pre></div>
+    </div></div>
+  </div>
+
+  <span class="anchor" id="v1-status"></span>
+  <div class="ep" id="ep-v1status">
+    <div class="ep-hdr" onclick="toggleEp('ep-v1status')">
+      <span class="ep-met get">GET</span><span class="ep-path">/api/v1<em>?method=status&amp;txid=&lt;hex&gt;</em></span>
+      <span class="ep-ds">Full TX status via v1 API (same as /api/status, with _meta wrapper)</span><span class="ep-chev">▾</span>
+    </div>
+    <div class="ep-body"><div class="ep-inner">
+      <p style="font-size:.8rem;color:var(--m)">Returns identical payload to <code style="font-family:var(--mono)">/api/status</code> with additional <code style="font-family:var(--mono)">_meta</code> object containing tier, remaining limits, requestId.</p>
+    </div></div>
+  </div>
+
+  <span class="anchor" id="v1-fees"></span>
+  <div class="ep" id="ep-v1fees">
+    <div class="ep-hdr" onclick="toggleEp('ep-v1fees')">
+      <span class="ep-met get">GET</span><span class="ep-path">/api/v1<em>?method=fees</em></span>
+      <span class="ep-ds">Current fee market — fastest/halfHour/hour/economy + congestion + mempool</span><span class="ep-chev">▾</span>
+    </div>
+    <div class="ep-body"><div class="ep-inner">
+      <div class="cb"><div class="ch"><span class="cl">Response 200</span><button class="ccb" onclick="copyCode(this)">Copy</button></div><pre>{
+  <span class="p">"ok"</span>: <span class="k">true</span>,
+  <span class="p">"fees"</span>: { <span class="p">"fastest"</span>: <span class="n">8</span>, <span class="p">"halfHour"</span>: <span class="n">5</span>, <span class="p">"hour"</span>: <span class="n">4</span>, <span class="p">"economy"</span>: <span class="n">2</span> },
+  <span class="p">"congestion"</span>: <span class="s">"low"</span>,
+  <span class="p">"mempool"</span>: { <span class="p">"count"</span>: <span class="n">24965</span>, <span class="p">"vsizeMB"</span>: <span class="n">19.4</span> }
+}</pre></div>
+    </div></div>
+  </div>
+
+</section>
+
+<!-- RATE LIMITS -->
+<span class="anchor" id="rate-limits"></span>
+<section class="section">
+  <div class="sh">Rate Limits <span class="tag">#rate-limits</span></div>
+  <div class="sd">Per API key. Current usage in every response under <code style="font-family:var(--mono)">_meta</code> and response headers.</div>
+  <div class="tier-grid">
+    <div class="tc" onclick="openKeyModal('free')">
+      <div class="tc-name">Free</div>
+      <div class="tc-price">$0 <em>/ mo</em></div>
+      <div class="tc-lim"><span>30</span> req/min<br><span>500</span> req/day</div>
+      <button class="tc-btn free-btn">Get Free Key</button>
+    </div>
+    <div class="tc" onclick="openKeyModal('basic')">
+      <div class="tc-name">Basic</div>
+      <div class="tc-price">$29 <em>/ mo</em></div>
+      <div class="tc-lim"><span>100</span> req/min<br><span>5,000</span> req/day</div>
+      <button class="tc-btn paid-btn">Get Basic Key</button>
+    </div>
+    <div class="tc feat" onclick="openKeyModal('pro')">
+      <div class="tc-name">Pro ⭐</div>
+      <div class="tc-price" style="color:var(--a)">$99 <em>/ mo</em></div>
+      <div class="tc-lim"><span>500</span> req/min<br><span>50,000</span> req/day</div>
+      <button class="tc-btn paid-btn">Get Pro Key</button>
+    </div>
+    <div class="tc" onclick="openKeyModal('partner')">
+      <div class="tc-name">Partner</div>
+      <div class="tc-price">Custom</div>
+      <div class="tc-lim"><span>Unlimited</span><br>SLA + support</div>
+      <button class="tc-btn partner-btn">Contact Us</button>
+    </div>
+  </div>
+  <div class="cb"><div class="ch"><span class="cl">Response Headers</span></div><pre>X-RateLimit-Limit-Minute:     500
+X-RateLimit-Remaining-Minute: 498
+X-RateLimit-Limit-Day:        50000
+X-RateLimit-Remaining-Day:    49997</pre></div>
+</section>
+
+<!-- ERRORS -->
+<span class="anchor" id="errors"></span>
+<section class="section">
+  <div class="sh">Error Codes <span class="tag">#errors</span></div>
+  <table class="etable">
+    <thead><tr><th>HTTP</th><th>Reason</th><th>Resolution</th></tr></thead>
+    <tbody>
+      <tr><td class="hc c2">200</td><td><code style="font-family:var(--mono)">ok: false</code></td><td>TX not found or method returned empty</td></tr>
+      <tr><td class="hc c4">400</td><td>Invalid txid / method</td><td>Ensure txid = 64 hex chars. Check <code style="font-family:var(--mono)">availableMethods</code> in error body.</td></tr>
+      <tr><td class="hc c41">401</td><td>Unauthorized</td><td>API key missing or invalid. Check <code style="font-family:var(--mono)">Authorization: Bearer</code> header.</td></tr>
+      <tr><td class="hc c42">429</td><td>Rate limit exceeded</td><td>Slow down or upgrade tier. See <code style="font-family:var(--mono)">retryAfter</code> ms.</td></tr>
+      <tr><td class="hc c5">500</td><td>Internal error</td><td>Upstream Bitcoin node error. Retry with backoff.</td></tr>
+    </tbody>
+  </table>
+  <div class="cb" style="margin-top:14px"><div class="ch"><span class="cl">Error Body</span></div><pre>{
+  <span class="p">"ok"</span>: <span class="k">false</span>,
+  <span class="p">"error"</span>: <span class="s">"Rate limit exceeded (per_minute)"</span>,
+  <span class="p">"limit"</span>: <span class="n">30</span>,
+  <span class="p">"retryAfter"</span>: <span class="n">45000</span>
+}</pre></div>
+</section>
+
+<!-- CHANGELOG -->
+<span class="anchor" id="changelog"></span>
+<section class="section">
+  <div class="sh">Changelog <span class="tag">#changelog</span></div>
+  <div class="cl-item">
+    <div class="cl-d"><span class="cl-v">v14.3</span> — March 2026</div>
+    <div class="cl-title">heartLevel sync + i18n + wave timer fixes</div>
+    <ul class="cl-list">
+      <li>heartLevel now synced with price tier (feeRate + mpCount + blockTime) — no more mismatch between price and heart animation</li>
+      <li>Removed duplicate heart update in _rtApplyTicker — was causing flicker</li>
+      <li>Full i18n for NI cards, FAQ answers, modal header, pool grid, mempool bar</li>
+      <li class="fx">Wave history timer: confirmed TX shows "✅ confirmed" instead of frozen countdown</li>
+      <li class="fx">WebSocket: max 2 retries + session-level disable flag — no more console spam</li>
+      <li class="fx">Smart Advisor text had broken ternary — fixed lang-aware output</li>
+    </ul>
+  </div>
+  <div class="cl-item">
+    <div class="cl-d"><span class="cl-v">v14.2</span> — March 2026</div>
+    <div class="cl-title">Server-side waves + localStorage rewrite</div>
+    <ul class="cl-list">
+      <li>Wave system rewritten: localStorage + setInterval replaces 10× setTimeout — survives tab close/refresh</li>
+      <li>Server-side wave cron via cron-job.org + Firebase Realtime DB — waves fire even when browser closed</li>
+      <li>Wave state key: <code style="font-family:var(--mono);color:var(--a)">ttx_wave_v2_&lt;txid&gt;</code> with nextWaveAt, wavesDone, active</li>
+      <li class="fx">Wave countdown in history detail reads actual nextWaveAt from localStorage</li>
+      <li class="fx">Client PRICE_TIERS synced with router.js: low=5–10min, medium=10–15min, high=10–20min</li>
+    </ul>
+  </div>
+  <div class="cl-item">
+    <div class="cl-d"><span class="cl-v">v14.1</span> — March 2026</div>
+    <div class="cl-title">Security hardening + bug fixes</div>
+    <ul class="cl-list">
+      <li>HMAC activation tokens — PREMIUM_SECRET no longer sent to client</li>
+      <li>broadcast.js accepts both raw secret and HMAC token (backward compat)</li>
+      <li class="fx">Fixed dynamic API keys (created via v1 now work in auth)</li>
+      <li class="fx">Fixed Lightning bech32 invoice parser</li>
+      <li class="fx">Fixed hashrateReach = 0 despite pools responding</li>
+      <li class="fx">Fixed channel names mismatch (bitaccelerate, sochain.com, Lincoin)</li>
+      <li>Result panel restored after F5 from localStorage</li>
+      <li>History cards show feeRate, hashrate %, channels, ETA</li>
+      <li class="wn">CSP via meta tag (Vercel Hobby plan header limitation)</li>
+    </ul>
+  </div>
+  <div class="cl-item">
+    <div class="cl-d"><span class="cl-v">v14</span> — Q1 2026</div>
+    <div class="cl-title">Merged architecture + 10-wave repeat</div>
+    <ul class="cl-list">
+      <li>Merged acceleration.js into router (Vercel Hobby 12-function limit)</li>
+      <li>Merged keys.js into v1.js</li>
+      <li>Repeat waves upgraded 8 → 10</li>
+      <li>Dual-signal pricing: fee rate + mempool queue</li>
+      <li>Dynamic cheapWindowForecast with real 24h block data</li>
+      <li>Q1 2026 hashrate: MaraSlipstream, EMCDPool, SBICrypto, 2Miners, Rawpool</li>
+    </ul>
+  </div>
+  <div class="cl-item">
+    <div class="cl-d"><span class="cl-v">v13</span> — 2025</div>
+    <div class="cl-title">30 channels + MARA Slipstream</div>
+    <ul class="cl-list">
+      <li>30 channels: 8 nodes + 22 pools (~88% hashrate)</li>
+      <li>MARA Slipstream private mempool bypass</li>
+      <li>Public API v1 with Bearer auth and tiered rate limits</li>
+      <li>Smart Advisor — decision engine with cost analysis</li>
+    </ul>
+  </div>
+</section>
+
+</main>
+</div>
+
+<footer>
+  <span>TurboTX API v14.3 · 2026</span>
+  <span><a href="https://acelerat.vercel.app">acelerat.vercel.app</a> · <a href="https://t.me/Sup_TurboTX">Telegram</a></span>
+</footer>
+
+<script>
+const BASE = 'https://acelerat.vercel.app';
+
+// ── ACCORDION ──────────────────────────────────────────────
+function toggleEp(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.toggle('open');
+}
+// Auto-open
+['ep-price','ep-status','ep-v1ping','ep-v1acc'].forEach(id => {
+  const el = document.getElementById(id);
+  if (el) el.classList.add('open');
+});
+
+// ── COPY ───────────────────────────────────────────────────
+function copyCode(btn) {
+  const pre = btn.closest('.cb')?.querySelector('pre');
+  if (!pre) return;
+  const text = pre.innerText;
+  (navigator.clipboard ? navigator.clipboard.writeText(text) : Promise.reject())
+    .catch(() => {
+      const t = document.createElement('textarea');
+      t.value = text; document.body.appendChild(t); t.select();
+      document.execCommand('copy'); document.body.removeChild(t);
+    })
+    .finally(() => {
+      const orig = btn.textContent;
+      btn.textContent = '✓ Copied';
+      btn.style.color = 'var(--g)';
+      btn.style.borderColor = 'rgba(0,232,122,.3)';
+      setTimeout(() => { btn.textContent = orig; btn.style.color = ''; btn.style.borderColor = ''; }, 2000);
+    });
+}
+
+// ── SHOW RESULT ────────────────────────────────────────────
+function showResult(elId, data, isErr) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.classList.add('show');
+
+  let statusEl = el.querySelector('.ls');
+  if (!statusEl) {
+    statusEl = document.createElement('div');
+    statusEl.className = 'ls';
+    el.insertBefore(statusEl, el.firstChild);
+  }
+  const ok = !isErr && data.ok !== false;
+  statusEl.className = 'ls ' + (ok ? 'ok' : 'er');
+  statusEl.textContent = ok ? '✓ 200 OK' : ('✗ ' + (data.error || (isErr ? 'Request failed' : 'ok: false')));
+
+  let pre = el.querySelector('pre');
+  if (!pre) { pre = document.createElement('pre'); el.appendChild(pre); }
+  try { pre.textContent = JSON.stringify(data, null, 2); } catch(e) { pre.textContent = String(data); }
+}
+
+async function doFetch(url, opts) {
+  const r = await fetch(BASE + url, opts || {});
+  let data;
+  try { data = await r.json(); } catch(e) { data = { error: 'Invalid JSON response', status: r.status }; }
+  return { data, ok: r.ok };
+}
+
+function setBtnState(btn, loading) {
+  if (loading) { btn._orig = btn.textContent; btn.textContent = '⏳'; btn.disabled = true; }
+  else { btn.textContent = btn._orig || '▶ Run'; btn.disabled = false; }
+}
+
+// ── TESTS ──────────────────────────────────────────────────
+async function runTest(resId, url, btn) {
+  setBtnState(btn, true);
+  try {
+    const { data, ok } = await doFetch(url);
+    showResult('res-' + resId, data, !ok);
+  } catch(e) { showResult('res-' + resId, { error: e.message }, true); }
+  setBtnState(btn, false);
+}
+
+async function runTxTest(resId, baseUrl, inputId, btn) {
+  const val = document.getElementById(inputId)?.value?.trim();
+  if (!val || !/^[a-fA-F0-9]{64}$/.test(val)) {
+    alert('Please enter a valid 64-hex TXID');
+    return;
+  }
+  setBtnState(btn, true);
+  try {
+    const { data, ok } = await doFetch(baseUrl + encodeURIComponent(val));
+    showResult('res-' + resId, data, !ok);
+  } catch(e) { showResult('res-' + resId, { error: e.message }, true); }
+  setBtnState(btn, false);
+}
+
+async function runCpfp(btn) {
+  const txid = document.getElementById('inp-cpfp')?.value?.trim();
+  const target = document.getElementById('sel-cpfp')?.value || 'fast';
+  if (!txid || !/^[a-fA-F0-9]{64}$/.test(txid)) { alert('Please enter a valid 64-hex TXID'); return; }
+  setBtnState(btn, true);
+  try {
+    const { data, ok } = await doFetch(`/api/cpfp?txid=${encodeURIComponent(txid)}&target=${target}`);
+    showResult('res-cpfp', data, !ok);
+  } catch(e) { showResult('res-cpfp', { error: e.message }, true); }
+  setBtnState(btn, false);
+}
+
+async function runV1(method, keyInputId, btn) {
+  const key = document.getElementById(keyInputId)?.value?.trim();
+  if (!key || !key.startsWith('ttx_')) { alert('Enter a valid API key (ttx_live_…)'); return; }
+  setBtnState(btn, true);
+  try {
+    const { data, ok } = await doFetch(`/api/v1?method=${method}`, {
+      headers: { 'Authorization': 'Bearer ' + key }
+    });
+    showResult('res-v1' + method, data, !ok);
+  } catch(e) { showResult('res-v1' + method, { error: e.message }, true); }
+  setBtnState(btn, false);
+}
+
+// ── ACTIVE NAV ─────────────────────────────────────────────
+const navLinks = document.querySelectorAll('.nav-a[href^="#"]');
+
+function updateNav() {
+  const scrollY = window.scrollY + 90;
+  const anchors = Array.from(document.querySelectorAll('.anchor'))
+    .map(el => ({ id: el.id, top: el.getBoundingClientRect().top + window.scrollY }))
+    .filter(a => a.id).sort((a, b) => a.top - b.top);
+
+  let active = null;
+  for (const a of anchors) { if (a.top <= scrollY) active = a.id; }
+
+  navLinks.forEach(l => {
+    const href = l.getAttribute('href').slice(1);
+    l.classList.toggle('active', href === active);
+  });
+}
+
+window.addEventListener('scroll', updateNav, { passive: true });
+updateNav();
+</script>
+
+<!-- KEY PURCHASE MODAL -->
+<div class="km-overlay" id="km-overlay" onclick="if(event.target===this)closeKeyModal()">
+  <div class="km-box" style="max-width:460px">
+    <button class="km-close" onclick="closeKeyModal()">✕</button>
+
+    <!-- STEP 1: выбор метода оплаты -->
+    <div id="km-step1">
+      <div id="km-badge" class="km-tier-badge"></div>
+      <div id="km-price" class="km-price"></div>
+      <div id="km-lim" style="font-family:var(--mono);font-size:.62rem;color:var(--m);margin-bottom:16px"></div>
+
+      <div style="font-family:var(--mono);font-size:.52rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--m2);margin-bottom:8px">Pay with</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:18px">
+        <button class="km-pay-opt" id="pm-btc"  onclick="selectPM('btc')">₿ Bitcoin</button>
+        <button class="km-pay-opt" id="pm-usdt" onclick="selectPM('usdt')">💚 USDT TRC-20</button>
+        <button class="km-pay-opt" id="pm-ln"   onclick="selectPM('lightning')">⚡ Lightning</button>
+      </div>
+
+      <div id="km-addr-block" style="display:none;margin-bottom:14px">
+        <div style="font-family:var(--mono);font-size:.52rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--m2);margin-bottom:6px" id="km-addr-label">Send to address</div>
+        <div style="position:relative">
+          <div id="km-addr-val" style="font-family:var(--mono);font-size:.62rem;color:var(--t);background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px 44px 10px 12px;word-break:break-all;cursor:pointer;line-height:1.5" onclick="kmCopyAddr()"></div>
+          <button onclick="kmCopyAddr()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:rgba(255,255,255,.4);cursor:pointer;font-size:.7rem;padding:4px" title="Copy">⎘</button>
+        </div>
+        <div id="km-amount-line" style="font-family:var(--mono);font-size:.68rem;color:var(--a);margin-top:7px;text-align:center;font-weight:700"></div>
+        <div id="km-qr-wrap" style="display:none;text-align:center;margin-top:10px">
+          <img id="km-qr-img" width="140" height="140" style="border-radius:10px;border:2px solid rgba(255,255,255,.08)">
+        </div>
+      </div>
+
+      <div id="km-ln-block" style="display:none;margin-bottom:14px">
+        <div style="font-family:var(--mono);font-size:.52rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--m2);margin-bottom:6px">Lightning Invoice</div>
+        <div id="km-ln-invoice" style="font-family:var(--mono);font-size:.52rem;color:var(--t);background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px 12px;word-break:break-all;cursor:pointer;line-height:1.5;max-height:80px;overflow:hidden" onclick="kmCopyLn()">Generating...</div>
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button onclick="kmCopyLn()" class="km-small-btn">⎘ Copy Invoice</button>
+          <a id="km-ln-uri" href="#" class="km-small-btn" style="text-decoration:none;text-align:center">⚡ Open Wallet</a>
+        </div>
+        <div id="km-ln-qr-wrap" style="text-align:center;margin-top:10px">
+          <img id="km-ln-qr" width="140" height="140" style="border-radius:10px;border:2px solid rgba(255,255,255,.08)">
+        </div>
+        <div id="km-ln-status" style="font-family:var(--mono);font-size:.62rem;color:var(--m);margin-top:8px;text-align:center">Waiting for payment...</div>
+      </div>
+
+      <div id="km-btc-verify" style="display:none">
+        <div style="font-family:var(--mono);font-size:.52rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--m2);margin-bottom:6px">After payment — paste TXID</div>
+        <div style="display:flex;gap:8px">
+          <input id="km-txid-input" type="text" placeholder="Transaction ID (64 hex chars)" maxlength="64"
+            style="flex:1;font-family:var(--mono);font-size:.65rem;background:rgba(0,0,0,.4);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px 12px;color:#fff;outline:none">
+          <button onclick="kmVerify()" class="km-verify-btn" id="km-verify-btn">Verify</button>
+        </div>
+        <div id="km-verify-result" style="font-family:var(--mono);font-size:.62rem;margin-top:8px;display:none"></div>
+      </div>
+
+      <div id="km-loading" style="display:none;text-align:center;padding:14px 0;font-family:var(--mono);font-size:.65rem;color:var(--m)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--a)" stroke-width="2" stroke-linecap="round" style="animation:spin .8s linear infinite;transform-origin:center;display:inline-block;vertical-align:middle;margin-right:8px"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+        <span id="km-loading-text">Processing...</span>
+      </div>
+    </div>
+
+    <!-- STEP 2: ключ получен -->
+    <div id="km-step2" style="display:none;text-align:center">
+      <div style="font-size:2.5rem;margin-bottom:10px">🎉</div>
+      <div style="font-weight:800;font-size:1rem;margin-bottom:4px">API Key Ready!</div>
+      <div id="km-success-tier" style="font-family:var(--mono);font-size:.6rem;color:var(--m);margin-bottom:16px"></div>
+      <div style="font-family:var(--mono);font-size:.52rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--m2);margin-bottom:6px;text-align:left">Your API Key (save it now — shown once)</div>
+      <div style="position:relative;margin-bottom:12px">
+        <div id="km-key-display" style="font-family:var(--mono);font-size:.7rem;color:var(--a);background:rgba(247,147,26,.06);border:1px solid rgba(247,147,26,.25);border-radius:8px;padding:12px 44px 12px 14px;word-break:break-all;cursor:pointer;font-weight:700" onclick="kmCopyKey()"></div>
+        <button onclick="kmCopyKey()" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--a);cursor:pointer;font-size:.9rem;padding:4px" title="Copy">⎘</button>
+      </div>
+      <div style="font-family:var(--mono);font-size:.62rem;color:var(--m);background:rgba(0,0,0,.3);border-radius:8px;padding:10px 14px;text-align:left;margin-bottom:14px">
+        <div style="color:var(--m2);margin-bottom:4px">Usage:</div>
+        <code id="km-key-usage" style="color:rgba(255,255,255,.6);font-size:.58rem"></code>
+      </div>
+      <div id="km-key-limits" style="font-family:var(--mono);font-size:.6rem;color:var(--g);margin-bottom:14px"></div>
+      <button onclick="closeKeyModal()" style="width:100%;padding:11px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:var(--t);font-family:var(--mono);font-size:.65rem;cursor:pointer">Close</button>
+    </div>
+
+    <div style="margin-top:12px;text-align:center;font-family:var(--mono);font-size:.55rem;color:rgba(255,255,255,.2)">
+      Questions? <a href="https://t.me/Sup_TurboTX" target="_blank" style="color:rgba(255,255,255,.35)">@Sup_TurboTX</a> · Secure · Instant
+    </div>
+  </div>
+</div>
+
+<style>
+.km-pay-opt{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:8px;color:rgba(255,255,255,.6);font-family:var(--mono);font-size:.6rem;padding:10px 6px;cursor:pointer;transition:all .15s}
+.km-pay-opt:hover,.km-pay-opt.on{background:rgba(247,147,26,.1);border-color:rgba(247,147,26,.4);color:var(--a)}
+.km-small-btn{flex:1;padding:7px 10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:7px;color:rgba(255,255,255,.6);font-family:var(--mono);font-size:.58rem;cursor:pointer;transition:all .15s}
+.km-small-btn:hover{background:rgba(255,255,255,.08);color:#fff}
+.km-verify-btn{padding:10px 16px;background:rgba(247,147,26,.15);border:1px solid rgba(247,147,26,.3);border-radius:8px;color:var(--a);font-family:var(--mono);font-size:.62rem;font-weight:700;cursor:pointer;white-space:nowrap;transition:all .15s}
+.km-verify-btn:hover{background:rgba(247,147,26,.25)}
+.km-verify-btn:disabled{opacity:.5;cursor:not-allowed}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+
+<script>
+const _KM_API = '';
+let _km_tier = null;
+let _km_orderId = null;
+let _km_payMethod = null;
+let _km_addr = null;
+let _km_lnInvoice = null;
+let _km_lnUri = null;
+let _km_lnPollStop = null;
+let _km_apiKey = null;
+
+const _KM_PRICES = { free: 0, basic: 29, pro: 99 };
+const _KM_LABELS = { free: 'FREE', basic: 'BASIC', pro: 'PRO ⭐' };
+const _KM_LIMITS = {
+  free:  '30 req/min · 500 req/day',
+  basic: '100 req/min · 5,000 req/day',
+  pro:   '500 req/min · 50,000 req/day',
+};
+
+function openKeyModal(tier) {
+  if (tier === 'partner') {
+    window.open('https://t.me/Sup_TurboTX', '_blank');
+    return;
+  }
+  _km_tier      = tier;
+  _km_orderId   = null;
+  _km_payMethod = null;
+  _km_addr      = null;
+  _km_lnInvoice = null;
+
+  // Reset UI
+  document.getElementById('km-step1').style.display = '';
+  document.getElementById('km-step2').style.display  = 'none';
+  document.getElementById('km-addr-block').style.display = 'none';
+  document.getElementById('km-ln-block').style.display   = 'none';
+  document.getElementById('km-btc-verify').style.display = 'none';
+  document.getElementById('km-loading').style.display    = 'none';
+  document.getElementById('km-verify-result').style.display = 'none';
+  document.querySelectorAll('.km-pay-opt').forEach(b => b.classList.remove('on'));
+
+  const price = _KM_PRICES[tier];
+  const badge = document.getElementById('km-badge');
+  badge.textContent = _KM_LABELS[tier];
+  badge.style.background = tier === 'pro' ? 'rgba(247,147,26,.15)' : 'rgba(255,255,255,.06)';
+  badge.style.color      = tier === 'pro' ? '#f7931a' : 'rgba(255,255,255,.5)';
+  badge.style.border     = tier === 'pro' ? '1px solid rgba(247,147,26,.3)' : '1px solid rgba(255,255,255,.1)';
+  document.getElementById('km-price').innerHTML = price === 0 ? '$0 <em style="font-size:.8rem;font-weight:400;color:rgba(255,255,255,.4)">/ free</em>' : `$${price} <em style="font-size:.8rem;font-weight:400;color:rgba(255,255,255,.4)">/ mo</em>`;
+  document.getElementById('km-lim').textContent = _KM_LIMITS[tier];
+
+  // Free tier — skip payment
+  if (price === 0) {
+    document.querySelectorAll('.km-pay-opt').forEach(b => b.style.display = 'none');
+    kmCreateOrder('btc'); // instantly
+    return;
+  }
+  document.querySelectorAll('.km-pay-opt').forEach(b => b.style.display = '');
+
+  document.getElementById('km-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeKeyModal() {
+  if (_km_lnPollStop) { _km_lnPollStop(); _km_lnPollStop = null; }
+  document.getElementById('km-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function selectPM(method) {
+  _km_payMethod = method;
+  document.querySelectorAll('.km-pay-opt').forEach(b => b.classList.remove('on'));
+  document.getElementById('pm-' + (method === 'lightning' ? 'ln' : method))?.classList.add('on');
+  kmCreateOrder(method);
+}
+
+function kmSetLoading(text = 'Processing...') {
+  document.getElementById('km-loading').style.display = '';
+  document.getElementById('km-loading-text').textContent = text;
+  document.getElementById('km-addr-block').style.display = 'none';
+  document.getElementById('km-ln-block').style.display   = 'none';
+  document.getElementById('km-btc-verify').style.display = 'none';
+}
+
+function kmClearLoading() {
+  document.getElementById('km-loading').style.display = 'none';
+}
+
+async function kmCreateOrder(method) {
+  kmSetLoading('Generating payment details...');
+  if (_KM_PRICES[_km_tier] === 0) {
+    document.getElementById('km-overlay').classList.add('open');
+    document.body.style.overflow = 'hidden';
+  }
+  try {
+    const r = await fetch(_KM_API + '/api/keys-pay', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'create', tier: _km_tier, payMethod: method }),
+    });
+    const d = await r.json();
+    kmClearLoading();
+
+    if (!d.ok) {
+      document.getElementById('km-verify-result').style.display = '';
+      document.getElementById('km-verify-result').innerHTML = '<span style="color:#ff3355">× ' + (d.error || 'Error') + '</span>';
+      document.getElementById('km-btc-verify').style.display = '';
+      return;
+    }
+
+    // Free tier — got key immediately
+    if (d.key) { kmShowKey(d); return; }
+
+    _km_orderId = d.orderId;
+
+    if (method === 'lightning') {
+      _km_lnInvoice = d.invoice;
+      _km_lnUri     = d.lightningUri;
+      document.getElementById('km-ln-block').style.display = '';
+      document.getElementById('km-ln-invoice').textContent = d.invoice;
+      const uriEl = document.getElementById('km-ln-uri');
+      uriEl.href = d.lightningUri || '#';
+      const qrData = encodeURIComponent(d.lightningUri || d.invoice);
+      document.getElementById('km-ln-qr').src = 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&format=png&qzone=1&data=' + qrData;
+      document.getElementById('km-ln-status').textContent = `⚡ ${d.amountSats?.toLocaleString()} sats — waiting for payment...`;
+      // Start polling
+      _km_lnPollStop = kmStartLnPoll();
+    } else {
+      _km_addr = d.address;
+      document.getElementById('km-addr-block').style.display = '';
+      document.getElementById('km-addr-label').textContent = method === 'btc' ? 'Send Bitcoin to' : 'Send USDT TRC-20 to';
+      document.getElementById('km-addr-val').textContent = d.address || 'Not configured';
+      document.getElementById('km-amount-line').textContent = d.amount || '';
+      // QR
+      if (d.address) {
+        const qrPrefix = method === 'btc' ? `bitcoin:${d.address}?amount=${d.amountBtc}` : d.address;
+        document.getElementById('km-qr-wrap').style.display = '';
+        document.getElementById('km-qr-img').src = 'https://api.qrserver.com/v1/create-qr-code/?size=140x140&format=png&qzone=1&data=' + encodeURIComponent(qrPrefix);
+      }
+      document.getElementById('km-btc-verify').style.display = '';
+    }
+  } catch(e) {
+    kmClearLoading();
+    document.getElementById('km-btc-verify').style.display = '';
+    document.getElementById('km-verify-result').style.display = '';
+    document.getElementById('km-verify-result').innerHTML = '<span style="color:#ff3355">× Connection error. Try again.</span>';
+  }
+}
+
+function kmStartLnPoll() {
+  let stopped = false;
+  const interval = setInterval(async () => {
+    if (stopped) return;
+    try {
+      const r = await fetch(_KM_API + '/api/keys-pay', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'verify', orderId: _km_orderId }),
+      });
+      const d = await r.json();
+      if (d.ok && d.key) {
+        clearInterval(interval);
+        kmShowKey(d);
+      } else if (d.error === 'Invoice expired') {
+        clearInterval(interval);
+        document.getElementById('km-ln-status').style.color = '#ff3355';
+        document.getElementById('km-ln-status').textContent = '× Invoice expired. Please start over.';
+      }
+    } catch(e) {}
+  }, 3000);
+  return () => { stopped = true; clearInterval(interval); };
+}
+
+async function kmVerify() {
+  const txHash = document.getElementById('km-txid-input').value.trim();
+  const resEl  = document.getElementById('km-verify-result');
+  const btn    = document.getElementById('km-verify-btn');
+  resEl.style.display = '';
+
+  if (!txHash || txHash.length < 20) {
+    resEl.innerHTML = '<span style="color:#ff3355">× Enter TXID (at least 20 chars)</span>';
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = '...';
+  resEl.innerHTML = '<span style="color:rgba(255,255,255,.5)">🔍 Verifying payment...</span>';
+
+  try {
+    const r = await fetch(_KM_API + '/api/keys-pay', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action: 'verify', orderId: _km_orderId, txHash }),
+    });
+    const d = await r.json();
+
+    if (d.ok && d.key) {
+      kmShowKey(d);
+    } else {
+      resEl.innerHTML = '<span style="color:#ff3355">× ' + (d.error || 'Not verified. Check TXID and try again.') + '</span><br><span style="color:rgba(255,255,255,.3);font-size:.58rem">TX not in mempool yet? Wait 1–2 min. Issues? <a href="https://t.me/Sup_TurboTX" target="_blank" style="color:rgba(255,255,255,.5)">@Sup_TurboTX</a></span>';
+    }
+  } catch(e) {
+    resEl.innerHTML = '<span style="color:#ff3355">× Connection error. Try again.</span>';
+  }
+
+  btn.disabled = false;
+  btn.textContent = 'Verify';
+}
+
+function kmShowKey(d) {
+  if (_km_lnPollStop) { _km_lnPollStop(); _km_lnPollStop = null; }
+  _km_apiKey = d.key;
+  document.getElementById('km-step1').style.display = 'none';
+  document.getElementById('km-step2').style.display = '';
+  document.getElementById('km-success-tier').textContent = (d.tier || _km_tier) + ' tier · ' + (d.limits || _KM_LIMITS[_km_tier] || '');
+  document.getElementById('km-key-display').textContent = d.key;
+  document.getElementById('km-key-usage').textContent   = 'Authorization: Bearer ' + d.key;
+  document.getElementById('km-key-limits').textContent  = '✓ ' + (d.limits || _KM_LIMITS[_km_tier] || '');
+  try { navigator.clipboard.writeText(d.key); } catch(e) {}
+}
+
+function kmCopyAddr() {
+  if (_km_addr) {
+    navigator.clipboard.writeText(_km_addr).then(() => {
+      const el = document.getElementById('km-addr-val');
+      const orig = el.textContent;
+      el.textContent = '✓ Copied!';
+      setTimeout(() => { el.textContent = orig; }, 1500);
+    }).catch(() => alert('Copy: ' + _km_addr));
+  }
+}
+
+function kmCopyLn() {
+  if (_km_lnInvoice) {
+    navigator.clipboard.writeText(_km_lnInvoice).then(() => {
+      const el = document.getElementById('km-ln-invoice');
+      const orig = el.textContent;
+      el.textContent = '✓ Copied!';
+      setTimeout(() => { el.textContent = orig; }, 1500);
+    }).catch(() => alert('Copy invoice:\n' + _km_lnInvoice));
+  }
+}
+
+function kmCopyKey() {
+  if (_km_apiKey) {
+    navigator.clipboard.writeText(_km_apiKey).then(() => {
+      const el = document.getElementById('km-key-display');
+      const orig = el.textContent;
+      el.textContent = '✓ Copied!';
+      setTimeout(() => { el.textContent = orig; }, 1500);
+    }).catch(() => alert('Your key:\n' + _km_apiKey));
+  }
+}
+
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeKeyModal(); });
+</script>
+</body>
+
+</html>
