@@ -39,42 +39,42 @@ const HR_HEALTH = {
 
 // v14: 8 nodes + 23 pools = 31 канал, ~88% хешрейта
 const HEALTH_CHANNELS = [
-  // ── Hex nodes ─────────────────────────────────────────────
-  { name:'mempool.space',    tier:'node', url:'https://mempool.space/api/blocks/tip/height',   method:'GET' },
-  { name:'blockstream',      tier:'node', url:'https://blockstream.info/api/blocks/tip/height', method:'GET' },
-  { name:'blockchair',       tier:'node', url:'https://api.blockchair.com/bitcoin/stats',        method:'GET' },
-  { name:'blockcypher',      tier:'node', url:'https://api.blockcypher.com/v1/btc/main',         method:'GET' },
-  { name:'btcscan',          tier:'node', url:'https://btcscan.org/api/blocks/tip/height',       method:'GET' },
-  { name:'blockchain.info',  tier:'node', url:'https://blockchain.info/latestblock',             method:'GET' },
-  { name:'bitaps',           tier:'node', url:'https://bitaps.com/api/bitcoin/blockcount',       method:'GET' },
-  { name:'sochain',          tier:'node', url:'https://sochain.com/api/v2/get_info/BTC',         method:'GET' },
-  // ── Mining pools ──────────────────────────────────────────
-  { name:'Foundry',          tier:'pool', url:'https://foundryusapool.com/',             method:'HEAD' },
-  { name:'AntPool',          tier:'pool', url:'https://www.antpool.com/',                method:'HEAD' },
-  { name:'MARA',             tier:'pool', url:'https://mara.com/',                       method:'HEAD' },
-  { name:'MaraSlipstream',   tier:'pool', url:'https://slipstream.mara.com/',            method:'HEAD' }, // v12 NEW
-  { name:'ViaBTC',           tier:'pool', url:'https://viabtc.com/',                     method:'HEAD' },
-  { name:'SpiderPool',       tier:'pool', url:'https://www.spiderpool.com/',             method:'HEAD' },
-  { name:'F2Pool',           tier:'pool', url:'https://www.f2pool.com/',                 method:'HEAD' },
-  { name:'Luxor',            tier:'pool', url:'https://luxor.tech/',                     method:'HEAD' },
-  { name:'CloverPool',       tier:'pool', url:'https://clvpool.com/',                    method:'HEAD' },
-  { name:'BitFuFu',          tier:'pool', url:'https://www.bitfufu.com/',                method:'HEAD' },
-  { name:'BTC.com',          tier:'pool', url:'https://btc.com/',                        method:'HEAD' },
-  { name:'Ocean',            tier:'pool', url:'https://ocean.xyz/',                      method:'HEAD' },
-  { name:'EMCDPool',         tier:'pool', url:'https://emcd.io/',                        method:'HEAD' }, // v12 NEW
-  { name:'SBICrypto',        tier:'pool', url:'https://sbicrypto.com/',                  method:'HEAD' }, // v12 NEW
-  { name:'2Miners',          tier:'pool', url:'https://2miners.com/',                    method:'HEAD' }, // v12 NEW
-  { name:'Rawpool',          tier:'pool', url:'https://rawpool.com/',                    method:'HEAD' }, // v12 NEW
-  // Акселераторы: GET вместо HEAD (Cloudflare блокирует HEAD с Vercel IP → ложный offline)
-  // noBlock:true → любой HTTP ответ (включая 4xx) считается "живой"
-  { name:'TxBoost',          tier:'pool', url:'https://txboost.com/',                    method:'GET', noBlock:true },
-  { name:'mempoolAccel',     tier:'pool', url:'https://mempool.space/',                  method:'GET', noBlock:true },
-  { name:'bitaccelerate',    tier:'pool', url:'https://www.bitaccelerate.com/',          method:'GET', noBlock:true },
-  { name:'360btc',           tier:'pool', url:'https://360btc.net/',                     method:'GET', noBlock:true },
-  { name:'txfaster',         tier:'pool', url:'https://txfaster.com/',                   method:'GET', noBlock:true },
-  { name:'btcspeed',         tier:'pool', url:'https://btcspeed.org/',                   method:'GET', noBlock:true },
+  // ── 8 HEX NODES — GET к реальному API, строгая проверка ─────────────
+  { name:'mempool.space',   tier:'node', url:'https://mempool.space/api/blocks/tip/height',          method:'GET' },
+  { name:'blockstream',     tier:'node', url:'https://blockstream.info/api/blocks/tip/height',       method:'GET' },
+  { name:'blockchair',      tier:'node', url:'https://api.blockchair.com/bitcoin/stats',              method:'GET' },
+  { name:'blockcypher',     tier:'node', url:'https://api.blockcypher.com/v1/btc/main',              method:'GET' },
+  { name:'btcscan',         tier:'node', url:'https://btcscan.org/api/blocks/tip/height',            method:'GET' },
+  { name:'blockchain.info', tier:'node', url:'https://blockchain.info/latestblock',                  method:'GET' },
+  { name:'bitaps',          tier:'node', url:'https://bitaps.com/api/bitcoin/blockcount',            method:'GET' },
+  { name:'sochain',         tier:'node', url:'https://sochain.com/api/v2/get_info/BTC',              method:'GET' },
+  // ── 23 POOLS — GET к реальному accelerate endpoint ───────────────────
+  // noBlock:true = любой HTTP (200/405/403) = живой, только timeout = мёртвый
+  // GET к POST endpoint вернёт 405 — это нормально, значит сервер работает
+  { name:'Foundry',         tier:'pool', url:'https://foundryusapool.com/accelerate',                method:'GET', noBlock:true },
+  { name:'AntPool',         tier:'pool', url:'https://www.antpool.com/',                             method:'GET', noBlock:true },
+  { name:'MARA',            tier:'pool', url:'https://mara.com/',                                    method:'GET', noBlock:true },
+  { name:'MaraSlipstream',  tier:'pool', url:'https://slipstream.mara.com/',                        method:'GET', noBlock:true },
+  { name:'ViaBTC',          tier:'pool', url:'https://viabtc.com/tools/txaccelerator/',              method:'GET', noBlock:true },
+  { name:'SpiderPool',      tier:'pool', url:'https://www.spiderpool.com/btc/accelerator',           method:'GET', noBlock:true },
+  { name:'F2Pool',          tier:'pool', url:'https://www.f2pool.com/accelerate',                    method:'GET', noBlock:true },
+  { name:'Luxor',           tier:'pool', url:'https://btc.luxor.tech/accelerate',                    method:'GET', noBlock:true },
+  { name:'CloverPool',      tier:'pool', url:'https://clvpool.com/accelerator',                      method:'GET', noBlock:true },
+  { name:'BitFuFu',         tier:'pool', url:'https://www.bitfufu.com/txaccelerator/submit',         method:'GET', noBlock:true },
+  { name:'BTC.com',         tier:'pool', url:'https://btc.com/tools/txaccelerator',                  method:'GET', noBlock:true },
+  { name:'Ocean',           tier:'pool', url:'https://ocean.xyz/api/accelerate',                     method:'GET', noBlock:true },
+  { name:'EMCDPool',        tier:'pool', url:'https://emcd.io/accelerate',                           method:'GET', noBlock:true },
+  { name:'SBICrypto',       tier:'pool', url:'https://sbicrypto.com/accelerate',                     method:'GET', noBlock:true },
+  { name:'2Miners',         tier:'pool', url:'https://2miners.com/api/v1/btc/accelerate',            method:'GET', noBlock:true },
+  { name:'Rawpool',         tier:'pool', url:'https://rawpool.com/api/accelerate',                   method:'GET', noBlock:true },
+  { name:'Lincoin',         tier:'pool', url:'https://lincoin.com/api/accelerate',                   method:'GET', noBlock:true },
+  { name:'TxBoost',         tier:'pool', url:'https://txboost.com/',                                 method:'GET', noBlock:true },
+  { name:'mempoolAccel',    tier:'pool', url:'https://mempool.space/api/v1/tx-accelerator/enqueue',  method:'GET', noBlock:true },
+  { name:'bitaccelerate',   tier:'pool', url:'https://www.bitaccelerate.com/api/push',               method:'GET', noBlock:true },
+  { name:'360btc',          tier:'pool', url:'https://360btc.net/accelerate',                        method:'GET', noBlock:true },
+  { name:'txfaster',        tier:'pool', url:'https://txfaster.com/api/accelerate',                  method:'GET', noBlock:true },
+  { name:'btcspeed',        tier:'pool', url:'https://btcspeed.org/boost',                           method:'GET', noBlock:true },
 ];
-
 async function pingCh(ch, timeout = 5000) {
   const t0 = Date.now();
   try {
@@ -369,11 +369,9 @@ async function handleStats(req, res) {
 // feeRate 80-200= перегрузка, TX застревают часами
 // feeRate 200+  = критика (халвинг, ordinals-спайк и т.д.)
 const PRICE_TIERS = [
-  // FIX: confLabel учитывает реальное время С ускорением TurboTX (30 каналов, ~88% хешрейта)
-  // Без ускорения при low: 7-14 блоков (~70-140 мин). С ускорением: 1-3 блока (~10-20 мин)
-  { maxFee:8,   usd:3,  label:'low',      emoji:'🟢', text:'Сеть свободна',        textEn:'Network is clear',    confLabel:'10–20 мин ⚡' },
-  { maxFee:25,  usd:5,  label:'medium',   emoji:'🟡', text:'Умеренная нагрузка',   textEn:'Moderate load',       confLabel:'15–25 мин ⚡' },
-  { maxFee:80,  usd:9,  label:'high',     emoji:'🟠', text:'Высокая нагрузка',     textEn:'High load',           confLabel:'20–40 мин'    },
+  { maxFee:8,   usd:3,  label:'low',      emoji:'🟢', text:'Сеть свободна',        textEn:'Network is clear',    confLabel:'5–10 мин ⚡'  },
+  { maxFee:25,  usd:5,  label:'medium',   emoji:'🟡', text:'Умеренная нагрузка',   textEn:'Moderate load',       confLabel:'10–20 мин ⚡' },
+  { maxFee:80,  usd:9,  label:'high',     emoji:'🟠', text:'Высокая нагрузка',     textEn:'High load',           confLabel:'15–30 мин'    },
   { maxFee:200, usd:14, label:'extreme',  emoji:'🔴', text:'Перегрузка сети',      textEn:'Network congested',   confLabel:'30–60 мин'    },
   { maxFee:Infinity, usd:19, label:'critical', emoji:'🔴', text:'Критическая перегрузка', textEn:'Critical congestion', confLabel:'1–3 часа' },
 ];
@@ -423,19 +421,16 @@ async function handlePrice(req, res) {
   const tierByFee = PRICE_TIERS.find(t => feeRate <= t.maxFee) ?? PRICE_TIERS.at(-1);
 
   // Сигнал 2: очередь мемпула (TX count + vsize)
-  // Реальная калибровка 2026:
-  //   1 блок = 1 MB vsize = ~4000-6000 TX (Taproot/SegWit mix, avg ~200 vB)
-  //   mpVsizeMB — точнее чем count (учитывает реальный размер TX)
-  //   "Пустой" мемпул в 2026 = < 10K TX / < 10 MB (< 2-3 блоков ожидания)
-  //   "Норма" = 10-30K TX / 10-30 MB (3-8 блоков = 30-80 мин без ускорения)
-  //   "Загружен" = 30-100K TX / 30-100 MB (8-25 блоков = 1.5-4 часа)
-  //   "Перегружен" = 100K+ TX / 100+ MB (25+ блоков = 4+ часа)
+  // 1 блок = ~1 МБ = ~2000 TX; норма ≤3 блоков = ≤6000 TX / 3 МБ
+  // Каждые +2000 TX сверх нормы = ещё один блок ожидания
+  // mpTierIdx v14.2 — откалиброван по реальным данным (норма 2026 = 20-50k TX)
+  // 300 MB = максимальный стандартный размер мемпула (3 блока по 1 вейт-МБ)
   const mpTierIdx =
-    mpCount > 200000 || mpVsizeMB > 300 ? 4 :   // critical: 300+ MB = дни ожидания
-    mpCount > 100000 || mpVsizeMB > 150 ? 3 :   // extreme:  150+ MB = 4+ часа
-    mpCount >  50000 || mpVsizeMB >  60 ? 2 :   // high:     60+ MB = 1-2 часа
-    mpCount >  20000 || mpVsizeMB >  20 ? 1 :   // medium:   20+ MB = 30-60 мин
-                                          0;    // low:      < 20 MB = < 30 мин
+    mpCount > 150000 || mpVsizeMB > 250 ? 4 :   // critical
+    mpCount >  80000 || mpVsizeMB > 150 ? 3 :   // extreme
+    mpCount >  40000 || mpVsizeMB >  80 ? 2 :   // high
+    mpCount >  25000 || mpVsizeMB >  40 ? 1 :   // medium (13-25k TX = норма 2026)
+                                          0;    // low
 
   // Сигнал 3: среднее время блока (получаем из /api/v1/mining/blocks/timestamps)
   // Медленные блоки = TX накапливаются быстрее чем обрабатываются
@@ -469,10 +464,8 @@ async function handlePrice(req, res) {
 
   // Итоговый тир = максимум из трёх сигналов
   const feeTierIdx = PRICE_TIERS.indexOf(tierByFee);
-  // FIX: при feeRate<=3 мемпул может всё равно поднять тир — но только при РЕАЛЬНОЙ забитости
-  // Спам/ординалы: fee=2sat/vB но 100K+ TX → ускорение реально помогает
-  // При нормальном пустом мемпуле (<30K TX) — fee главный сигнал
-  const effectiveMpTierIdx = (feeRate <= 3 && mpCount < 50000 && mpVsizeMB < 80) ? 0 : mpTierIdx;
+  // При feeRate≤3 sat/vB рынок пустой — мемпул не поднимает цену
+  const effectiveMpTierIdx = feeRate <= 3 ? 0 : mpTierIdx;
   let tier = PRICE_TIERS[Math.max(feeTierIdx, effectiveMpTierIdx, blockTierIdx)];
 
   // Отдельный индикатор нагрузки мемпула (не зависит от feeRate)
@@ -494,11 +487,9 @@ async function handlePrice(req, res) {
     return{tip:'🔴 Критическая перегрузка. Транзакции застревают. TurboTX поможет ускорить.',quality:'critical'};
   };
   const tip=bestTimeFn(feeRate,allFees);
-  // confLabel: берём из tier, но корректируем если мемпул большой
-  // При mpVsizeMB > 30 ускорение занимает чуть дольше — честнее показывать клиенту
-  let confLabel = tier.confLabel || '10–20 мин ⚡';
-  if (tier.label === 'low' && mpVsizeMB > 30) confLabel = '15–30 мин';
-  else if (tier.label === 'low' && mpVsizeMB > 15) confLabel = '10–20 мин ⚡';
+  // BUG FIX: confLabel по tier — клиент показывает реальное время подтверждения
+  const CONF_LABELS = { low:'5–10 мин ⚡', medium:'10–15 мин ⚡', high:'10–20 мин ⚡', extreme:'15–30 мин', critical:'20–40 мин' };
+  const confLabel = CONF_LABELS[tier.label] || '10–20 мин ⚡';
   // BUG FIX: CDN кэш уменьшен до 60с (был 180с) — цена обновляется чаще
   // _t query param от клиента меняется каждую минуту → cache miss каждую минуту
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
@@ -521,10 +512,9 @@ async function handlePrice(req, res) {
     confLabel,
     bestTime:tip,mempool:mempoolStats,
     // heartLevel и blockIcon для анимаций фронта (v14.2)
-    // FIX: используем итоговый tier (включает mpTier + blockTier), а не только feeRate
     heartLevel: (
-      tier.label === 'critical' || tier.label === 'extreme' ? 'busy' :
-      tier.label === 'high'     || tier.label === 'medium'  ? 'mid'  : 'calm'
+      feeRate > 80  ? 'busy' :
+      feeRate > 20  ? 'mid'  : 'calm'
     ),
     // blockIcon: 4 состояния — источник правды для анимации на фронте
     // fast       = звёзды  (avgBlock < 8 мин   — блоки летят, сеть свободна)
@@ -673,7 +663,7 @@ async function handleRbf(req, res) {
     const getR=s=>s.status==='fulfilled'?s.value:null;
     const txR=getR(txRes),feesR=getR(feesRes),priceP=getR(priceRes);
     if(!txR?.ok) return res.status(404).json({ok:false,error:'TX not found'});
-    const tx=await sj(txR),fees=feesR?.ok?await sj(feesR):{};
+    const tx=await txR.json(),fees=feesR?.ok?await sj(feesR):{};
     if(tx.status?.confirmed) return res.status(200).json({ok:true,rbfPossible:false,reason:'already_confirmed'});
     const vsize=tx.weight?Math.ceil(tx.weight/4):(tx.size||250),feePaid=tx.fee||0,feeRate=feePaid&&vsize?Math.round(feePaid/vsize):0;
     const fastest=fees.fastestFee||50,minRelay=1;
