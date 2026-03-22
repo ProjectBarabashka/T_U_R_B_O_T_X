@@ -369,9 +369,11 @@ async function handleStats(req, res) {
 // feeRate 80-200= перегрузка, TX застревают часами
 // feeRate 200+  = критика (халвинг, ordinals-спайк и т.д.)
 const PRICE_TIERS = [
-  { maxFee:8,   usd:3,  label:'low',      emoji:'🟢', text:'Сеть свободна',        textEn:'Network is clear',    confLabel:'5–10 мин ⚡'  },
-  { maxFee:25,  usd:5,  label:'medium',   emoji:'🟡', text:'Умеренная нагрузка',   textEn:'Moderate load',       confLabel:'10–20 мин ⚡' },
-  { maxFee:80,  usd:9,  label:'high',     emoji:'🟠', text:'Высокая нагрузка',     textEn:'High load',           confLabel:'15–30 мин'    },
+  // FIX: confLabel учитывает реальное время С ускорением TurboTX (30 каналов, ~88% хешрейта)
+  // Без ускорения при low: 7-14 блоков (~70-140 мин). С ускорением: 1-3 блока (~10-20 мин)
+  { maxFee:8,   usd:3,  label:'low',      emoji:'🟢', text:'Сеть свободна',        textEn:'Network is clear',    confLabel:'10–20 мин ⚡' },
+  { maxFee:25,  usd:5,  label:'medium',   emoji:'🟡', text:'Умеренная нагрузка',   textEn:'Moderate load',       confLabel:'15–25 мин ⚡' },
+  { maxFee:80,  usd:9,  label:'high',     emoji:'🟠', text:'Высокая нагрузка',     textEn:'High load',           confLabel:'20–40 мин'    },
   { maxFee:200, usd:14, label:'extreme',  emoji:'🔴', text:'Перегрузка сети',      textEn:'Network congested',   confLabel:'30–60 мин'    },
   { maxFee:Infinity, usd:19, label:'critical', emoji:'🔴', text:'Критическая перегрузка', textEn:'Critical congestion', confLabel:'1–3 часа' },
 ];
@@ -421,16 +423,19 @@ async function handlePrice(req, res) {
   const tierByFee = PRICE_TIERS.find(t => feeRate <= t.maxFee) ?? PRICE_TIERS.at(-1);
 
   // Сигнал 2: очередь мемпула (TX count + vsize)
-  // 1 блок = ~1 МБ = ~2000 TX; норма ≤3 блоков = ≤6000 TX / 3 МБ
-  // Каждые +2000 TX сверх нормы = ещё один блок ожидания
-  // mpTierIdx v14.2 — откалиброван по реальным данным (норма 2026 = 20-50k TX)
-  // 300 MB = максимальный стандартный размер мемпула (3 блока по 1 вейт-МБ)
+  // Реальная калибровка 2026:
+  //   1 блок = 1 MB vsize = ~4000-6000 TX (Taproot/SegWit mix, avg ~200 vB)
+  //   mpVsizeMB — точнее чем count (учитывает реальный размер TX)
+  //   "Пустой" мемпул в 2026 = < 10K TX / < 10 MB (< 2-3 блоков ожидания)
+  //   "Норма" = 10-30K TX / 10-30 MB (3-8 блоков = 30-80 мин без ускорения)
+  //   "Загружен" = 30-100K TX / 30-100 MB (8-25 блоков = 1.5-4 часа)
+  //   "Перегружен" = 100K+ TX / 100+ MB (25+ блоков = 4+ часа)
   const mpTierIdx =
-    mpCount > 150000 || mpVsizeMB > 250 ? 4 :   // critical
-    mpCount >  80000 || mpVsizeMB > 150 ? 3 :   // extreme
-    mpCount >  40000 || mpVsizeMB >  80 ? 2 :   // high
-    mpCount >  25000 || mpVsizeMB >  40 ? 1 :   // medium (13-25k TX = норма 2026)
-                                          0;    // low
+    mpCount > 200000 || mpVsizeMB > 300 ? 4 :   // critical: 300+ MB = дни ожидания
+    mpCount > 100000 || mpVsizeMB > 150 ? 3 :   // extreme:  150+ MB = 4+ часа
+    mpCount >  50000 || mpVsizeMB >  60 ? 2 :   // high:     60+ MB = 1-2 часа
+    mpCount >  20000 || mpVsizeMB >  20 ? 1 :   // medium:   20+ MB = 30-60 мин
+                                          0;    // low:      < 20 MB = < 30 мин
 
   // Сигнал 3: среднее время блока (получаем из /api/v1/mining/blocks/timestamps)
   // Медленные блоки = TX накапливаются быстрее чем обрабатываются
@@ -464,8 +469,10 @@ async function handlePrice(req, res) {
 
   // Итоговый тир = максимум из трёх сигналов
   const feeTierIdx = PRICE_TIERS.indexOf(tierByFee);
-  // При feeRate≤3 sat/vB рынок пустой — мемпул не поднимает цену
-  const effectiveMpTierIdx = feeRate <= 3 ? 0 : mpTierIdx;
+  // FIX: при feeRate<=3 мемпул может всё равно поднять тир — но только при РЕАЛЬНОЙ забитости
+  // Спам/ординалы: fee=2sat/vB но 100K+ TX → ускорение реально помогает
+  // При нормальном пустом мемпуле (<30K TX) — fee главный сигнал
+  const effectiveMpTierIdx = (feeRate <= 3 && mpCount < 50000 && mpVsizeMB < 80) ? 0 : mpTierIdx;
   let tier = PRICE_TIERS[Math.max(feeTierIdx, effectiveMpTierIdx, blockTierIdx)];
 
   // Отдельный индикатор нагрузки мемпула (не зависит от feeRate)
@@ -487,8 +494,11 @@ async function handlePrice(req, res) {
     return{tip:'🔴 Критическая перегрузка. Транзакции застревают. TurboTX поможет ускорить.',quality:'critical'};
   };
   const tip=bestTimeFn(feeRate,allFees);
-  // FIX: confLabel берём напрямую из tier — единый источник правды (PRICE_TIERS)
-  const confLabel = tier.confLabel || '10–20 мин ⚡';
+  // confLabel: берём из tier, но корректируем если мемпул большой
+  // При mpVsizeMB > 30 ускорение занимает чуть дольше — честнее показывать клиенту
+  let confLabel = tier.confLabel || '10–20 мин ⚡';
+  if (tier.label === 'low' && mpVsizeMB > 30) confLabel = '15–30 мин';
+  else if (tier.label === 'low' && mpVsizeMB > 15) confLabel = '10–20 мин ⚡';
   // BUG FIX: CDN кэш уменьшен до 60с (был 180с) — цена обновляется чаще
   // _t query param от клиента меняется каждую минуту → cache miss каждую минуту
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
