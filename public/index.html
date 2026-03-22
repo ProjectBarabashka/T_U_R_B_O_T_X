@@ -961,9 +961,10 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
   0%   { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
 }
-.clock-anim { display:inline-flex; align-items:center; justify-content:center; position:relative; }
-.clock-hand-fast { position:absolute; top:0; left:0; transform-origin:50% 50%; animation:clockTick 2s linear infinite; }
-.clock-hand-slow { position:absolute; top:0; left:0; transform-origin:50% 50%; animation:clockTickSlow 24s linear infinite; }
+/* FIX v14.3: clock hands now as SVG children → transform-origin in SVG-space (12,12) */
+.clock-face-wrap { display:inline-flex; align-items:center; justify-content:center; }
+.clock-svg-hand-fast { transform-origin: 12px 12px; transform-box: view-box; animation: clockTick 2s linear infinite; }
+.clock-svg-hand-slow { transform-origin: 12px 12px; transform-box: view-box; animation: clockTickSlow 12s linear infinite; }
 
 .flying-files {
   position: relative;
@@ -1340,10 +1341,12 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
   </span>
   <span style="color:rgba(255,255,255,.1)">|</span>
   <span style="display:flex;align-items:center;gap:4px">
-    <span class="clock-anim" style="width:14px;height:14px">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--a)" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
-      <svg class="clock-hand-fast" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--a)" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="12" x2="12" y2="6"/></svg>
-      <svg class="clock-hand-slow" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--a)" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="12" x2="16" y2="14"/></svg>
+    <span class="clock-face-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="overflow:visible">
+        <circle cx="12" cy="12" r="10" stroke="var(--a)" stroke-width="2"/>
+        <line class="clock-svg-hand-fast" x1="12" y1="12" x2="12" y2="5" stroke="var(--a)" stroke-width="2.5" stroke-linecap="round"/>
+        <line class="clock-svg-hand-slow" x1="12" y1="12" x2="16" y2="14" stroke="var(--a)" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
     </span>
     <span style="color:var(--m)" id="mp-lbl-nextblock">след. блок</span>
     <strong id="tk-nextblock" style="color:var(--t)">—</strong>
@@ -2682,12 +2685,12 @@ const POOLS_DIRECT = [
   {n:'360BTC',           p:'pool accelerator',              c:'g', api:true},
   {n:'txfaster',         p:'accelerator',                   c:'g', api:true},
   {n:'btcspeed',         p:'accelerator',                   c:'g', api:true},
-  {n:'Lincoin',          p:'Европа · ~1% хешрейта',       pEn:'Europe · ~1% hashrate',         c:'g', api:true, new26:true},
+  {n:'NiceHash',         p:'Глобальный · ~2% хешрейта',   pEn:'Global · ~2% hashrate',          c:'g', api:true, new26:true},
 ]
 // P2P секция удалена — только реальные каналы из broadcast.js
 const POOLS = [...POOLS_DIRECT]; // только реальные каналы сервера
 const pg = document.getElementById('pg');
-const NEW_2026 = new Set(['SpiderPool','BitFuFu','Foundry USA','MARA Slipstream','Luxor','EMCDPool','SBI Crypto','2Miners','Rawpool','Lincoin']);
+const NEW_2026 = new Set(['SpiderPool','BitFuFu','Foundry USA','MARA Slipstream','Luxor','EMCDPool','SBI Crypto','2Miners','Rawpool','NiceHash']);
 const NEW_V12  = new Set(['MARA Slipstream','EMCDPool','SBI Crypto','2Miners','Rawpool']);
 
 function renderPoolGrid() {
@@ -3238,7 +3241,10 @@ function renderFeedFromData(feed) {
   feed.forEach(function(item, i) {
     const safeTxid = sanitizeTxid(item.txid || '');
     const ago = Math.round((Date.now() - item.ts) / 60000);
-    const agoStr = ago < 1 ? _currentLang==='en'?'just now':'только что' : ago < 60 ? ago + _currentLang==='en'?' min ago':' мин назад' : Math.floor(ago/60) + _currentLang==='en'?' h ago':' ч назад';
+    const _en2 = typeof _currentLang !== 'undefined' && _currentLang === 'en';
+    const agoStr = ago < 1 ? (_en2 ? 'just now' : 'только что')
+      : ago < 60 ? (ago + (_en2 ? ' min ago' : ' мин назад'))
+      : (Math.floor(ago/60) + (_en2 ? ' h ago' : ' ч назад'));
     const short = safeTxid.slice(0,6) + '...' + safeTxid.slice(-4);
 
     let node = el.querySelector('.feed-item[data-txid="' + safeTxid + '"]');
@@ -3355,11 +3361,13 @@ async function fbFeedAdd(txid, planType, mins, accelTs) {
 }
 
 async function syncGlobalFeed() {
-  if (!_fbReady || _fbDead) return;
+  // FIX v14.3: всегда рендерим из localStorage — даже если Firebase offline
   try {
     const lf = JSON.parse(localStorage.getItem('turbotx_feed') || '[]');
     if (lf.length) renderFeedFromData(lf);
   } catch(e) {}
+  // Firebase дополнительно — только если доступен
+  if (!_fbReady || _fbDead) return;
   try {
     const r = await _fbFetch(`${FIREBASE_DB}/feed.json?orderBy="$key"&limitToLast=20`, {}, 8000);
     if (!r) return;
@@ -3583,7 +3591,7 @@ setInterval(async () => {
 }, 60000);
 
 setInterval(function() { if (_fbReady && !_fbDead) syncGlobalQueue(); }, 30000);
-setInterval(function() { if (_fbReady && !_fbDead) syncGlobalFeed();   }, 40000);
+setInterval(function() { syncGlobalFeed(); }, 40000); // FIX: всегда — LS доступен offline
 setInterval(function() { if (_fbReady && !_fbDead) syncCounterFromFirebase(); }, 90000);
 
 // ── FIREBASE SSE ──────────────────────────────────────────────
@@ -4188,12 +4196,11 @@ async function go() {
     <div id="${_apiStatusId}" style="margin-top:12px;padding:10px 12px;background:rgba(247,147,26,.04);border:1px solid rgba(247,147,26,.12);border-radius:8px;font-family:var(--mono);font-size:.65rem;line-height:1.9">
       <div style="color:var(--m);letter-spacing:1px;text-transform:uppercase;font-size:.58rem;margin-bottom:6px">Статус 30 каналов · v14</div>
       <div id="${_apiStatusId}-rows" style="display:flex;flex-direction:column;gap:2px">
-        <div style="color:var(--m)">⏳ hex-узлы: blockstream · Blockchair · BlockCypher…</div>
-        <div style="color:var(--m)">⏳ Foundry USA (~27%) · AntPool (~16%) · MARA Slipstream ★ (~11%)…</div>
-        <div style="color:var(--m)">⏳ ViaBTC · SpiderPool · Luxor · CloverPool…</div>
-        <div style="color:var(--m)">⏳ BitFuFu · BTC.com · TxBoost · mempoolAccel…</div>
-        <div style="color:var(--m)">⏳ BitAccelerate · 360BTC · txfaster · btcspeed…</div>
-        <div style="color:var(--m)">⏳ Авто-повтор: волны 15→30→60→120→240 мин ⚡</div>
+        <div style="color:var(--m)">⏳ Broadcast hex в 8 узлов: mempool.space · blockstream · Blockchair…</div>
+        <div style="color:var(--m)">⏳ AntPool (~16%) · MARA Slipstream ★ (~11%) · ViaBTC (~9%)…</div>
+        <div style="color:var(--m)">⏳ SpiderPool (~8%) · F2Pool (~7%) · CloverPool · BTC.com…</div>
+        <div style="color:var(--m)">⏳ mempoolAccel · TxBoost · BitAccelerate · EMCDPool · SBICrypto…</div>
+        <div style="color:var(--m)">⏳ Запускаем 10 волн авто-повтора ⚡</div>
       </div>
     </div>
     <div id="wave-panel-${_apiStatusId}" class="wave-panel-instance"></div>` : `
@@ -4210,9 +4217,9 @@ async function go() {
     <div id="conf-tracker" style="margin-top:14px;padding:12px 14px;background:rgba(0,232,122,.04);border:1px solid rgba(0,232,122,.1);border-radius:var(--r)">
       <div style="font-family:var(--mono);font-size:.6rem;color:var(--m);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Подтверждения</div>
       <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-        <div class="conf-dot conf-dot-wait" id="conf-0" style="width:11px;height:11px;border-radius:50%;background:var(--b2);transition:background .4s,box-shadow .4s;animation-delay:0s"></div>
-        <div class="conf-dot conf-dot-wait" id="conf-1" style="width:11px;height:11px;border-radius:50%;background:var(--b2);transition:background .4s,box-shadow .4s;animation-delay:.3s"></div>
-        <div class="conf-dot conf-dot-wait" id="conf-2" style="width:11px;height:11px;border-radius:50%;background:var(--b2);transition:background .4s,box-shadow .4s;animation-delay:.6s"></div>
+        <div class="conf-dot conf-dot-wait" id="conf-0" style="width:11px;height:11px;border-radius:50%;background:rgba(247,147,26,.25);transition:background .4s,box-shadow .4s;animation-delay:0s"></div>
+        <div class="conf-dot conf-dot-wait" id="conf-1" style="width:11px;height:11px;border-radius:50%;background:rgba(247,147,26,.25);transition:background .4s,box-shadow .4s;animation-delay:.3s"></div>
+        <div class="conf-dot conf-dot-wait" id="conf-2" style="width:11px;height:11px;border-radius:50%;background:rgba(247,147,26,.25);transition:background .4s,box-shadow .4s;animation-delay:.6s"></div>
         <span id="conf-text" style="font-family:var(--mono);font-size:.68rem;color:var(--m2);margin-left:6px">Ожидание включения в блок…</span>
       </div>
       <div style="font-size:.6rem;color:var(--m);font-family:var(--mono)">1 подтверждение = 1 блок (~10 мин) · 3 = безопасно для большинства платежей</div>
@@ -4263,11 +4270,22 @@ async function go() {
 
       if (rowsEl && data.results) {
         const fmt = (ok, name, ms, reason) => {
-          const isSkipped = reason === 'circuit_open' || reason === 'dead' || reason === 'neg_cached';
-          const isRateLimit = reason === 'rate_limit' || reason === 'rate_limited';
-          const color = ok ? 'var(--g)' : isRateLimit ? 'rgba(247,147,26,.5)' : 'rgba(255,255,255,.18)';
-          const icon  = ok ? '✓' : isRateLimit ? '⏱' : isSkipped ? '—' : '·';
-          const hint  = !ok && isRateLimit ? ' <span style="font-size:.54rem;color:rgba(247,147,26,.4)">(rate limit)</span>' : '';
+          const isSkipped  = reason === 'circuit_open' || reason === 'dead' || reason === 'neg_cached';
+          const isRateLimit= reason === 'rate_limit' || reason === 'rate_limited';
+          const notInRes   = ok === undefined || ok === null; // канал вообще не вернул результат (key mismatch или не запускался)
+          let color, icon;
+          if (ok === true) {
+            color = 'var(--g)'; icon = '✓';
+          } else if (isRateLimit) {
+            color = 'rgba(247,147,26,.55)'; icon = '⏱';
+          } else if (isSkipped) {
+            color = 'rgba(255,255,255,.12)'; icon = '—';
+          } else if (notInRes) {
+            color = 'rgba(255,255,255,.1)';  icon = '—';
+          } else {
+            color = 'rgba(255,255,255,.22)'; icon = '·';
+          }
+          const hint = isRateLimit ? ' <span style="font-size:.54rem;color:rgba(247,147,26,.4)">(rate limit)</span>' : '';
           return '<div style="display:flex;justify-content:space-between;align-items:center;color:' + color + '">' +
             '<span>' + icon + ' ' + name + hint + '</span>' +
             (ok && ms ? '<span style="font-size:.57rem;color:var(--m);font-family:var(--mono)">' + ms + 'ms</span>' : '') +
@@ -4300,8 +4318,7 @@ async function go() {
             // ── 22 пул-акселератора ────────────────────────────────────
             fmt(ch('Foundry').ok,          'Foundry USA ⭐ · ~27% хешрейта',         ch('Foundry').ms,          ch('Foundry').reason) +
             fmt(ch('AntPool').ok,          'AntPool (Bitmain) ⭐ · ~16%',            ch('AntPool').ms,          ch('AntPool').reason) +
-            fmt(ch('MARA').ok,             'MARA Pool ⭐ · ~11%',                    ch('MARA').ms,             ch('MARA').reason) +
-            fmt(ch('MaraSlipstream').ok,   'MARA Slipstream ★★ · приватный мемпул', ch('MaraSlipstream').ms,   ch('MaraSlipstream').reason) +
+            fmt(ch('MaraSlipstream').ok,   'MARA Marathon ★★ · Slipstream · ~11%',  ch('MaraSlipstream').ms,   ch('MaraSlipstream').reason) +
             fmt(ch('ViaBTC').ok,           'ViaBTC ⭐ · ~9%',                        ch('ViaBTC').ms,           ch('ViaBTC').reason) +
             fmt(ch('SpiderPool').ok,       'SpiderPool ★ · ~8%',                    ch('SpiderPool').ms,       ch('SpiderPool').reason) +
             fmt(ch('F2Pool').ok,           'F2Pool · ~7%',                           ch('F2Pool').ms,           ch('F2Pool').reason) +
@@ -4314,7 +4331,7 @@ async function go() {
             fmt(ch('SBICrypto').ok,        'SBI Crypto · ~2%',                       ch('SBICrypto').ms,        ch('SBICrypto').reason) +
             fmt(ch('2Miners').ok,          '2Miners · ~1%',                          ch('2Miners').ms,          ch('2Miners').reason) +
             fmt(ch('Rawpool').ok,          'Rawpool (Европа) · ~1%',                 ch('Rawpool').ms,          ch('Rawpool').reason) +
-            fmt(ch('Lincoin').ok,          'Lincoin · ~1%',                          ch('Lincoin').ms,          ch('Lincoin').reason) +
+            fmt(ch('NiceHash').ok,          'NiceHash · ~2%',                         ch('NiceHash').ms,          ch('NiceHash').reason) +
             fmt(ch('mempoolAccel').ok,     'mempool.space Accelerator',              ch('mempoolAccel').ms,     ch('mempoolAccel').reason) +
             fmt(ch('TxBoost').ok,          'TxBoost Accelerator',                    ch('TxBoost').ms,          ch('TxBoost').reason) +
             fmt(ch('bitaccelerate').ok,    'BitAccelerate · accelerator',            ch('bitaccelerate').ms,    ch('bitaccelerate').reason) +
@@ -4351,7 +4368,7 @@ async function go() {
           Foundry:27, AntPool:16, MARA:11, ViaBTC:9, SpiderPool:8,
           F2Pool:7, Luxor:5, CloverPool:4, BitFuFu:4, 'BTC.com':3,
           Ocean:2, EMCDPool:2, SBICrypto:2,
-          TxBoost:1, mempoolAccel:1, bitaccelerate:1, '360btc':1, txfaster:1, btcspeed:1,
+          TxBoost:1, mempoolAccel:1, bitaccelerate:1, NiceHash:2,
           Rawpool:1, '2Miners':1,
         };
         let hrReach = data.summary?.hashrateReach || 0;
@@ -4371,7 +4388,8 @@ async function go() {
 
         const mainRow = document.createElement('div');
         mainRow.style.cssText = 'padding-top:8px;border-top:1px solid rgba(255,255,255,.06);font-size:.6rem;letter-spacing:.5px;display:flex;justify-content:space-between;color:' + (okCnt > 0 ? 'var(--a)' : 'var(--err)');
-        mainRow.innerHTML = '<span>⚡ ' + okCnt + '/' + total + _currentLang==='en'?' channels responded':' каналов ответили' + (skipped > 0 ? ' <span style="color:var(--m);font-size:.55rem">(' + skipped + ' пропущено)</span>' : '') + '</span><span style="color:var(--m)">' + elapsed + 'мс</span>';
+        const _en = typeof _currentLang !== 'undefined' && _currentLang === 'en';
+        mainRow.innerHTML = '<span>⚡ ' + okCnt + '/' + total + (_en ? ' channels responded' : ' каналов ответили') + (skipped > 0 ? ' <span style="color:var(--m);font-size:.55rem">(' + skipped + ' ' + (_en ? 'skipped' : 'пропущено') + ')</span>' : '') + '</span><span style="color:var(--m)">' + elapsed + 'мс</span>';
         summaryEl.appendChild(mainRow);
 
         if (hrReach > 0) {
@@ -4792,7 +4810,7 @@ function _setDot(d, state) {
   if (!d) return;
   d.classList.remove('conf-dot-wait','conf-dot-active');
   d.style.animationDelay = '0s';
-  if (state==='wait') { d.classList.add('conf-dot-wait'); d.style.background='var(--b2)'; d.style.boxShadow='none'; }
+  if (state==='wait') { d.classList.add('conf-dot-wait'); d.style.background='rgba(247,147,26,.25)'; d.style.boxShadow='none'; }
   else if (state==='lit-orange') { d.classList.add('conf-dot-active'); d.style.background='var(--a)'; d.style.boxShadow='0 0 6px 2px rgba(247,147,26,.4)'; }
   else if (state==='lit-green') { d.style.background='var(--g)'; d.style.boxShadow='none'; d.style.animation='conf-glow 2s ease-in-out infinite'; }
 }
@@ -4836,6 +4854,23 @@ async function startConfTracker(txid) {
       }
       updateHistoryConfs(txid, confs);
       if (confs >= 1) {
+        // ── FIX v14.3: добавляем в ленту и убираем из очереди ───
+        // checkConf раньше останавливал волны но НЕ обновлял ленту
+        var _qNow = typeof loadQ === 'function' ? loadQ() : [];
+        var _qEntry = _qNow.find(function(i){ return i.txid === txid; });
+        var _accelTs = _qEntry ? _qEntry.ts : (Date.now() - 15*60000);
+        var _planNow = _qEntry ? _qEntry.plan : (plan || 'free');
+        var _minsNow = Math.max(1, Math.round((Date.now() - _accelTs) / 60000));
+        // Добавляем в ленту только один раз (флаг)
+        if (!window._feedAdded) {
+          window._feedAdded = txid;
+          if (typeof addFeedItem === 'function') addFeedItem(txid, _planNow, _minsNow);
+          if (typeof fbFeedAdd === 'function') fbFeedAdd(txid, _planNow, _minsNow, _accelTs);
+          if (typeof fbQueueRemove === 'function') fbQueueRemove(txid);
+          if (typeof saveQ === 'function') saveQ(_qNow.filter(function(i){ return i.txid !== txid; }));
+          if (typeof bumpCounter === 'function') bumpCounter();
+          if (typeof switchFeedTab === 'function') switchFeedTab('confirmed');
+        }
         // FIX: останавливаем волны через новую систему
         if (typeof _wStop === 'function') _wStop(txid);
         if (typeof _wClear === 'function') _wClear(txid);
