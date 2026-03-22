@@ -2147,7 +2147,7 @@ function openTab(tab) {
       <tbody>
         <tr><td class="comp-row-label">Бесплатный план</td><td class="us comp-us-col">✓ 100/день</td><td class="maybe">20/час</td><td class="no">—</td><td class="no">—</td></tr>
         <tr><td class="comp-row-label">Кол-во каналов</td><td class="us comp-us-col">30 каналов · сервер ⚡</td><td class="maybe">1 пул (ViaBTC)</td><td class="maybe">1 пул (CloverPool)</td><td class="maybe">~20 нод (клиент)</td></tr>
-        <tr><td class="comp-row-label">Цена Premium</td><td class="us comp-us-col" id="comp-price-cell"><strong>$3–18</strong> (динамич.)</td><td class="maybe">$25+</td><td class="maybe">$24+</td><td class="maybe">~$65</td></tr>
+        <tr><td class="comp-row-label">Цена Premium</td><td class="us comp-us-col" id="comp-price-cell"><strong>$3–18</strong> <span style="color:var(--m);font-size:.85em">(сейчас <span class="net-heart calm no-transition sm" id="comp-heart-dot" style="display:inline-flex;vertical-align:middle;margin:0 2px"><svg width="11" height="11" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g class="h-flame"><path d="M9 19 Q7 15 9.5 11 Q10.5 15 12 11 Q13.5 15 14.5 11 Q17 15 15 19" fill="#ff6b00" opacity=".85"/></g><path class="h-body" d="M12 20.5C12 20.5 2.5 14 2.5 8C2.5 5.2 4.7 3 7.5 3C9.1 3 10.6 3.8 12 5.2C13.4 3.8 14.9 3 16.5 3C19.3 3 21.5 5.2 21.5 8C21.5 14 12 20.5 12 20.5Z"/><g class="h-ice" stroke="#cff0ff" stroke-width="1" stroke-linecap="round" fill="none"><line x1="12" y1="5.5" x2="12" y2="8.5"/><line x1="10.4" y1="6.3" x2="13.6" y2="7.7"/><line x1="10.4" y1="7.7" x2="13.6" y2="6.3"/></g></svg></span> $…)</span></td><td class="maybe">$25+</td><td class="maybe">$24+</td><td class="maybe">~$65</td></tr>
         <tr><td class="comp-row-label">Время Premium</td><td class="us comp-us-col">10–20 мин ⚡</td><td class="maybe">~30 мин</td><td class="maybe">30–60 мин</td><td class="maybe">повтор раз в 6ч</td></tr>
         <tr><td class="comp-row-label">Серверный broadcast</td><td class="us comp-us-col" style="color:var(--g)">✓ реальный ответ</td><td class="no">—</td><td class="no">—</td><td class="no">—</td></tr>
         <tr><td class="comp-row-label">Авто-повторы</td><td class="us comp-us-col" style="color:var(--g)">8 волн · 4 ч ⚡</td><td class="no">—</td><td class="no">—</td><td class="maybe">раз в 6ч</td></tr>
@@ -6410,7 +6410,7 @@ function _rtApplyTicker(p) {
   // Сохраняем avgBlockMin для других частей страницы
   if (p.avgBlockMin != null) window._avgBlockMin = p.avgBlockMin;
 
-  ['net-pulse-dot','fee-dot','price-tag-dot','modal-heart-dot'].forEach(function(id) {
+  ['net-pulse-dot','fee-dot','price-tag-dot','modal-heart-dot','comp-heart-dot'].forEach(function(id) {
     const el = document.getElementById(id);
     if (!el) return;
     const hasSm = el.classList.contains('sm');
@@ -7893,7 +7893,7 @@ window._TurboAPI = {
   }
 
   function _setNetState(level, text, color, bg) {
-    ['net-pulse-dot','fee-dot','price-tag-dot','modal-heart-dot'].forEach(function(id) {
+    ['net-pulse-dot','fee-dot','price-tag-dot','modal-heart-dot','comp-heart-dot'].forEach(function(id) {
       const el = document.getElementById(id);
       if (!el) return;
       const hasSm = el.classList.contains('sm');
@@ -7960,7 +7960,7 @@ window._TurboAPI = {
     const heroEl = document.getElementById('hero-price-badge'); if (heroEl) heroEl.textContent = '$' + usd;
 
     const compEl = document.getElementById('comp-price-cell');
-    if (compEl) compEl.innerHTML = '<strong>$3–18</strong> <span style="color:var(--m);font-size:.85em">(сейчас ' + (p.emoji || state.emoji || '💲') + ' $' + usd + ')</span>';
+    if (compEl) compEl.innerHTML = '<strong>$3–18</strong> <span style="color:var(--m);font-size:.85em">(сейчас <span class="net-heart ' + level + ' no-transition sm" style="display:inline-flex;vertical-align:middle;margin:0 2px"><svg width="11" height="11" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g class="h-flame"><path d="M9 19 Q7 15 9.5 11 Q10.5 15 12 11 Q13.5 15 14.5 11 Q17 15 15 19" fill="#ff6b00" opacity=".85"/></g><path class="h-body" d="M12 20.5C12 20.5 2.5 14 2.5 8C2.5 5.2 4.7 3 7.5 3C9.1 3 10.6 3.8 12 5.2C13.4 3.8 14.9 3 16.5 3C19.3 3 21.5 5.2 21.5 8C21.5 14 12 20.5 12 20.5Z"/><g class="h-ice" stroke="#cff0ff" stroke-width="1" stroke-linecap="round" fill="none"><line x1="12" y1="5.5" x2="12" y2="8.5"/><line x1="10.4" y1="6.3" x2="13.6" y2="7.7"/><line x1="10.4" y1="7.7" x2="13.6" y2="6.3"/></g></svg></span> $' + usd + ')</span>';
 
     const modalUsd  = document.getElementById('modal-price-usd');
     const modalBtc  = document.getElementById('modal-price-btc');
