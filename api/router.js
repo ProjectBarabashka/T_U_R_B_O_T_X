@@ -511,10 +511,15 @@ async function handlePrice(req, res) {
     mempoolCongestion,
     confLabel,
     bestTime:tip,mempool:mempoolStats,
-    // heartLevel и blockIcon для анимаций фронта (v14.2)
+    // heartLevel — синхронизирован с tier (источник цены), не только с feeRate.
+    // FIX v14.3: раньше heartLevel = feeRate > 80 ? 'busy' : > 20 ? 'mid' : 'calm'
+    // Это давало рассинхрон когда blockTime или mpCount поднимали tier
+    // (напр. медленные блоки → price $9/high, но feeRate 2 sat/vB → heartLevel 'calm').
+    // Теперь heartLevel всегда совпадает с тем что показывает цена.
     heartLevel: (
-      feeRate > 80  ? 'busy' :
-      feeRate > 20  ? 'mid'  : 'calm'
+      tier.label === 'critical' || tier.label === 'extreme' ? 'busy' :
+      tier.label === 'high'     ? 'mid'  :
+      tier.label === 'medium'   ? (feeRate > 8 ? 'mid' : 'calm') : 'calm'
     ),
     // blockIcon: 4 состояния — источник правды для анимации на фронте
     // fast       = звёзды  (avgBlock < 8 мин   — блоки летят, сеть свободна)
