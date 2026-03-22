@@ -3564,8 +3564,10 @@ async function initGlobalSync() {
     else if (_st && _stAge >= 4 * 24 * 3600 * 1000) { localStorage.removeItem('turbotx_tracker_txid'); localStorage.removeItem('turbotx_tracker_ts'); }
   } catch(e) {}
   try {
-    var _pt = localStorage.getItem('turbotx_premium_txid');
-    if (_pt && /^[a-fA-F0-9]{64}$/.test(_pt)) startPremiumRepeat(_pt);
+    // FIX v14.3: turbotx_premium_txid никогда не пишется — убрано.
+    // Волны восстанавливаются через _wRecover() из ttx_wave_v2_* ключей.
+    // _wRecover вызывается при DOMContentLoaded ниже.
+    void 0;
   } catch(e) {}
 }
 
@@ -4715,9 +4717,12 @@ async function _wFire(txid) {
     const fired   = state.nextWave;
     const next    = fired + 1;
     const msToNext = data.recommendedNextWaveMs || (_WAVE_MINS_LST[Math.min(next-1, _WAVE_MINS_LST.length-1)] * 60000);
-    if (next > _MAX_WAVES_LST) { _wStop(txid); _wClear(txid); console.log('[TurboTX] Все 10 волн завершены'); }
-    else {
-      _wSave(txid, { ...state, nextWave: next, nextWaveAt: Date.now() + msToNext });
+    if (next > _MAX_WAVES_LST) {
+      _wSave(txid, { ...state, nextWave: next, wavesDone: fired, active: false });
+      _wStop(txid); _wClear(txid);
+      console.log('[TurboTX] Все 10 волн завершены');
+    } else {
+      _wSave(txid, { ...state, nextWave: next, wavesDone: fired, nextWaveAt: Date.now() + msToNext });
       console.log('[TurboTX] Волна', fired, '✓ следующая', next, 'через', Math.round(msToNext/60000), 'мин');
     }
   } catch(e) { console.warn('[TurboTX] Ошибка волны', state?.nextWave, ':', e.message); }
@@ -4748,8 +4753,15 @@ function _wRecover() {
       if (!key?.startsWith(_WAVE_KEY_PFX)) continue;
       const txid  = key.slice(_WAVE_KEY_PFX.length);
       const state = _wLoad(txid);
-      if (state && state.nextWave <= _MAX_WAVES_LST && !_activeWaves.has(txid))
+      if (state && state.nextWave <= _MAX_WAVES_LST && !_activeWaves.has(txid)) {
         startServerRepeat(txid, state.token);
+        // Если есть живая панель для этой TX — перерисовываем немедленно
+        setTimeout(() => {
+          if (window._waves && window._waves[txid] && typeof window._waves[txid].draw === 'function') {
+            try { window._waves[txid].draw(); } catch(_) {}
+          }
+        }, 500);
+      }
     }
   } catch {}
 }
@@ -8083,7 +8095,10 @@ function toggleHistDetail(btn) {
         // а не из turbotx_wave_start (старый ключ, теряется после F5) и не из
         // window._wResults (in-memory, теряется после F5).
         (function() {
-          var wrapInDetail = detail.querySelector('#wave-hist-wrap');
+          // FIX v14.4: сохранённый HTML содержит #wave-hist-wrap-TXID а не #wave-hist-wrap
+          // Нужен гибкий поиск
+          var wrapInDetail = detail.querySelector('#wave-hist-wrap')
+                          || detail.querySelector('[id^="wave-hist-wrap"]');
           if (!wrapInDetail) return;
 
           // Читаем состояние из новой системы волн (ttx_wave_v2_txid)
@@ -8112,7 +8127,9 @@ function toggleHistDetail(btn) {
           }
 
           function _dDraw() {
-            var w = detail.querySelector('#wave-hist-wrap');
+            // FIX v14.4: гибкий поиск wave-hist-wrap (id может содержать txid)
+            var w = detail.querySelector('#wave-hist-wrap')
+                 || detail.querySelector('[id^="wave-hist-wrap"]');
             if (!w) { clearInterval(_dTick); return; }
 
             var st = _readState();
@@ -8133,30 +8150,39 @@ function toggleHistDetail(btn) {
 
             // FIX v14.3: таймер из nextWaveAt (точный), не из кумулятивного расписания
             var msToNext = st.nextWaveAt ? Math.max(0, st.nextWaveAt - Date.now()) : 0;
+            // FIX: если nextWaveAt уже прошёл — волна в процессе отправки сервером/кроном
+            var isFiring = st.nextWaveAt && Date.now() > st.nextWaveAt;
             var sLeft = Math.round(msToNext / 1000);
             var hh = String(Math.floor(sLeft/3600)).padStart(2,'0');
             var mm = String(Math.floor((sLeft%3600)/60)).padStart(2,'0');
             var ss = String(sLeft%60).padStart(2,'0');
-            var wavesDone = st.wavesDone || 0; // 0..10 (сколько волн уже выполнено)
-            var nextWaveNum = st.nextWave || (wavesDone + 1); // следующая волна 1..10
+            var wavesDone = st.wavesDone || (st.nextWave ? st.nextWave - 1 : 0);
+            var nextWaveNum = st.nextWave || (wavesDone + 1);
 
-            var topHtml = msToNext > 0
-              ? '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:6px 10px;background:rgba(247,147,26,.07);border-radius:6px;border:1px solid rgba(247,147,26,.18)">'
+            var topHtml;
+            if (isFiring) {
+              topHtml = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:6px 10px;background:rgba(0,232,122,.07);border-radius:6px;border:1px solid rgba(0,232,122,.2)">'
+                + '<span style="color:var(--g);font-size:.58rem">⚡ Волна ' + nextWaveNum + ' · отправляется…</span>'
+                + '<span style="font-family:var(--mono);font-size:.75rem;color:var(--g);animation:blink-g 1s step-end infinite">●</span></div>';
+            } else if (msToNext > 0) {
+              topHtml = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:6px 10px;background:rgba(247,147,26,.07);border-radius:6px;border:1px solid rgba(247,147,26,.18)">'
                 + '<span style="color:var(--m);font-size:.58rem">волна ' + nextWaveNum + ' через</span>'
-                + '<span style="font-family:var(--mono);font-size:1rem;font-weight:800;color:var(--a);letter-spacing:2px">' + hh + ':' + mm + ':' + ss + '</span></div>'
-              : '<div style="color:var(--a);font-size:.6rem;margin-bottom:8px;font-weight:700">⚡ Волна ' + nextWaveNum + ' отправляется…</div>';
+                + '<span style="font-family:var(--mono);font-size:1rem;font-weight:800;color:var(--a);letter-spacing:2px">' + hh + ':' + mm + ':' + ss + '</span></div>';
+            } else {
+              topHtml = '<div style="color:var(--a);font-size:.6rem;margin-bottom:8px;font-weight:700">⚡ Волна ' + nextWaveNum + ' отправляется…</div>';
+            }
 
             // Строим список волн: 0 = первый broadcast (мгновенно), 1..10 = повторы
             var rows = _dSched.map(function(wMin, i) {
-              var isDoneRow = i < nextWaveNum;   // волны до текущей — выполнены
-              var isNextRow = i === nextWaveNum; // текущая ожидаемая
+              var isDoneRow = i < nextWaveNum;
+              var isNextRow = i === nextWaveNum;
               var cls = isDoneRow ? 'done' : isNextRow ? 'active' : 'pending';
               var dot = isDoneRow ? 'background:var(--g)' : isNextRow ? 'background:var(--a)' : 'background:rgba(255,255,255,.15)';
               var lbl = wMin === 0 ? 'Волна 1 · мгновенно' : 'Волна ' + (i+1) + ' · +' + wMin + ' мин';
               var info = isDoneRow
                 ? '<span style="color:var(--g);font-size:.55rem">✓</span>'
                 : isNextRow
-                  ? '<span style="color:var(--a);font-size:.55rem">→ скоро</span>'
+                  ? (isFiring ? '<span style="color:var(--g);font-size:.55rem">⚡ сейчас</span>' : '<span style="color:var(--a);font-size:.55rem">→ скоро</span>')
                   : '<span style="font-size:.55rem;opacity:.45">в ' + wMin + ' мин</span>';
               return '<div class="wave-item ' + cls + '" style="padding:5px 8px;border-radius:6px;display:flex;align-items:center;gap:8px;margin-bottom:2px">'
                 + '<div style="' + dot + ';width:7px;height:7px;border-radius:50%;flex-shrink:0"></div>'
@@ -8256,6 +8282,52 @@ function restoreLastResult() {
     rb.querySelectorAll('.wave-panel-instance').forEach(el => {
       el.innerHTML = '<div style="font-family:var(--mono);font-size:.58rem;color:var(--m);padding:6px 0">↻ Волны повтора запущены на сервере — работают в фоне</div>';
     });
+
+    // FIX v14.4: запускаем живой тикер для wave-hist-wrap в rb после F5
+    setTimeout(function() {
+      try {
+        var rbWrap = rb.querySelector('[id^="wave-hist-wrap"]');
+        if (rbWrap && last.plan === 'premium' && (last.confs || 0) < 1) {
+          var _rbTxid = last.txid;
+          var _rbLsKey = 'ttx_wave_v2_' + _rbTxid;
+          var _rbDSched = [0, 15, 30, 60, 120, 240, 360, 480, 600, 780, 960];
+          function _rbDraw() {
+            var rbW = rb.querySelector('[id^="wave-hist-wrap"]');
+            if (!rbW) { clearInterval(_rbTick); return; }
+            try {
+              var st = JSON.parse(localStorage.getItem(_rbLsKey) || 'null');
+              if (!st || st.active === false || st.nextWave > 10) {
+                clearInterval(_rbTick);
+                rbW.innerHTML = '<div style="padding:10px 14px;background:rgba(0,232,122,.06);border:1px solid rgba(0,232,122,.25);border-radius:10px;font-family:var(--mono);text-align:center"><div style="color:var(--g);font-size:.75rem;font-weight:700">✅ Все волны завершены · Гарантия 6 часов</div></div>';
+                return;
+              }
+              var msToNext = st.nextWaveAt ? Math.max(0, st.nextWaveAt - Date.now()) : 0;
+              var sLeft = Math.round(msToNext / 1000);
+              var hh = String(Math.floor(sLeft/3600)).padStart(2,'0');
+              var mm = String(Math.floor((sLeft%3600)/60)).padStart(2,'0');
+              var ss = String(sLeft%60).padStart(2,'0');
+              var wavesDone = st.wavesDone || (st.nextWave ? st.nextWave - 1 : 0);
+              var nextWaveNum = st.nextWave || 1;
+              var isFiring = st.nextWaveAt && Date.now() > st.nextWaveAt;
+              var topHtml = isFiring
+                ? '<div style="padding:5px 10px;background:rgba(0,232,122,.07);border-radius:6px;border:1px solid rgba(0,232,122,.2);color:var(--g);font-size:.58rem;margin-bottom:8px">⚡ Волна ' + nextWaveNum + ' · отправляется…</div>'
+                : '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;padding:5px 10px;background:rgba(247,147,26,.07);border-radius:6px;border:1px solid rgba(247,147,26,.18)"><span style="color:var(--m);font-size:.58rem">волна ' + nextWaveNum + ' через</span><span style="font-family:var(--mono);font-size:.95rem;font-weight:800;color:var(--a);letter-spacing:2px">' + hh + ':' + mm + ':' + ss + '</span></div>';
+              var rows = _rbDSched.map(function(wMin, i) {
+                var isDoneRow = i < nextWaveNum;
+                var isNextRow = i === nextWaveNum;
+                var dot = isDoneRow ? 'background:var(--g)' : isNextRow ? 'background:var(--a)' : 'background:rgba(255,255,255,.15)';
+                var lbl = wMin === 0 ? 'Волна 1 · мгновенно' : 'Волна ' + (i+1) + ' · +' + wMin + ' мин';
+                var info = isDoneRow ? '<span style="color:var(--g);font-size:.52rem">✓</span>' : isNextRow ? '<span style="color:var(--a);font-size:.52rem">→ скоро</span>' : '<span style="font-size:.52rem;opacity:.4">в ' + wMin + ' мин</span>';
+                return '<div style="padding:4px 8px;border-radius:5px;display:flex;align-items:center;gap:8px;margin-bottom:2px"><div style="' + dot + ';width:6px;height:6px;border-radius:50%;flex-shrink:0"></div><span style="flex:1;font-size:.58rem">' + lbl + '</span>' + info + '</div>';
+              }).join('');
+              rbW.innerHTML = '<div style="padding:10px 14px;background:linear-gradient(135deg,rgba(0,232,122,.05),rgba(124,92,252,.05));border:1px solid rgba(0,232,122,.18);border-radius:10px;font-family:var(--mono)"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px"><span style="color:var(--a);font-weight:700;font-size:.62rem">⚡ АВТО-ПОВТОРЫ PREMIUM</span><span style="color:var(--m);font-size:.52rem">10 волн · до 16 ч</span></div>' + topHtml + rows + '</div>';
+            } catch(e) { clearInterval(_rbTick); }
+          }
+          _rbDraw();
+          var _rbTick = setInterval(_rbDraw, 1000);
+        }
+      } catch(e) {}
+    }, 200);
 
     // Убираем спиннеры прогресса которые уже не актуальны
     rb.querySelectorAll('#pw,#pf').forEach(el => el.style.display = 'none');
