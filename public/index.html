@@ -2165,7 +2165,7 @@ function openTab(tab) {
 </div>
 
 <!-- POOLS -->
-<div id="pools" style="margin-bottom:36px"><div class="sh"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Подключённые узлы и пулы</div><div style="display:flex;gap:16px;margin-bottom:10px;font-family:var(--mono);font-size:.62rem;color:var(--m)"><span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:var(--g);display:inline-block"></span id="pools-lbl-direct">Прямой API</span><span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:#7c5c9e;box-shadow:0 0 4px rgba(124,92,158,.4);display:inline-block"></span id="pools-lbl-p2p">Через p2p сеть</span><span style="display:flex;align-items:center;gap:5px"><span style="color:var(--accent3);font-size:.9em">★</span><span id="pools-lbl-new">Новый топ-пул 2026</span></span></div><div class="pools-grid" id="pg"></div></div>
+<div id="pools" style="margin-bottom:36px"><div class="sh"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg> Подключённые узлы и пулы</div><div style="display:flex;gap:16px;margin-bottom:10px;font-family:var(--mono);font-size:.62rem;color:var(--m)"><span style="display:flex;align-items:center;gap:5px"><span style="width:7px;height:7px;border-radius:50%;background:var(--g);display:inline-block"></span id="pools-lbl-direct">Прямой API</span><span style="display:flex;align-items:center;gap:5px"><span style="display:flex;align-items:center;gap:5px"><span style="color:var(--accent3);font-size:.9em">★</span><span id="pools-lbl-new">Новый топ-пул 2026</span></span></div><div class="pools-grid" id="pg"></div></div>
 
 <!-- FAQ (компактный) -->
 <section class="faq-section" style="background:var(--s);border:1px solid var(--b);border-radius:20px;padding:36px;margin-bottom:40px">
@@ -2701,7 +2701,6 @@ const POOLS_DIRECT = [
   {n:'Foundry USA',      p:'пул #1 · 27% хешрейта ★',    c:'g', api:true, new26:true},
   {n:'AntPool',          p:'Bitmain · 16% хешрейта',      c:'g', api:true},
   {n:'MARA Slipstream',  p:'приватный мемпул ★★ NEW',    c:'g', api:true, new26:true},
-  {n:'MARA Pool',        p:'Marathon Digital · ~11%',               c:'g', api:true, new26:true},
   {n:'ViaBTC',           p:'pool accelerator · 9%',        c:'g', api:true},
   {n:'SpiderPool',       p:'топ-5 · 8% ★',                c:'g', api:true, new26:true},
   {n:'F2Pool',           p:'7% хешрейта',                  c:'g', api:true},
@@ -2720,19 +2719,12 @@ const POOLS_DIRECT = [
   {n:'360BTC',           p:'pool accelerator',              c:'g', api:true},
   {n:'txfaster',         p:'accelerator',                   c:'g', api:true},
   {n:'btcspeed',         p:'accelerator',                   c:'g', api:true},
+  {n:'Lincoin',          p:'Европа · ~1% хешрейта',            c:'g', api:true, new26:true},
 ]
-const POOLS_P2P = [
-  {n:'Binance Pool',  p:'via p2p broadcast', c:'y'},
-  {n:'F2Pool',        p:'via p2p (API закрыт в 2026)', c:'y'},
-  {n:'Braiins',       p:'via p2p broadcast', c:'y'},
-  {n:'Ocean',         p:'via p2p broadcast', c:'y'},
-  {n:'SBI Crypto',    p:'via p2p broadcast', c:'y'},
-  {n:'Rawpool',       p:'via p2p broadcast', c:'y'},
-  {n:'WhitePool',     p:'via p2p broadcast', c:'y'},
-];
-const POOLS = [...POOLS_DIRECT, ...POOLS_P2P];
+// P2P секция удалена — только реальные каналы из broadcast.js
+const POOLS = [...POOLS_DIRECT]; // только реальные каналы сервера
 const pg = document.getElementById('pg');
-const NEW_2026 = new Set(['SpiderPool','BitFuFu','Foundry USA','MARA Pool','MARA Slipstream','Luxor','EMCDPool','SBI Crypto','2Miners','Rawpool']);
+const NEW_2026 = new Set(['SpiderPool','BitFuFu','Foundry USA','MARA Slipstream','Luxor','EMCDPool','SBI Crypto','2Miners','Rawpool','Lincoin']);
 const NEW_V12  = new Set(['MARA Slipstream','EMCDPool','SBI Crypto','2Miners','Rawpool']);
 POOLS.forEach(p => {
   const isNew  = p.new26 || NEW_2026.has(p.n);
@@ -2749,7 +2741,7 @@ POOLS.forEach(p => {
   pg.innerHTML += `<div class="${cls}"><div class="dot ${p.c}"></div><div><div class="pn">${p.n}${badge}</div><div class="pp">${p.p}</div></div></div>`;
 });
 const p2pEl = document.getElementById('p2p-count');
-if (p2pEl) { p2pEl.textContent = POOLS_P2P.length; p2pEl.style.opacity="1"; p2pEl.style.animation="none"; p2pEl.style.color="#ffd166"; p2pEl.style.fontWeight="700"; }
+if (p2pEl) { p2pEl.style.display='none'; }
 
 // ── GLOBAL COUNTER (Firebase) ──────────────────────────────────
 const COUNTER_KEY = 'turbotx_acc_count';
@@ -3036,7 +3028,7 @@ async function fetchLiveStats() {
 
     // pools-online обновляется через fetchHealthOnline() из /api/health
     const p2pEl2 = document.getElementById('p2p-count');
-    if (p2pEl2) { p2pEl2.textContent = p2pOnline + ' / ' + POOLS_P2P.length; p2pEl2.style.opacity='1'; p2pEl2.style.animation='none'; p2pEl2.style.color='#ffd166'; p2pEl2.style.fontWeight='700'; }
+    if (p2pEl2) { p2pEl2.style.display='none'; p2pEl2.style.opacity='1'; p2pEl2.style.animation='none'; p2pEl2.style.color='#ffd166'; p2pEl2.style.fontWeight='700'; }
   } catch(e) {}
 }
 // fetchLiveStats вызывается из RT-петли каждые 60 сек
