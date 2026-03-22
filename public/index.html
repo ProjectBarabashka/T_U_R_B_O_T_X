@@ -1810,7 +1810,7 @@ input[type=text]:focus { border-color: rgba(247,147,26,.5) !important; box-shado
     <!-- Карточка 2: Fee rate -->
     <div style="background:linear-gradient(145deg,rgba(0,232,122,.06),rgba(13,13,20,.95));border:1px solid rgba(0,232,122,.15);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden">
       <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;background:radial-gradient(circle,rgba(0,232,122,.1),transparent 70%);pointer-events:none"></div>
-      <div style="font-family:var(--mono);font-size:.55rem;color:var(--m);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Fast fee</div>
+      <div style="font-family:var(--mono);font-size:.55rem;color:var(--m);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px" id="ni-label-fee">Fast fee</div>
       <div style="display:flex;align-items:baseline;gap:6px;margin-bottom:4px">
         <span style="font-size:1.8rem;font-weight:800;color:var(--g);font-family:var(--display)" id="ni-fee-rate">—</span>
         <span style="font-family:var(--mono);font-size:.62rem;color:var(--m2)">sat/vB</span>
@@ -2134,9 +2134,9 @@ function openTab(tab) {
 <section class="faq-section" style="background:var(--s);border:1px solid var(--b);border-radius:20px;padding:36px;margin-bottom:40px">
   <h2 style="font-size:1.1rem;font-weight:800;margin-bottom:20px;display:flex;align-items:center;gap:12px" id="faq-header">Часто задаваемые вопросы <span style="flex:1;height:1px;background:var(--b);display:block"></span></h2>
   <div id="faq-section" style="display:flex;flex-direction:column;gap:0">
-    <details style="border-bottom:1px solid var(--b);padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Как ускорить застрявшую Bitcoin транзакцию? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">Скопируйте <strong style="color:var(--t)">TXID (Transaction ID)</strong> вашей транзакции из кошелька — это строка из 64 символов. Вставьте его в форму выше и нажмите «Ускорить транзакцию». TurboTX v14 мгновенно отправит транзакцию в 30 каналов (MARA Slipstream, Foundry, AntPool, ViaBTC, SpiderPool и другие — ~88% хешрейта Bitcoin), которые включат её в следующий блок. Бесплатное ускорение занимает <strong style="color:var(--t)">1–3 часа</strong>, Premium — <strong style="color:var(--t)">10–20 минут</strong> с авто-повтором каждые 15 мин.</p></details>
-    <details style="border-bottom:1px solid var(--b);padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Почему Bitcoin транзакция не подтверждается? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">Транзакция зависает в <strong style="color:var(--t)">mempool</strong> (очередь транзакций), когда сеть перегружена или комиссия (fee) была установлена слишком низкой. В 2026 году дополнительную нагрузку создают <strong style="color:var(--t)">Ordinals, BRC-20 токены и Runes</strong> — они конкурируют с обычными переводами за место в блоке. Майнеры выбирают транзакции с наибольшей комиссией в первую очередь — транзакции с низкой fee могут ждать часами и даже сутками. Акселератор TurboTX решает эту проблему без замены транзакции (RBF). Также доступен CPFP калькулятор для продвинутых пользователей.</p></details>
-    <details style="border-bottom:1px solid var(--b);padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Что такое BTC transaction accelerator и как он работает? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><div style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">
+    <details id="faq-a1" style="border-bottom:1px solid var(--b);padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Как ускорить застрявшую Bitcoin транзакцию? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">Скопируйте <strong style="color:var(--t)">TXID (Transaction ID)</strong> вашей транзакции из кошелька — это строка из 64 символов. Вставьте его в форму выше и нажмите «Ускорить транзакцию». TurboTX v14 мгновенно отправит транзакцию в 30 каналов (MARA Slipstream, Foundry, AntPool, ViaBTC, SpiderPool и другие — ~88% хешрейта Bitcoin), которые включат её в следующий блок. Бесплатное ускорение занимает <strong style="color:var(--t)">1–3 часа</strong>, Premium — <strong style="color:var(--t)">10–20 минут</strong> с авто-повтором каждые 15 мин.</p></details>
+    <details id="faq-a2" style="border-bottom:1px solid var(--b);padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Почему Bitcoin транзакция не подтверждается? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">Транзакция зависает в <strong style="color:var(--t)">mempool</strong> (очередь транзакций), когда сеть перегружена или комиссия (fee) была установлена слишком низкой. В 2026 году дополнительную нагрузку создают <strong style="color:var(--t)">Ordinals, BRC-20 токены и Runes</strong> — они конкурируют с обычными переводами за место в блоке. Майнеры выбирают транзакции с наибольшей комиссией в первую очередь — транзакции с низкой fee могут ждать часами и даже сутками. Акселератор TurboTX решает эту проблему без замены транзакции (RBF). Также доступен CPFP калькулятор для продвинутых пользователей.</p></details>
+    <details id="faq-a3" style="border-bottom:1px solid var(--b);padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Что такое BTC transaction accelerator и как он работает? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><div style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">
 <p style="margin-bottom:10px">TurboTX работает на <strong style="color:var(--t)">трёх уровнях</strong>, каждый из которых реально ускоряет транзакцию — это не просто «бесполезный broadcast»:</p>
 <p style="margin-bottom:8px"><strong style="color:var(--a)">① Hex-broadcast в узлы сети (8 штук)</strong><br>
 Мы берём RAW HEX вашей транзакции и отправляем его через API в mempool.space, blockstream.info, blockchair, blockcypher и ещё 4 узла. Каждый из них ретранслирует TX своим пирам в P2P-сети Bitcoin. Это гарантирует, что TX не «потеряется» — её увидят все майнеры, включая тех, кто не подключён к стандартным узлам. <span style="color:rgba(247,147,26,.7)">Важно: TX, которая только у 1–2 пиров, рискует быть дропнута при высокой нагрузке.</span></p>
@@ -2145,8 +2145,8 @@ ViaBTC, AntPool, MARA, SpiderPool, F2Pool, Luxor и другие пулы име
 <p style="margin-bottom:0"><strong style="color:var(--a)">③ Волновой повтор (Premium: 10 волн за 16 часов)</strong><br>
 Акселераторы пулов очищают свои очереди периодически — TX подаётся заново каждые 15–30 минут, чтобы оставаться в «горячем» списке. Это <strong style="color:var(--t)"><span data-i18n="z131">принципиально отличается</span></strong> от разовой отправки в mempool: мы не просто «говорим пулу один раз», а напоминаем регулярно до подтверждения.</p>
 </div></details>
-    <details style="border-bottom:1px solid var(--b);padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Сколько времени займёт ускорение транзакции? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7"><strong style="color:var(--t)">Бесплатный режим:</strong> 1–3 часа в зависимости от загрузки сети.<br><strong style="color:var(--t)">Premium режим:</strong> 10–20 минут — MARA Slipstream + Foundry + AntPool + ViaBTC + SpiderPool + 17 других пулов (10 волн) до подтверждения. Средний блок Bitcoin появляется каждые 10 минут.</p></details>
-    <details style="padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Безопасно ли использовать акселератор транзакций? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">Да, абсолютно безопасно. TurboTX использует только <strong style="color:var(--t)">TXID транзакции</strong> — публичную информацию из блокчейна. Мы не запрашиваем приватные ключи, seed-фразы или данные кошелька. Rebroadcast транзакций — стандартная практика в экосистеме Bitcoin. Сервис работает аналогично ViaBTC Accelerator и BTC.com Accelerator.</p></details>
+    <details id="faq-a4" style="border-bottom:1px solid var(--b);padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Сколько времени займёт ускорение транзакции? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7"><strong style="color:var(--t)">Бесплатный режим:</strong> 1–3 часа в зависимости от загрузки сети.<br><strong style="color:var(--t)">Premium режим:</strong> 10–20 минут — MARA Slipstream + Foundry + AntPool + ViaBTC + SpiderPool + 17 других пулов (10 волн) до подтверждения. Средний блок Bitcoin появляется каждые 10 минут.</p></details>
+    <details id="faq-a5" style="padding:16px 0"><summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Безопасно ли использовать акселератор транзакций? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">Да, абсолютно безопасно. TurboTX использует только <strong style="color:var(--t)">TXID транзакции</strong> — публичную информацию из блокчейна. Мы не запрашиваем приватные ключи, seed-фразы или данные кошелька. Rebroadcast транзакций — стандартная практика в экосистеме Bitcoin. Сервис работает аналогично ViaBTC Accelerator и BTC.com Accelerator.</p></details>
   </div>
 </section>
 
@@ -5144,11 +5144,14 @@ function switchModalTab(tab, el) {
     if (svb) svb.style.display = 'block';
   }
   const note = document.getElementById('modal-note');
-  if (note) note.textContent =
-    tab === 'usdt'  ? 'Прямая оплата USDT TRC-20 — сеть TRON, без посредников' :
-    tab === 'promo' ? 'Введите промокод — моментальная активация' :
-    tab === 'ln'    ? _currentLang==='en'?'Lightning Network — instant payment ⚡':'Lightning Network — мгновенная оплата ⚡' :
-                     'Прямая оплата Bitcoin — без посредников';
+  if (note) {
+    var _en = typeof _currentLang !== 'undefined' && _currentLang === 'en';
+    note.textContent =
+      tab === 'usdt'  ? (_en ? 'Direct USDT TRC-20 payment — TRON network, no intermediaries' : 'Прямая оплата USDT TRC-20 — сеть TRON, без посредников') :
+      tab === 'promo' ? (_en ? 'Enter promo code — instant activation' : 'Введите промокод — моментальная активация') :
+      tab === 'ln'    ? (_en ? 'Lightning Network — instant payment ⚡' : 'Lightning Network — мгновенная оплата ⚡') :
+                       (_en ? 'Direct Bitcoin payment — no intermediaries' : 'Прямая оплата Bitcoin — без посредников');
+  }
   if (tab === 'btc') _updateDirectAmount();
   if (tab === 'usdt') _updateUsdtAmount();
   if (tab === 'promo') setTimeout(() => { const inp = document.getElementById('promo-input'); if (inp) inp.focus(); }, 80);
@@ -5568,14 +5571,17 @@ function updateNetworkIntelligence(priceData, mempoolData) {
     const tierEl = document.getElementById('ni-price-tier');
     if (tierEl) {
       const tierLevel = effectiveLevel === 0 ? 'calm' :
-                        effectiveLevel === 1 ? 'mid'  :
-                        effectiveLevel === 2 ? 'mid'  :
-                        effectiveLevel === 3 ? 'busy' : 'busy';
-      const tierText  = effectiveLevel === 0 ? 'Сеть спокойна — лучший момент' :
-                        effectiveLevel === 1 ? 'Умеренная нагрузка' :
-                        effectiveLevel === 2 ? 'Повышенная нагрузка' :
-                        effectiveLevel === 3 ? 'Высокая нагрузка' :
-                                               'Критическая загрузка';
+                        effectiveLevel <= 2   ? 'mid'  : 'busy';
+      var _en = typeof _currentLang !== 'undefined' && _currentLang === 'en';
+      const tierText = _en
+        ? (effectiveLevel === 0 ? 'Network clear — best time' :
+           effectiveLevel === 1 ? 'Moderate load' :
+           effectiveLevel === 2 ? 'Elevated load' :
+           effectiveLevel === 3 ? 'High load' : 'Critical load')
+        : (effectiveLevel === 0 ? 'Сеть спокойна — лучший момент' :
+           effectiveLevel === 1 ? 'Умеренная нагрузка' :
+           effectiveLevel === 2 ? 'Повышенная нагрузка' :
+           effectiveLevel === 3 ? 'Высокая нагрузка' : 'Критическая загрузка');
       tierEl.innerHTML = `<span class="net-heart ${tierLevel} no-transition sm" style="vertical-align:middle;margin-right:4px"><svg width="11" height="11" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g class="h-flame"><path d="M9 19 Q7 15 9.5 11 Q10.5 15 12 11 Q13.5 15 14.5 11 Q17 15 15 19" fill="#ff6b00" opacity=".85"/></g><path class="h-body" d="M12 20.5C12 20.5 2.5 14 2.5 8C2.5 5.2 4.7 3 7.5 3C9.1 3 10.6 3.8 12 5.2C13.4 3.8 14.9 3 16.5 3C19.3 3 21.5 5.2 21.5 8C21.5 14 12 20.5 12 20.5Z"/><g class="h-ice" stroke="#cff0ff" stroke-width="1" stroke-linecap="round" fill="none"><line x1="12" y1="5.5" x2="12" y2="8.5"/><line x1="10.4" y1="6.3" x2="13.6" y2="7.7"/><line x1="10.4" y1="7.7" x2="13.6" y2="6.3"/></g></svg></span>${tierText}`;
     }
   }
@@ -7487,6 +7493,11 @@ function _applyLang(lang) {
   // --- Карта id → перевод ---
   var ru = lang === 'ru';
   var idMap = {
+    // Modal header
+    'modal-title-text':   ru ? 'Premium Ускорение'  : 'Premium Acceleration',
+    'modal-rate-label':   ru ? 'Курс BTC:'           : 'BTC rate:',
+    // NI card labels — Fast fee stays English on both langs (industry term)
+    'ni-label-fee':        ru ? 'Fast fee'            : 'Fast fee',
     // Plan selector + batch + history
     'plan-opt-free-title': ru ? 'Бесплатный'                        : 'Free',
     'batch-toggle-label':  ru ? 'Пакетное ускорение (до 20 TX)'     : 'Batch acceleration (up to 20 TX)',
@@ -7572,7 +7583,33 @@ function _applyLang(lang) {
   // ПОЛНЫЙ innerHTML перевод всех блоков
   // ══════════════════════════════════════════════
 
-  // --- FAQ вопросы (summary теги) ---
+  // ── FAQ ответы — полный innerHTML перевод ───────────────────
+  var _faqA = {
+    'faq-a1': [
+      '<summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Как ускорить застрявшую Bitcoin транзакцию? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">Скопируйте <strong style="color:var(--t)">TXID (Transaction ID)</strong> вашей транзакции из кошелька — это строка из 64 символов. Вставьте его в форму выше и нажмите «Ускорить транзакцию». TurboTX v14 мгновенно отправит транзакцию в 30 каналов (MARA Slipstream, Foundry, AntPool, ViaBTC, SpiderPool и другие — ~88% хешрейта Bitcoin), которые включат её в следующий блок. Бесплатное ускорение занимает <strong style="color:var(--t)">1–3 часа</strong>, Premium — <strong style="color:var(--t)">10–20 минут</strong> с авто-повтором каждые 15 мин.</p>',
+      '<summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">How to speed up a stuck Bitcoin transaction? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">Copy your <strong style="color:var(--t)">TXID (Transaction ID)</strong> from your wallet — it\'s a 64-character string. Paste it into the form above and click "Accelerate". TurboTX v14 instantly broadcasts to 30 channels (MARA Slipstream, Foundry, AntPool, ViaBTC, SpiderPool and more — ~88% of Bitcoin hashrate). Free acceleration takes <strong style="color:var(--t)">1–3 hours</strong>, Premium — <strong style="color:var(--t)">10–20 minutes</strong> with auto-repeat every 15 min.</p>',
+    ],
+    'faq-a2': [
+      '<summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Почему Bitcoin транзакция не подтверждается? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">Транзакция зависает в <strong style="color:var(--t)">mempool</strong> (очередь транзакций), когда сеть перегружена или комиссия (fee) была установлена слишком низкой. В 2026 году дополнительную нагрузку создают <strong style="color:var(--t)">Ordinals, BRC-20 токены и Runes</strong> — они конкурируют с обычными переводами за место в блоке. Майнеры выбирают транзакции с наибольшей комиссией в первую очередь — транзакции с низкой fee могут ждать часами и даже сутками. Акселератор TurboTX решает эту проблему без замены транзакции (RBF). Также доступен CPFP калькулятор для продвинутых пользователей.</p>',
+      '<summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Why is my Bitcoin transaction not confirming? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">Transactions get stuck in the <strong style="color:var(--t)">mempool</strong> (transaction queue) when the network is overloaded or the fee was set too low. In 2026, <strong style="color:var(--t)">Ordinals, BRC-20 tokens and Runes</strong> create additional demand competing with regular payments for block space. Miners prioritize transactions with the highest fees — low-fee transactions can wait hours or even days. TurboTX solves this without replacing the transaction (RBF). A CPFP calculator is also available for advanced users.</p>',
+    ],
+    'faq-a3': [
+      '<summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Что такое BTC transaction accelerator и как он работает? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><div style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7"><p style="margin-bottom:8px"><strong style="color:var(--a)">① Hex-broadcast в узлы сети (8 штук)</strong><br>Мы берём RAW HEX вашей транзакции и отправляем его через API в mempool.space, blockstream.info, blockchair, blockcypher и ещё 4 узла. Каждый ретранслирует TX своим пирам в P2P-сети Bitcoin — TX не «потеряется» и не будет дропнута при перегрузке.</p><p style="margin-bottom:8px"><strong style="color:var(--a)">② Прямая отправка в акселераторы пулов (22 пула)</strong><br>ViaBTC, AntPool, MARA, SpiderPool, F2Pool, Luxor и другие имеют <strong style="color:var(--t)">отдельную очередь ускорения</strong> — не обычный mempool. Foundry (27%) + AntPool (16%) + MARA Slipstream (11%) + ViaBTC (9%) + SpiderPool (8%) + остальные — ~88% хешрейта.</p><p style="margin-bottom:0"><strong style="color:var(--a)">③ Волновой повтор (Premium: 10 волн за 16 часов)</strong><br>Очереди пулов очищаются периодически — TX подаётся каждые 15–30 мин, оставаясь в «горячем» списке до подтверждения.</p></div>',
+      '<summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">What is a BTC transaction accelerator and how does it work? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><div style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7"><p style="margin-bottom:8px"><strong style="color:var(--a)">① Hex-broadcast to network nodes (8 nodes)</strong><br>We take the RAW HEX of your transaction and submit it via API to mempool.space, blockstream.info, blockchair, blockcypher and 4 more nodes. Each relays the TX to its P2P peers — the TX won\'t get lost or dropped under load.</p><p style="margin-bottom:8px"><strong style="color:var(--a)">② Direct submission to mining pool accelerators (22 pools)</strong><br>ViaBTC, AntPool, MARA, SpiderPool, F2Pool, Luxor and others have a <strong style="color:var(--t)">separate acceleration queue</strong> — not the regular mempool. Foundry (27%) + AntPool (16%) + MARA Slipstream (11%) + ViaBTC (9%) + SpiderPool (8%) + others — ~88% hashrate.</p><p style="margin-bottom:0"><strong style="color:var(--a)">③ Wave repeat (Premium: 10 waves over 16 hours)</strong><br>Pool queues are periodically cleared — the TX is re-submitted every 15–30 min, staying in the hot list until confirmed.</p></div>',
+    ],
+    'faq-a4': [
+      '<summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Сколько времени займёт ускорение транзакции? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7"><strong style="color:var(--t)">Бесплатный режим:</strong> 1–3 часа в зависимости от загрузки сети.<br><strong style="color:var(--t)">Premium режим:</strong> 10–20 минут — MARA Slipstream + Foundry + AntPool + ViaBTC + SpiderPool + 17 других пулов (10 волн) до подтверждения. Средний блок Bitcoin появляется каждые 10 минут.</p>',
+      '<summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">How long does transaction acceleration take? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7"><strong style="color:var(--t)">Free mode:</strong> 1–3 hours depending on network load.<br><strong style="color:var(--t)">Premium mode:</strong> 10–20 minutes — MARA Slipstream + Foundry + AntPool + ViaBTC + SpiderPool + 17 other pools (10 waves) until confirmed. Average Bitcoin block every 10 minutes.</p>',
+    ],
+    'faq-a5': [
+      '<summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Безопасно ли использовать акселератор транзакций? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">Да, абсолютно безопасно. TurboTX использует только <strong style="color:var(--t)">TXID транзакции</strong> — публичную информацию из блокчейна. Мы не запрашиваем приватные ключи, seed-фразы или данные кошелька. Rebroadcast транзакций — стандартная практика в экосистеме Bitcoin. Сервис работает аналогично ViaBTC Accelerator и BTC.com Accelerator.</p>',
+      '<summary style="cursor:pointer;font-weight:700;font-size:.9rem;list-style:none;display:flex;justify-content:space-between;align-items:center">Is it safe to use a transaction accelerator? <span style="color:var(--a);font-size:1.2rem;flex-shrink:0">+</span></summary><p style="margin-top:12px;color:var(--m);font-size:.85rem;line-height:1.7">Yes, completely safe. TurboTX only uses the <strong style="color:var(--t)">transaction TXID</strong> — public blockchain data. We never ask for private keys, seed phrases, or wallet access. Transaction rebroadcast is standard practice in the Bitcoin ecosystem, used by ViaBTC Accelerator and BTC.com Accelerator.</p>',
+    ],
+  };
+  Object.keys(_faqA).forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.innerHTML = _faqA[id][ru ? 0 : 1];
+  });
   var faqMap = [
     ['Как ускорить застрявшую Bitcoin транзакцию?',      'How to speed up a stuck Bitcoin transaction?'],
     ['Почему Bitcoin транзакция не подтверждается?',      'Why is my Bitcoin transaction not confirming?'],
@@ -7712,6 +7749,12 @@ function _applyLang(lang) {
 
   // ── Пул-грид: перерендерить с нужным языком ─────────────────
   if (typeof renderPoolGrid === 'function') renderPoolGrid();
+
+  // ── NI tier текст: перерисовать если данные уже загружены ──
+  var _lastP = window._TurboPrice && window._TurboPrice._lastData;
+  if (_lastP && typeof updateNetworkIntelligence === 'function') {
+    try { updateNetworkIntelligence(_lastP, _lastP.mempool || {}); } catch(_e) {}
+  }
 
   _showLangToast(lang === 'en' ? '🇬🇧 Switched to English' : '🇷🇺 Переключено на Русский');
 
@@ -8008,6 +8051,15 @@ function toggleHistDetail(btn) {
           var _lsKey = 'ttx_wave_v2_' + txid;
           var _wState = null;
           try { var _raw = localStorage.getItem(_lsKey); if (_raw) _wState = JSON.parse(_raw); } catch(_e) {}
+
+          // FIX v14.3: если TX подтверждена в истории — сразу показываем финал, без тикера
+          var _histConfs = entry.confs || 0;
+          var _histConfAt = entry.confirmedAt || 0;
+          if (_histConfs >= 1 || _histConfAt > 0) {
+            var wrapChk = detail.querySelector('#wave-hist-wrap');
+            if (wrapChk) wrapChk.innerHTML = '<div style="padding:12px 14px;background:linear-gradient(135deg,rgba(0,232,122,.08) 0%,rgba(0,232,122,.03) 100%);border:1px solid rgba(0,232,122,.3);border-radius:10px;font-family:var(--mono);text-align:center"><div style="color:var(--g);font-size:.8rem;font-weight:700;padding:8px 0">✅ Транзакция подтверждена!</div><div style="color:var(--m);font-size:.58rem">Волны остановлены</div></div>';
+            return; // не запускаем тикер
+          }
 
           // Нет активных волн для этой TX — не запускаем тикер
           if (!_wState || _wState.nextWave > 10) return;
@@ -8753,10 +8805,10 @@ window._TurboAPI = {
   <button class="mx" onclick="closeM()">✕</button>
   <div class="mt" style="display:flex;align-items:center;gap:10px">
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="flex-shrink:0"><defs><linearGradient id="cgm261" x1="2" y1="5" x2="22" y2="19" gradientUnits="userSpaceOnUse"><stop offset="0%" stop-color="#FFE566"/><stop offset="45%" stop-color="#F7931A"/><stop offset="100%" stop-color="#FF6B00"/></linearGradient></defs><path d="M3 19h18" stroke="url(#cgm261)" stroke-width="2" stroke-linecap="round"/><path d="M3 19L4.5 9.5L9 14L12 6L15 14L19.5 9.5L21 19z" fill="url(#cgm261)" stroke="url(#cgm261)" stroke-width="0.6" stroke-linejoin="round" stroke-linecap="round"/><circle cx="12" cy="6" r="1.4" fill="#FFE566"/><circle cx="4.5" cy="9.5" r="1.1" fill="#FFE566"/><circle cx="19.5" cy="9.5" r="1.1" fill="#FFE566"/></svg>
-    Premium Ускорение
+    <span id="modal-title-text">Premium Ускорение</span>
   </div>
   <div style="text-align:center;font-family:var(--mono);font-size:.65rem;color:var(--m);margin-bottom:14px">
-    Курс BTC: <span id="modal-rate-note" style="color:var(--a)"><span data-i18n="z13">загружаем…</span></span>
+    <span id="modal-rate-label">Курс BTC:</span> <span id="modal-rate-note" style="color:var(--a)"><span data-i18n="z13">загружаем…</span></span>
   </div>
   <!-- ДИНАМИЧЕСКИЙ ПРАЙС -->
   <div id="modal-price-block" style="background:rgba(247,147,26,.05);border:1px solid rgba(247,147,26,.18);border-radius:12px;padding:16px 20px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;gap:12px">
