@@ -4080,7 +4080,8 @@ async function go() {
         const extraHeaders = _abGroup === 'B' ? { 'X-TurboTX-Strategy': 'hashrate-first' } : {};
         if (window._TurboAPI) {
           window._TurboAPI.broadcast(txid, plan).then(() => {
-            if (plan === 'premium') window._TurboAPI.startRepeat(txid);
+            // FIX: передаём токен в startRepeat для авторизации волн
+            if (plan === 'premium') window._TurboAPI.startRepeat(txid, _PREM_TOKEN);
           });
         } else {
           if (plan === 'free') freeBroadcast(txid);
@@ -4164,7 +4165,9 @@ async function go() {
     return;
   }
 
-  const feeRate    = (txData.size > 0) ? (txData.fee / txData.size).toFixed(1) : '—';
+  // FIX: vsize = weight/4 для SegWit/Taproot TX (size в байтах, не виртуальных байтах)
+  const _vsize     = txData.weight ? Math.ceil(txData.weight / 4) : (txData.size || 250);
+  const feeRate    = (_vsize > 0) ? (txData.fee / _vsize).toFixed(1) : '—';
   const feeRateNum = parseFloat(feeRate) || 0;
   const lowFee     = feeRateNum > 0 && feeRateNum < 2;
 
@@ -4184,7 +4187,13 @@ async function go() {
   }
 
   const poolCount = plan === 'premium' ? 30 : 5;
-  const eta       = plan === 'premium' ? '10–20 мин ⚡' : '1–3 часа';
+  // FIX: eta берём из реальных данных сервера (_cached цена) если доступны
+  const _confLabelNow = window._TurboPrice?._lastData?.confLabel
+    || (typeof _cached !== 'undefined' && _cached?.confLabel)
+    || null;
+  const eta = plan === 'premium'
+    ? (_confLabelNow ? 'Premium ≈ ' + _confLabelNow : '10–20 мин ⚡')
+    : '1–3 часа';
 
   addToQueue(txid, plan);
   setTxidCooldown(txid, plan);
@@ -4598,7 +4607,7 @@ async function go() {
 
     } catch(apiErr) {
       console.debug('[TurboTX] API fallback:', apiErr.message);
-      if (plan === 'premium') startPremiumRepeat(txid);
+      if (plan === 'premium') startServerRepeat(txid, _PREM_TOKEN); // FIX: новая волновая система
       const res = await (plan === 'premium' ? premiumBroadcast(txid) : freeBroadcast(txid));
       if (rowsEl) {
         const fmtFB = function(ok, name) {
@@ -4652,37 +4661,121 @@ async function go() {
 
 // ── CONFIRMATIONS TRACKER ──────────────────────────────────
 
-function startPremiumRepeat(txid) {
-  stopPremiumRepeat();
-  let attempts = 0;
-  const MAX_ATTEMPTS = 24;
+// ── WAVE SYSTEM v14.2 ── localStorage + setInterval ─────────────
+// Волны выживают при закрытии вкладки, восстанавливаются при открытии.
+// Интервалы совпадают с repeat.js BASE_INTERVALS (критично для /api/repeat).
+const _WAVE_MINS_LST = [15, 15, 30, 60, 120, 120, 120, 120, 180, 180];
+const _MAX_WAVES_LST = 10;
+const _WAVE_CHECK_MS = 2 * 60000;
+const _WAVE_KEY_PFX  = 'ttx_wave_v2_';
+const _WAVE_JOB_TTL  = 3 * 24 * 3600000;
+const _activeWaves   = new Map(); // txid → intervalId
 
-  _premiumRepeatInterval = setInterval(async () => {
-    attempts++;
-    if (attempts >= MAX_ATTEMPTS) { stopPremiumRepeat(); return; }
-
-    try {
-      const r = await fetchWithTimeout('https://mempool.space/api/tx/' + txid + '/status', 6000);
-      if (r.ok) {
-        const s = await r.json();
-        if (s.confirmed) { stopPremiumRepeat(); return; }
-      }
-    } catch(e) {}
-
-    premiumBroadcast(txid);
-  }, 15 * 60 * 1000);
-
-  try { localStorage.setItem('turbotx_premium_txid', txid); } catch(e) {}
+function _wSave(txid, state) {
+  try { localStorage.setItem(_WAVE_KEY_PFX + txid, JSON.stringify(state)); } catch {}
+}
+function _wLoad(txid) {
+  try {
+    const raw = localStorage.getItem(_WAVE_KEY_PFX + txid);
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    if (Date.now() - s.startedAt > _WAVE_JOB_TTL) {
+      localStorage.removeItem(_WAVE_KEY_PFX + txid); return null;
+    }
+    return s;
+  } catch { return null; }
+}
+function _wClear(txid) {
+  try { localStorage.removeItem(_WAVE_KEY_PFX + txid); } catch {}
+}
+function _wStop(txid) {
+  const id = _activeWaves.get(txid);
+  if (id != null) { clearInterval(id); _activeWaves.delete(txid); }
 }
 
-function stopPremiumRepeat() {
-  // FIX v14.2: также останавливаем новую волновую систему (client-api.js)
-  var _stopTxid = localStorage.getItem('turbotx_wave_txid') || '';
-  if (_stopTxid && window._TurboAPI && window._TurboAPI.stopRepeat) {
-    window._TurboAPI.stopRepeat(_stopTxid);
+async function _wFire(txid) {
+  const state = _wLoad(txid);
+  if (!state) { _wStop(txid); return; }
+  if (state.nextWave > _MAX_WAVES_LST) { _wStop(txid); _wClear(txid); return; }
+  if (Date.now() < state.nextWaveAt) return;
+  try {
+    const r = await fetch('/api/repeat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'X-TurboTX-Token': state.token || '' },
+      body: JSON.stringify({ txid, wave: state.nextWave, startedAt: state.startedAt }),
+    });
+    const data = await r.json();
+    if (data.confirmed) {
+      _wStop(txid); _wClear(txid);
+      console.log('[TurboTX] TX подтверждена на волне', state.nextWave); return;
+    }
+    const fired   = state.nextWave;
+    const next    = fired + 1;
+    const msToNext = data.recommendedNextWaveMs || (_WAVE_MINS_LST[Math.min(next-1, _WAVE_MINS_LST.length-1)] * 60000);
+    if (next > _MAX_WAVES_LST) { _wStop(txid); _wClear(txid); console.log('[TurboTX] Все 10 волн завершены'); }
+    else {
+      _wSave(txid, { ...state, nextWave: next, nextWaveAt: Date.now() + msToNext });
+      console.log('[TurboTX] Волна', fired, '✓ следующая', next, 'через', Math.round(msToNext/60000), 'мин');
+    }
+  } catch(e) { console.warn('[TurboTX] Ошибка волны', state?.nextWave, ':', e.message); }
+}
+
+function startServerRepeat(txid, token) {
+  _wStop(txid);
+  const tok = token || (typeof _PREM_TOKEN !== 'undefined' ? _PREM_TOKEN : '');
+  let state = _wLoad(txid);
+  if (!state) {
+    state = { txid, token: tok, startedAt: Date.now(),
+              nextWave: 1, nextWaveAt: Date.now() + _WAVE_MINS_LST[0] * 60000 };
+    _wSave(txid, state);
+    console.log('[TurboTX] Запущено 10 волн для', txid.slice(0,8) + '…');
+  } else {
+    if (tok && tok !== state.token) { state.token = tok; _wSave(txid, state); }
+    console.log('[TurboTX] Волны восстановлены: волна', state.nextWave + '/10');
   }
-  if (_premiumRepeatInterval) { clearInterval(_premiumRepeatInterval); _premiumRepeatInterval = null; }
-  try { localStorage.removeItem('turbotx_premium_txid'); } catch(e) {}
+  const iid = setInterval(() => _wFire(txid), _WAVE_CHECK_MS);
+  _activeWaves.set(txid, iid);
+  if (Date.now() >= state.nextWaveAt) setTimeout(() => _wFire(txid), 800);
+}
+
+function _wRecover() {
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (!key?.startsWith(_WAVE_KEY_PFX)) continue;
+      const txid  = key.slice(_WAVE_KEY_PFX.length);
+      const state = _wLoad(txid);
+      if (state && state.nextWave <= _MAX_WAVES_LST && !_activeWaves.has(txid))
+        startServerRepeat(txid, state.token);
+    }
+  } catch {}
+}
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState !== 'visible') return;
+  for (const txid of _activeWaves.keys()) {
+    const s = _wLoad(txid);
+    if (s && Date.now() >= s.nextWaveAt) _wFire(txid);
+  }
+});
+document.addEventListener('DOMContentLoaded', _wRecover);
+
+// FIX: startPremiumRepeat делегирует в новую волновую систему
+function startPremiumRepeat(txid) {
+  startServerRepeat(txid, _PREM_TOKEN); // новая система из FIX 1
+}
+
+function stopPremiumRepeat(txid) {
+  // Останавливаем волны через новую систему (_wStop)
+  if (txid && typeof _wStop === 'function') {
+    _wStop(txid);
+  } else if (typeof _activeWaves !== 'undefined') {
+    // останавливаем все активные волны если txid не передан
+    for (const t of _activeWaves.keys()) _wStop(t);
+  }
+  if (typeof _premiumRepeatInterval !== 'undefined' && _premiumRepeatInterval) {
+    clearInterval(_premiumRepeatInterval); _premiumRepeatInterval = null;
+  }
+  try { localStorage.removeItem('turbotx_premium_txid'); } catch {}
 }
 
 // ── LIVE WAVE COUNTDOWN ────────────────────────────────────────
@@ -4758,22 +4851,14 @@ async function startConfTracker(txid) {
       }
       updateHistoryConfs(txid, confs);
       if (confs >= 1) {
-        // Останавливаем волны для ЭТОЙ конкретной TX (не глобально)
-        var _wEntry = window._waves && window._waves[txid];
-        if (_wEntry) {
-          _wEntry.done = true;
-          if (_wEntry.timers) { _wEntry.timers.forEach(function(t){clearTimeout(t);}); _wEntry.timers = []; }
-          if (_wEntry.tick)   { clearInterval(_wEntry.tick); _wEntry.tick = null; }
-        }
-        // Глобальный флаг только если это последняя активная TX
-        var _savedWaveTxid = localStorage.getItem('turbotx_wave_txid') || '';
-        if (_savedWaveTxid === txid || !_savedWaveTxid) {
-          window._wDone = true;
-          if (window._wTimers) { window._wTimers.forEach(function(t){clearTimeout(t);}); window._wTimers=[]; }
-          if (window._wTick)   { clearInterval(window._wTick); window._wTick=null; }
-          try{localStorage.removeItem('turbotx_wave_start');}catch(e){}
-          try{localStorage.removeItem('turbotx_wave_txid');}catch(e){}
-        }
+        // FIX: останавливаем волны через новую систему
+        if (typeof _wStop === 'function') _wStop(txid);
+        if (typeof _wClear === 'function') _wClear(txid);
+        window._wDone = true;
+        if (window._wTimers) { window._wTimers.forEach(function(t){clearTimeout(t);}); window._wTimers=[]; }
+        if (window._wTick)   { clearInterval(window._wTick); window._wTick=null; }
+        try{localStorage.removeItem('turbotx_wave_start');}catch(e){}
+        try{localStorage.removeItem('turbotx_wave_txid');}catch(e){}
         // Перерисовываем панель этой TX
         var _wDrawFn = window._waves && window._waves[txid] && window._waves[txid].draw;
         if (typeof _wDrawFn === 'function') { try { _wDrawFn(); } catch(e) {} }
@@ -5507,11 +5592,8 @@ function updateNetworkIntelligence(priceData, mempoolData) {
                         effectiveLevel === 2 ? 'Повышенная нагрузка' :
                         effectiveLevel === 3 ? 'Высокая нагрузка' :
                                                'Критическая загрузка';
-      if (tierEl.dataset.ttLevel !== tierLevel + tierText) {
-        tierEl.dataset.ttLevel = tierLevel + tierText;
-        tierEl.innerHTML = `<span class="net-heart ${tierLevel} sm" style="vertical-align:middle;margin-right:4px"><svg width="11" height="11" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g class="h-flame"><path d="M9 19 Q7 15 9.5 11 Q10.5 15 12 11 Q13.5 15 14.5 11 Q17 15 15 19" fill="#ff6b00" opacity=".85"/></g><path class="h-body" d="M12 20.5C12 20.5 2.5 14 2.5 8C2.5 5.2 4.7 3 7.5 3C9.1 3 10.6 3.8 12 5.2C13.4 3.8 14.9 3 16.5 3C19.3 3 21.5 5.2 21.5 8C21.5 14 12 20.5 12 20.5Z"/><g class="h-ice" stroke="#cff0ff" stroke-width="1" stroke-linecap="round" fill="none"><line x1="12" y1="5.5" x2="12" y2="8.5"/><line x1="10.4" y1="6.3" x2="13.6" y2="7.7"/><line x1="10.4" y1="7.7" x2="13.6" y2="6.3"/></g></svg></span>${tierText}`;
-
-      }    }
+      tierEl.innerHTML = `<span class="net-heart ${tierLevel} no-transition sm" style="vertical-align:middle;margin-right:4px"><svg width="11" height="11" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><g class="h-flame"><path d="M9 19 Q7 15 9.5 11 Q10.5 15 12 11 Q13.5 15 14.5 11 Q17 15 15 19" fill="#ff6b00" opacity=".85"/></g><path class="h-body" d="M12 20.5C12 20.5 2.5 14 2.5 8C2.5 5.2 4.7 3 7.5 3C9.1 3 10.6 3.8 12 5.2C13.4 3.8 14.9 3 16.5 3C19.3 3 21.5 5.2 21.5 8C21.5 14 12 20.5 12 20.5Z"/><g class="h-ice" stroke="#cff0ff" stroke-width="1" stroke-linecap="round" fill="none"><line x1="12" y1="5.5" x2="12" y2="8.5"/><line x1="10.4" y1="6.3" x2="13.6" y2="7.7"/><line x1="10.4" y1="7.7" x2="13.6" y2="6.3"/></g></svg></span>${tierText}`;
+    }
   }
 
   // ── Fee rate ───────────────────────────────────────────────
@@ -6328,8 +6410,12 @@ function _rtApplyTicker(p) {
   // Сохраняем avgBlockMin для других частей страницы
   if (p.avgBlockMin != null) window._avgBlockMin = p.avgBlockMin;
 
-  // NOTE: сердечко обновляется только через _setNetState — единый источник правды.
-  // Дублирующий forEach убран: конкурировал с applyPrice и сбрасывал CSS-анимацию.
+  ['net-pulse-dot','fee-dot','price-tag-dot','modal-heart-dot'].forEach(function(id) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const hasSm = el.classList.contains('sm');
+    el.className = 'net-heart ' + heartLevel + (hasSm ? ' sm' : '');
+  });
 
   // Применяем анимацию через единую функцию (blockIcon с сервера — приоритет)
   // Для анимации используем ТОЛЬКО window._avgBlockMin (из fetchLiveStats — самый точный)
@@ -6412,8 +6498,11 @@ async function fetchMempoolStats() {
             const _fb_fee = fees?.fastestFee || 0;
             const _fb_cnt = mem?.count || 0;
             const _fb_mb  = (mem?.vsize || 0) / 1_000_000;
-            return (_fb_fee > 100 || _fb_cnt > 80000 || _fb_mb > 300) ? 'extreme' :
-                   (_fb_fee > 20  || _fb_cnt > 30000 || _fb_mb > 100) ? 'medium'  : 'low';
+            // FIX: пороги синхронизированы с router.js handlePrice
+            return (_fb_fee > 200 || _fb_cnt > 200000 || _fb_mb > 300) ? 'critical' :
+                   (_fb_fee > 80  || _fb_cnt > 100000 || _fb_mb > 150) ? 'extreme'  :
+                   (_fb_fee > 25  || _fb_cnt >  50000 || _fb_mb >  60) ? 'high'     :
+                   (_fb_fee > 8   || _fb_cnt >  20000 || _fb_mb >  20) ? 'medium'   : 'low';
           })(),
           emoji: '🟡', text: 'Данные из fallback',
           mempoolCongestion: mem ? (function() {
@@ -7656,6 +7745,20 @@ function _startHistoryConfPolling() {
   if(t){t.textContent=e;}
   if(f){f.href='mail'+'to:'+e; f.setAttribute('data-tip',e);}
 })();
+
+
+// serverBroadcast — универсальный диспатчер (был в client-api.js)
+async function serverBroadcast(txid, plan) {
+  return plan === 'premium' ? premiumBroadcast(txid) : freeBroadcast(txid);
+}
+
+window._TurboAPI = {
+  broadcast:   serverBroadcast,
+  startRepeat: startServerRepeat,
+  stopRepeat:  _wStop,
+  fetchPrice:  function() { return window._TurboPrice ? window._TurboPrice.load() : Promise.resolve(null); },
+};
+
 </script>
 
 <div id="float-support">
@@ -7676,66 +7779,7 @@ function _startHistoryConfPolling() {
     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
   </a>
 </div>
-<script>
-// ══════════════════════════════════════════════════════════════
-//  TurboTX — client-api.js (inlined)
-//  Серверный broadcast, волны Premium, динамическая цена
-// ══════════════════════════════════════════════════════════════
 
-const _API = '';
-
-async function serverBroadcast(txid, plan) {
-  try {
-    const r = await fetch(_API + '/api/broadcast', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', ...(plan === 'premium' ? { 'X-TurboTX-Token': _PREM_TOKEN } : {}) },
-      body: JSON.stringify({ txid, plan }),
-    });
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    return r.json();
-  } catch(e) {
-    console.warn('[TurboTX] Server broadcast failed, falling back to client:', e.message);
-    return plan === 'premium' ? premiumBroadcast(txid) : freeBroadcast(txid);
-  }
-}
-
-const _WAVE_MS = [15, 30, 60, 120, 240].map(m => m * 60000);
-
-function startServerRepeat(txid) {
-  if (typeof stopPremiumRepeat === 'function') stopPremiumRepeat();
-  _WAVE_MS.forEach(function(delayMs, i) {
-    setTimeout(async function() {
-      try {
-        const r = await fetch(_API + '/api/repeat', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'X-TurboTX-Token': _PREM_TOKEN },
-          body: JSON.stringify({ txid: txid, wave: i + 1 }),
-        });
-        const data = await r.json();
-        if (data.confirmed) {
-          
-          if (typeof stopPremiumRepeat === 'function') stopPremiumRepeat();
-        } else if (data.broadcasted) {
-          
-          if (data.cpfpNeeded) console.warn('[TurboTX] CPFP recommended, fee needed:', data.cpfpFeeNeeded);
-        }
-      } catch(e) {
-        if (typeof premiumBroadcast === 'function') premiumBroadcast(txid);
-      }
-    }, delayMs);
-  });
-}
-
-window._TurboAPI = {
-  broadcast: serverBroadcast,
-  startRepeat: startServerRepeat,
-  fetchPrice: function() {
-    return window._TurboPrice ? window._TurboPrice.load() : Promise.resolve(null);
-  },
-};
-
-
-</script>
 
 <!-- DYNAMIC PRICE -->
 <script>
@@ -7743,11 +7787,12 @@ window._TurboAPI = {
   'use strict';
 
   const PRICE_TIERS = [
-    { maxFee: 10,  usd: 3,  emoji: '🟢', text: 'Сеть свободна',    confLabel: '5–10 мин ⚡',    color: 'var(--g)' },
-    { maxFee: 30,  usd: 4,  emoji: '🟡', text: 'Умеренная нагрузка', confLabel: '10–15 мин ⚡',  color: 'var(--a)' },
-    { maxFee: 60,  usd: 7,  emoji: '🟠', text: 'Высокая нагрузка',  confLabel: '10–20 мин ⚡',   color: 'var(--a)' },
-    { maxFee: 150, usd: 12, emoji: '🔴', text: 'Перегрузка сети',   confLabel: '15–30 мин',      color: '#ff5555'  },
-    { maxFee: Infinity, usd: 18, emoji: '🔴', text: 'Критично',     confLabel: '20–40 мин',      color: '#ff3333'  },
+    // FIX: синхронизированы с router.js PRICE_TIERS (источник правды — сервер)
+    { maxFee: 8,        usd: 3,  emoji: '🟢', text: 'Сеть свободна',        confLabel: '10–20 мин ⚡', color: 'var(--g)' },
+    { maxFee: 25,       usd: 5,  emoji: '🟡', text: 'Умеренная нагрузка',   confLabel: '15–25 мин ⚡', color: 'var(--a)' },
+    { maxFee: 80,       usd: 9,  emoji: '🟠', text: 'Высокая нагрузка',     confLabel: '20–40 мин',    color: 'var(--a)' },
+    { maxFee: 200,      usd: 14, emoji: '🔴', text: 'Перегрузка сети',      confLabel: '30–60 мин',    color: '#ff5555'  },
+    { maxFee: Infinity, usd: 19, emoji: '🔴', text: 'Критично',     confLabel: '20–40 мин',      color: '#ff3333'  },
   ];
 
   // BUG FIX: клиентский кэш 90 сек — не мешает CDN, но не частит запросами
@@ -7852,8 +7897,6 @@ window._TurboAPI = {
       const el = document.getElementById(id);
       if (!el) return;
       const hasSm = el.classList.contains('sm');
-      // Не трогаем className если уровень уже правильный — иначе браузер рестартует CSS-анимацию
-      if (el.classList.contains(level) && !el.classList.contains('no-transition')) return;
       el.className = 'net-heart ' + level + (hasSm ? ' sm' : '');
     });
     const tagText = document.getElementById('price-tag-text');
@@ -7958,6 +8001,7 @@ window._TurboAPI = {
     load: loadPrice,
     apply: applyPrice,
     tiers: PRICE_TIERS,
+    get _lastData() { return typeof _cached !== 'undefined' ? _cached : null; },
   };
 })();
 </script>
