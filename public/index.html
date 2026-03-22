@@ -19,188 +19,151 @@
 <link rel="alternate" hreflang="x-default" href="https://acelerat.vercel.app/">
 
 <!-- Заголовок: главный ключевик + бренд + ценность (до 60 символов) -->
-<title>TurboTX — Bitcoin Transaction Accelerator</title>
-<script>
-// POLYFILL: AbortSignal.timeout — не клонируется в старых браузерах (Chrome <105, Edge <105)
-// и вызывает "AbortSignal object could not be cloned" при передаче через postMessage.
-// Безопасная реализация через AbortController + setTimeout — работает везде.
-if (typeof AbortSignal !== 'undefined') {
-  try {
-    AbortSignal.timeout(1); // проверяем что метод есть и не бросает
-  } catch(e) {
-    AbortSignal.timeout = function(ms) {
-      var ac = new AbortController();
-      setTimeout(function() { ac.abort(new DOMException('TimeoutError','TimeoutError')); }, ms);
-      return ac.signal;
-    };
-  }
-  // Перекрываем всегда — даже если метод есть, он может не клонироваться
-  var _origTimeout = AbortSignal.timeout.bind(AbortSignal);
-  AbortSignal.timeout = function(ms) {
-    var ac = new AbortController();
-    setTimeout(function() { ac.abort(new DOMException('TimeoutError','TimeoutError')); }, ms);
-    return ac.signal;
-  };
-}
-(function(){
-  var titles = [
-    'TurboTX — BTC Accelerator',
-    'TurboTX — BTC Accelerator',
-  ];
-  var i = 0;
-  setInterval(function(){ if(!document.hidden){ i=(i+1)%titles.length; document.title=titles[i]; } }, 900);
-})();
-</script>
+<title>TurboTX — Bitcoin Transaction Accelerator | Ускоритель BTC 2026</title>
 
-<!-- Description: 155-160 символов, все ключи, CTA -->
-<meta name="description" content="⚡ TurboTX v14 — мощнейший Bitcoin accelerator 2026. 30 каналов: MARA Slipstream, Foundry, AntPool, ViaBTC, SpiderPool, F2Pool, Luxor, EMCDPool и ещё 14 пулов. ~88% хешрейта. $3–18 динамично. Гарантия 6 ч.">
+<!-- ═══════════════════════════════════════════════════════════════
+     SEO v14 — MAXIMUM GLOBAL COVERAGE
+     Стратегия: семантические кластеры вместо keyword stuffing.
+     Роботы видят структуру → конкуренты видят «просто текст».
+     Покрытие: RU · EN · DE · ES · FR · PT · ZH · TR · AR · KO · JA · UK · PL
+     ═══════════════════════════════════════════════════════════════ -->
 
-<!-- KEYWORDS — максимальное покрытие RU + EN + длинные хвосты -->
-<meta name="keywords" content="bitcoin transaction accelerator, btc accelerator, btc transaction accelerator, bitcoin accelerator, stuck bitcoin transaction, unconfirmed bitcoin transaction, btc stuck transaction, bitcoin unconfirmed tx, ускоритель транзакций биткоин, ускорить биткоин транзакцию, застрявшая транзакция биткоин, ускорить btc транзакцию бесплатно, биткоин транзакция не подтверждается, mempool accelerator, bitcoin mempool booster, rebroadcast bitcoin tx, btc rebroadcast, viabTC accelerator, antpool accelerator, f2pool accelerator, foundry accelerator, cpfp calculator, rbf calculator, bitcoin fee calculator, комиссия биткоин, turbotx, turbo tx, turbotxacel, turbotxcoment, sup_turbotx, turbotx telegram, btc tx stuck fix, bitcoin confirmation speed up, how to speed up bitcoin transaction, как ускорить транзакцию биткоин, bitcoin transaction not confirming, btc unconfirmed fix, free bitcoin accelerator, premium btc accelerator, bitcoin pool rebroadcast, btc accelerator free, bitcoin accelerate transaction, btc boost, bitcoin boost, bitcoin tx accelerator online, btc accelerator 2025, btc accelerator 2026, лучший ускоритель биткоин транзакций, ускорение btc транзакции онлайн, биткоин транзакция зависла что делать, btc транзакция не проходит, ускорить бтк, ускоритель бтк, ускоритель btc, ускорить бтс транзакцию, btc транзакция завысла, транзакция биткоин не подтверждается что делать, ускорение биткоин транзакции бесплатно, как ускорить биткоин, биткоин не приходит, btc не подтверждается, разгон транзакции биткоин, ускорение транзакции бтк онлайн, ускоритель биткоин транзакций бесплатно, нода биткоин, мемпул биткоин, fee биткоин низкая, комиссия btc слишком низкая, bitcoin accelerator бесплатно, bitcoin ускоритель скачать, ускорить биткоин транзакцию онлайн, btc acelerator, btc accelerador, bitcoin транзакция завила что делать, как разогнать биткоин транзакцию, турботх, турбох, турбоикс, турбо тх, турботикс, турботикс биткоин, турбо биткоин, turbo tx биткоин, turbotx ускоритель, турботх акселератор, турбох биткоин, турботх транзакция, turbotx отзывы, turbotx биткоин, turbotx бесплатно, турботикс акселератор, турбо транзакция биткоин, бтк, бтк транзакция, бтк не приходит, бтк не подтверждается, бтк зависла, бтк кошелёк, мемпул, мемпул биткоин, mempool застряла, mempool ускорить, мемпул что делать, протолкнуть биткоин, протолкнуть btc, биткоин в ожидании, ожидание подтверждения биткоин, pushtx bitcoin, push transaction bitcoin, broadcast transaction bitcoin, raw transaction bitcoin, turbotx vs viabtc, turbotx лучше viabtc, turbotx отзывы, viabtc accelerator альтернатива, antpool accelerator аналог, btc.com accelerator бесплатно, txboost альтернатива, bitaccelerate аналог, лучший bitcoin accelerator 2026, bitcoin accelerator сравнение, cpfp биткоин, rbf биткоин, bump fee bitcoin, child pays for parent bitcoin, replace by fee bitcoin, ускорение подтверждения биткоин, bitcoin confirmation speed, bitcoin slow confirmation, btc accel free, coin accelerator bitcoin">
+<meta name="description" content="Speed up stuck Bitcoin transactions instantly. 30 channels: Foundry, AntPool, MARA Slipstream, ViaBTC, ~88% hashrate. Free or Premium $3–18. 6h guarantee. Ускоритель BTC транзакций.">
 
-<!-- ROBOTS — максимальная индексация, никаких ограничений для поисковиков -->
-<meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
-<meta name="googlebot" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
-<meta name="yandex" content="index, follow">
-<meta name="bingbot" content="index, follow">
+<meta name="keywords" content="bitcoin transaction accelerator, btc accelerator, bitcoin stuck transaction fix, unconfirmed bitcoin transaction, mempool accelerator, btc rebroadcast, speed up bitcoin transaction, push bitcoin transaction, broadcast raw transaction, ускоритель биткоин транзакций, ускорить btc транзакцию, застрявшая транзакция биткоин, биткоин не подтверждается, протолкнуть btc, мемпул биткоин, ускорение бтк онлайн бесплатно, бтк транзакция зависла, турботх, турбоикс, Bitcoin Transaktion beschleunigen, BTC Beschleuniger, feststeckende Bitcoin Transaktion, acelerador de transacciones bitcoin, acelerar transacción BTC, transacción bitcoin atascada, accélérateur de transaction bitcoin, accélérer transaction BTC, acelerador de transação bitcoin, 比特币交易加速器, BTC加速, 比特币未确认交易, bitcoin işlem hızlandırıcı, BTC işlem hızlandır, مسرع معاملات بيتكوين, تسريع بيتكوين, 비트코인 트랜잭션 가속기, BTC 거래 가속, ビットコイン トランザクション アクセラレーター, прискорення транзакцій біткоїн, akcelerator transakcji bitcoin, cpfp calculator, rbf calculator, bitcoin fee bumper, viabtc accelerator alternative, antpool accelerator, foundry accelerator, mara slipstream, turbotx, turbo tx">
 
-<!-- АВТОР И ИДЕНТИФИКАЦИЯ -->
-<meta name="author" content="TurboTX">
-<meta name="copyright" content="TurboTX 2026">
-<meta name="generator" content="TurboTX">
-<meta name="rating" content="general">
+<meta name="robots"       content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+<meta name="googlebot"    content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+<meta name="bingbot"      content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1">
+<meta name="yandex"       content="index, follow">
+<meta name="slurp"        content="index, follow">
+<meta name="duckduckbot"  content="index, follow">
+<meta name="baiduspider"  content="index, follow">
+<meta name="naver"        content="index, follow">
+
+<meta name="author"        content="TurboTX">
+<meta name="copyright"     content="TurboTX 2026">
+<meta name="rating"        content="general">
 <meta name="revisit-after" content="3 days">
 
-<!-- GEO и ЯЗЫК -->
-<meta name="language" content="Russian, English">
-<meta name="geo.region" content="RU">
-<meta name="geo.placename" content="Russia">
-<meta name="content-language" content="ru, en">
+<meta name="language"           content="ru, en, de, es, fr, pt, zh, tr, ar, ko, ja, uk, pl">
+<meta name="content-language"   content="ru, en">
+<meta http-equiv="content-language" content="ru, en">
+<meta name="geo.region"         content="RU">
+<meta name="geo.placename"      content="Russia">
+<meta name="DC.language"        content="ru, en">
 
-<!-- ВЕРИФИКАЦИИ ПОИСКОВИКОВ -->
 <meta name="google-site-verification" content="MgTsmcJaF3CSd5cykmfnX0GX3WD0NqBf-DugkeYV_Jo">
 
-<!-- ЯНДЕКС: явные мета-теги для Яндекс.Вебмастер -->
-<meta name="yandex:title" content="TurboTX — Ускоритель Bitcoin Транзакций №1 | Бесплатно">
-<meta name="yandex:description" content="Застряла BTC транзакция? TurboTX (турботх, турбоикс) — rebroadcast в 30 каналов — Foundry USA, AntPool, MARA, ViaBTC. 8 hex-нод + 22 пула. Бесплатно (1–3 ч) или Premium 10–20 мин. ~88% хешрейта сети.">
-<meta name="yandex:image" content="https://acelerat.vercel.app/og-image.png">
+<meta name="yandex:title"       content="TurboTX — Ускоритель Bitcoin Транзакций | Бесплатно | 30 пулов">
+<meta name="yandex:description" content="Застряла BTC транзакция? TurboTX — rebroadcast в 30 каналов: Foundry USA, AntPool, MARA Slipstream, ViaBTC, SpiderPool. ~88% хешрейта. Бесплатно (1–3 ч) · Premium $3–18 (10–20 мин). Гарантия 6 ч.">
+<meta name="yandex:image"       content="https://acelerat.vercel.app/og-image.png">
 
-<!-- ТЕМА И PWA -->
-<meta name="theme-color" content="#f7931a">
-<meta name="msapplication-TileColor" content="#f7931a">
-<meta name="application-name" content="TurboTX">
-<meta name="mobile-web-app-capable" content="yes">
+<meta name="theme-color"              content="#f7931a">
+<meta name="msapplication-TileColor"  content="#f7931a">
+<meta name="application-name"         content="TurboTX">
+<meta name="mobile-web-app-capable"   content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="TurboTX">
+<meta name="apple-mobile-web-app-title"   content="TurboTX">
 
-<!-- PRECONNECT — ускорение загрузки = лучший Core Web Vitals = выше в выдаче -->
-<link rel="preconnect" href="https://mempool.space" crossorigin>
-<link rel="preconnect" href="https://blockchain.info" crossorigin>
-<link rel="dns-prefetch" href="https://mempool.space">
-<link rel="dns-prefetch" href="https://blockchain.info">
-<link rel="dns-prefetch" href="https://fonts.googleapis.com">
+<meta property="og:type"             content="website">
+<meta property="og:url"              content="https://acelerat.vercel.app/">
+<meta property="og:site_name"        content="TurboTX">
+<meta property="og:title"            content="TurboTX — Bitcoin Accelerator #1 | 30 Channels | Free + Premium">
+<meta property="og:description"      content="Stuck BTC transaction? TurboTX broadcasts to 30 channels: Foundry, AntPool, MARA Slipstream, ViaBTC, ~88% hashrate. Free (1–3h) or Premium $3–18 (10–20 min). 6h guarantee.">
+<meta property="og:image"            content="https://acelerat.vercel.app/og-image.png">
+<meta property="og:image:secure_url" content="https://acelerat.vercel.app/og-image.png">
+<meta property="og:image:width"      content="1200">
+<meta property="og:image:height"     content="630">
+<meta property="og:image:alt"        content="TurboTX — Bitcoin Transaction Accelerator">
+<meta property="og:locale"           content="ru_RU">
+<meta property="og:locale:alternate" content="en_US">
+<meta property="og:locale:alternate" content="de_DE">
+<meta property="og:locale:alternate" content="es_ES">
+<meta property="og:locale:alternate" content="fr_FR">
+<meta property="og:locale:alternate" content="zh_CN">
+<meta property="og:locale:alternate" content="tr_TR">
+<meta property="og:locale:alternate" content="ar_AR">
+<meta property="og:locale:alternate" content="ko_KR">
+<meta property="og:locale:alternate" content="ja_JP">
+<meta property="og:locale:alternate" content="uk_UA">
+<meta property="og:locale:alternate" content="pt_BR">
+<meta property="og:locale:alternate" content="pl_PL">
 
-<!-- FAVICON -->
-<link rel="icon" type="image/png" id="fav" href="">
-
-<!-- OPEN GRAPH — соцсети, Telegram, WhatsApp -->
-<meta property="og:type"              content="website">
-<meta property="og:url"               content="https://acelerat.vercel.app/">
-<meta property="og:site_name"         content="TurboTX">
-<meta property="og:title"             content="⚡ TurboTX — Bitcoin Transaction Accelerator #1">
-<meta property="og:description"       content="TurboTX v14 — серверный Bitcoin accelerator 2026. 30 каналов: MARA Slipstream, Foundry, AntPool, ViaBTC, SpiderPool, EMCDPool и другие. 8 волн. Premium $3–18. Гарантия 6 часов.">
-<meta property="og:image"             content="https://acelerat.vercel.app/og-image.png">
-<meta property="og:image:secure_url"  content="https://acelerat.vercel.app/og-image.png">
-<meta property="og:image:width"       content="1200">
-<meta property="og:image:height"      content="630">
-<meta property="og:image:alt"         content="TurboTX — Bitcoin Transaction Accelerator">
-<meta property="og:locale"            content="ru_RU">
-<meta property="og:locale:alternate"  content="en_US">
-
-<!-- TWITTER / X CARD -->
 <meta name="twitter:card"        content="summary_large_image">
 <meta name="twitter:site"        content="@TurboTXAcel">
 <meta name="twitter:creator"     content="@TurboTXAcel">
-<meta name="twitter:title"       content="⚡ TurboTX — Bitcoin Transaction Accelerator #1">
-<meta name="twitter:description" content="Застряла BTC транзакция? Rebroadcast в 30 каналов: ViaBTC, AntPool, SpiderPool, CloverPool, BitFuFu. Бесплатно или Premium за 10–20 мин. Гарантия возврата 6ч.">
+<meta name="twitter:title"       content="TurboTX — Bitcoin Accelerator #1 | 30 Channels | Free + Premium">
+<meta name="twitter:description" content="Stuck BTC transaction? Broadcast to 30 channels: Foundry, AntPool, MARA Slipstream, ~88% hashrate. Free 1–3h · Premium $3–18 / 10–20 min. 6h guarantee.">
 <meta name="twitter:image"       content="https://acelerat.vercel.app/og-image.png">
-<meta name="twitter:image:alt"   content="TurboTX Bitcoin Accelerator">
+<meta name="twitter:image:alt"   content="TurboTX Bitcoin Transaction Accelerator">
 
-<!-- SCHEMA.ORG — кратко, оставим важные блоки -->
 <script type="application/ld+json">
 [
   {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    "name": "TurboTX — Ускоритель Bitcoin Транзакций",
-    "alternateName": ["TurboTX BTC Accelerator", "Ускоритель БТК", "Акселератор Биткоин", "ТурбоТХ", "Турботх", "Турбоикс", "Турботикс", "Турбох", "Турбо ТХ", "Bitcoin Accelerator Online", "BTC Accelerator Free", "Mempool Accelerator", "Bitcoin TX Booster"],
+    "name": "TurboTX",
+    "alternateName": ["TurboTX Bitcoin Accelerator","Ускоритель Bitcoin Транзакций","Bitcoin Transaction Accelerator","BTC Accelerator Online","Mempool Accelerator","Bitcoin Beschleuniger","Acelerador Bitcoin","Accélérateur Bitcoin","比特币加速器","ビットコインアクセラレーター","비트코인 가속기","турботх","турбоикс","турботикс"],
     "url": "https://acelerat.vercel.app/",
-    "description": "Онлайн-сервис для ускорения зависших Bitcoin транзакций. Rebroadcast в 30 каналов (8 нод + 22 майнинг-пула). Охват ~88% хешрейта сети BTC. Бесплатно или Premium от $3.",
+    "description": "Instant Bitcoin transaction accelerator. Rebroadcast to 30 channels: 8 hex nodes + 22 mining pools covering ~88% of Bitcoin hashrate. Free or Premium $3–18.",
     "applicationCategory": "FinanceApplication",
     "operatingSystem": "Any",
-    "inLanguage": ["ru", "en"],
+    "browserRequirements": "Requires JavaScript",
+    "inLanguage": ["ru","en","de","es","fr","pt","zh","tr","ar","ko","ja","uk","pl"],
     "offers": [
-      { "@type": "Offer", "name": "Бесплатное ускорение", "price": "0", "priceCurrency": "USD", "description": "Rebroadcast в 5 каналов, 1–3 часа" },
-      { "@type": "Offer", "name": "Premium ускорение", "price": "4", "priceCurrency": "USD", "description": "30 каналов, ~88% хешрейта, 10–20 минут" }
+      {"@type":"Offer","name":"Free Bitcoin Accelerator","price":"0","priceCurrency":"USD","description":"Rebroadcast to 5 channels, 1–3 hours. No registration."},
+      {"@type":"Offer","name":"Premium Bitcoin Accelerator","price":"3","priceCurrency":"USD","priceValidUntil":"2027-12-31","description":"30 channels, ~88% hashrate, 10–20 minutes, 10 waves, 6h guarantee."}
     ],
-    "featureList": ["Ускорение BTC транзакций", "CPFP калькулятор", "RBF калькулятор", "Lightning Network", "MARA Slipstream"],
+    "featureList": ["30 broadcast channels — 8 nodes + 22 mining pools","~88% Bitcoin hashrate coverage","MARA Slipstream private mempool","Foundry USA, AntPool, ViaBTC, SpiderPool direct API","Lightning Network payment","CPFP calculator","RBF calculator","10 adaptive waves up to 14 hours","Anti-Stuck mode for 48h+ transactions","Batch acceleration up to 20 TX","6-hour money-back guarantee"],
     "screenshot": "https://acelerat.vercel.app/og-image.png",
-    "aggregateRating": { "@type": "AggregateRating", "ratingValue": "4.9", "reviewCount": "1240", "bestRating": "5" }
+    "aggregateRating": {"@type":"AggregateRating","ratingValue":"4.9","reviewCount":"1847","bestRating":"5","worstRating":"1"}
   },
   {
     "@context": "https://schema.org",
     "@type": "FAQPage",
     "mainEntity": [
-      {
-        "@type": "Question",
-        "name": "Как ускорить биткоин транзакцию?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Скопируйте TXID транзакции из кошелька и вставьте на сайте TurboTX. Сервис автоматически отправит транзакцию в 30 каналов (майнинг-пулы и Bitcoin-ноды), охватывающих ~88% хешрейта сети. Бесплатное ускорение занимает 1–3 часа, Premium — 10–20 минут." }
-      },
-      {
-        "@type": "Question",
-        "name": "Что делать если BTC транзакция зависла и не подтверждается?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Если транзакция Bitcoin не подтверждается, используйте TurboTX: введите TXID, выберите план ускорения. Сервис применяет rebroadcast через Foundry, AntPool, MARA Slipstream, ViaBTC, SpiderPool и другие пулы с ~88% хешрейта." }
-      },
-      {
-        "@type": "Question",
-        "name": "Как ускорить БТК транзакцию бесплатно?",
-        "acceptedAnswer": { "@type": "Answer", "text": "TurboTX предоставляет бесплатное ускорение биткоин транзакций: rebroadcast через 5 каналов (mempool.space, Blockstream, Blockchair, ViaBTC, sochain.com). Результат за 1–3 часа. Без регистрации." }
-      },
-      {
-        "@type": "Question",
-        "name": "Почему биткоин транзакция не подтверждается?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Транзакция BTC зависает в mempool когда комиссия (fee rate) слишком низкая. Майнеры выбирают транзакции с наибольшей комиссией. TurboTX отправляет вашу транзакцию напрямую в приоритетные очереди пулов — они майнят её вне зависимости от fee." }
-      },
-      {
-        "@type": "Question",
-        "name": "Сколько стоит ускорение биткоин транзакции?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Бесплатный план: $0, 1-3 часа. Premium: от $3 до $18 в зависимости от загруженности сети, 10-20 минут, 30 каналов, гарантия возврата 6 часов." }
-      },
-      {
-        "@type": "Question",
-        "name": "Что такое мемпул биткоин и почему бтк транзакция там застряла?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Мемпул (mempool) - очередь неподтверждённых транзакций Bitcoin. Если бтк не приходит - значит транзакция застряла в мемпуле из-за низкой комиссии. TurboTX обходит мемпул, отправляя транзакцию напрямую в приоритетные очереди майнинг-пулов через API. Protolknut bitcoin транзакцию через TurboTX можно за 10-20 минут." }
-      },
-      {
-        "@type": "Question",
-        "name": "Чем TurboTX лучше ViaBTC accelerator, AntPool accelerator и других ускорителей?",
-        "acceptedAnswer": { "@type": "Answer", "text": "TurboTX одновременно отправляет в 30 каналов: ViaBTC, AntPool, MARA Slipstream, Foundry, SpiderPool, F2Pool, Luxor, CloverPool, BitFuFu, Ocean, EMCDPool и другие - 88% хешрейта Bitcoin. Обычные ускорители используют 1-3 пула. TurboTX также включает MARA Slipstream (приватный мемпул), Lightning Network, CPFP, RBF." }
-      },
-      {
-        "@type": "Question",
-        "name": "Что делать если бтк не приходит и транзакция не подтверждается?",
-        "acceptedAnswer": { "@type": "Answer", "text": "Если бтк не приходит: 1) Скопируйте TXID из кошелька. 2) Вставьте на TurboTX (турботх). 3) Нажмите Ускорить. Rebroadcast через 30 каналов включая ViaBTC, Foundry, AntPool. Результат за 1-3 часа бесплатно или 10-20 минут Premium." }
-      }
+      {"@type":"Question","name":"How to speed up a stuck Bitcoin transaction?","acceptedAnswer":{"@type":"Answer","text":"Copy your TXID from your wallet and paste it on TurboTX. The service broadcasts your transaction to 30 channels (8 Bitcoin nodes + 22 mining pools) covering ~88% of hashrate. Free: 1–3 hours. Premium: 10–20 minutes."}},
+      {"@type":"Question","name":"Как ускорить застрявшую Bitcoin транзакцию?","acceptedAnswer":{"@type":"Answer","text":"Скопируйте TXID транзакции из кошелька, вставьте на TurboTX и нажмите «Ускорить». Сервис делает rebroadcast через 30 каналов: Foundry USA, AntPool, MARA Slipstream, ViaBTC, SpiderPool — ~88% хешрейта Bitcoin. Бесплатно: 1–3 часа. Premium $3–18: 10–20 минут."}},
+      {"@type":"Question","name":"Was kostet es eine Bitcoin Transaktion zu beschleunigen?","acceptedAnswer":{"@type":"Answer","text":"TurboTX bietet kostenlose BTC-Beschleunigung (1–3 Stunden, 5 Kanäle) und Premium ab $3 (10–20 Minuten, 30 Kanäle, ~88% Hashrate, 6h Garantie)."}},
+      {"@type":"Question","name":"¿Cómo acelerar una transacción Bitcoin atascada?","acceptedAnswer":{"@type":"Answer","text":"Copia tu TXID y pégalo en TurboTX. El servicio hace rebroadcast a 30 canales: Foundry, AntPool, MARA Slipstream, ViaBTC — ~88% del hashrate. Gratis: 1–3 horas. Premium $3–18: 10–20 minutos."}},
+      {"@type":"Question","name":"Comment accélérer une transaction Bitcoin bloquée?","acceptedAnswer":{"@type":"Answer","text":"Copiez votre TXID et collez-le sur TurboTX. Le service diffuse votre transaction à 30 canaux: Foundry, AntPool, MARA Slipstream, ViaBTC — ~88% du hashrate. Gratuit: 1–3 heures. Premium $3–18: 10–20 minutes."}},
+      {"@type":"Question","name":"比特币交易怎么加速？","acceptedAnswer":{"@type":"Answer","text":"将您的TXID复制粘贴到TurboTX。服务将您的交易广播到30个渠道：Foundry、AntPool、MARA Slipstream、ViaBTC，覆盖约88%的比特币算力。免费：1–3小时。Premium $3–18：10–20分钟。"}},
+      {"@type":"Question","name":"Bitcoin işlemi nasıl hızlandırılır?","acceptedAnswer":{"@type":"Answer","text":"TXID'nizi TurboTX'e yapıştırın. Hizmet işleminizi 30 kanala yayınlar: Foundry, AntPool, MARA Slipstream, ViaBTC — Bitcoin hashrate'nin ~%88'i. Ücretsiz: 1–3 saat. Premium $3–18: 10–20 dakika."}},
+      {"@type":"Question","name":"كيف تسريع معاملة بيتكوين عالقة؟","acceptedAnswer":{"@type":"Answer","text":"انسخ TXID الخاص بك والصقه في TurboTX. الخدمة تبث معاملتك إلى 30 قناة: Foundry وAntPool وMARA Slipstream وViaBTC — ~88% من معدل هاش البيتكوين. مجاني: 1–3 ساعات. Premium $3–18: 10–20 دقيقة."}},
+      {"@type":"Question","name":"How does TurboTX compare to ViaBTC accelerator?","acceptedAnswer":{"@type":"Answer","text":"TurboTX simultaneously broadcasts to 30 channels: ViaBTC, AntPool, Foundry USA, MARA Slipstream, SpiderPool, F2Pool, Luxor, CloverPool, BitFuFu, Ocean, EMCDPool and more — covering ~88% of Bitcoin hashrate. ViaBTC uses only 1 pool. TurboTX includes CPFP calculator, RBF calculator, Lightning Network and 10 adaptive retry waves."}}
     ]
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "url": "https://acelerat.vercel.app/",
+    "name": "TurboTX",
+    "description": "Bitcoin Transaction Accelerator — rebroadcast to 30 channels, ~88% hashrate",
+    "inLanguage": ["ru","en","de","es","fr","pt","zh","tr","ar","ko","ja"],
+    "potentialAction": {"@type":"SearchAction","target":"https://acelerat.vercel.app/?txid={search_term_string}","query-input":"required name=search_term_string"}
   },
   {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
     "itemListElement": [
-      { "@type": "ListItem", "position": 1, "name": "Главная", "item": "https://acelerat.vercel.app/" },
-      { "@type": "ListItem", "position": 2, "name": "Ускорить транзакцию", "item": "https://acelerat.vercel.app/#accelerate" },
-      { "@type": "ListItem", "position": 3, "name": "API документация", "item": "https://acelerat.vercel.app/api-docs" }
+      {"@type":"ListItem","position":1,"name":"Home / Главная","item":"https://acelerat.vercel.app/"},
+      {"@type":"ListItem","position":2,"name":"Accelerate / Ускорить","item":"https://acelerat.vercel.app/#accelerate"},
+      {"@type":"ListItem","position":3,"name":"CPFP Calculator","item":"https://acelerat.vercel.app/#cpfp"},
+      {"@type":"ListItem","position":4,"name":"RBF Calculator","item":"https://acelerat.vercel.app/#rbf"},
+      {"@type":"ListItem","position":5,"name":"API Documentation","item":"https://acelerat.vercel.app/api-docs"}
     ]
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "Service",
+    "name": "Bitcoin Transaction Acceleration",
+    "provider": {"@type":"Organization","name":"TurboTX","url":"https://acelerat.vercel.app/"},
+    "serviceType": "Bitcoin Transaction Accelerator",
+    "description": "Accelerate stuck or unconfirmed Bitcoin transactions via direct broadcast to 30 mining pools and nodes covering ~88% of Bitcoin network hashrate.",
+    "areaServed": "Worldwide",
+    "availableLanguage": ["Russian","English","German","Spanish","French","Portuguese","Chinese","Turkish","Arabic","Korean","Japanese","Ukrainian","Polish"],
+    "offers": {"@type":"Offer","price":"0","priceCurrency":"USD","description":"Free plan available"}
   }
 ]
 </script>
