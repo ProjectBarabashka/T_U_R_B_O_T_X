@@ -3234,27 +3234,25 @@ function _feedRenderPage(page, animate) {
     if (cc0) cc0.textContent = '0';
     return;
   }
-  // Ограничиваем страницу
-  const maxPage = Math.max(0, Math.ceil(total / _feedPageSize) - 1);
-  if (page > maxPage) page = 0;
-  if (page < 0) page = maxPage;
-  _feedPage = page;
 
-  const start = page * _feedPageSize;
-  const slice = _feedAll.slice(start, start + _feedPageSize);
+  // Нормализуем страницу (цикл)
+  const totalPages = Math.max(1, Math.ceil(total / _feedPageSize));
+  if (page >= totalPages) page = 0;
+  if (page < 0) page = totalPages - 1;
+  _feedPage = page;
 
   // Счётчик
   const cc = document.getElementById('confirmed-count');
   if (cc) cc.textContent = (typeof cnt !== 'undefined' && cnt > 0) ? cnt.toLocaleString('ru') : total;
 
-  // Анимация fade
-  if (animate) {
-    el.style.transition = 'opacity .3s ease';
-    el.style.opacity = '0';
+  // Всегда берём ровно _feedPageSize элементов с циклическим переносом
+  const items = [];
+  for (var i = 0; i < Math.min(_feedPageSize, total); i++) {
+    items.push(_feedAll[(page * _feedPageSize + i) % total]);
   }
 
-  setTimeout(function() {
-    el.innerHTML = slice.map(function(item) {
+  const doRender = function() {
+    el.innerHTML = items.map(function(item) {
       var safeTxid = sanitizeTxid(item.txid || '');
       var short = safeTxid.slice(0,6) + '...' + safeTxid.slice(-4);
       var ago = _feedAgoStr(item.ts || Date.now());
@@ -3273,23 +3271,28 @@ function _feedRenderPage(page, animate) {
         + '</div></a>';
     }).join('');
 
-    // Индикатор страниц если больше одной
-    const totalPages = Math.ceil(total / _feedPageSize);
+    // Индикатор страниц — только если реально больше одной
     if (totalPages > 1) {
       var dots = '<div style="display:flex;justify-content:center;gap:5px;padding:8px 0 4px">';
       for (var d = 0; d < totalPages; d++) {
-        dots += '<div style="width:' + (d === _feedPage ? '16px' : '5px') + ';height:5px;border-radius:3px;background:' + (d === _feedPage ? 'var(--a)' : 'rgba(255,255,255,.15)') + ';transition:all .3s"></div>';
+        dots += '<div style="width:' + (d === _feedPage ? '16px' : '5px') + ';height:5px;border-radius:3px;background:'
+          + (d === _feedPage ? 'var(--a)' : 'rgba(255,255,255,.15)') + ';transition:all .3s"></div>';
       }
       dots += '</div>';
       el.insertAdjacentHTML('beforeend', dots);
     }
 
-    if (animate) {
-      setTimeout(function() { el.style.opacity = '1'; }, 30);
-    } else {
-      el.style.opacity = '1';
-    }
-  }, animate ? 300 : 0);
+    if (animate) setTimeout(function() { el.style.opacity = '1'; }, 30);
+    else el.style.opacity = '1';
+  };
+
+  if (animate) {
+    el.style.transition = 'opacity .3s ease';
+    el.style.opacity = '0';
+    setTimeout(doRender, 300);
+  } else {
+    doRender();
+  }
 }
 
 function _feedStartRotation() {
