@@ -3260,11 +3260,14 @@ function renderFeedFromData(feed) {
       node.style.cssText = 'text-decoration:none;cursor:pointer;transition:background .15s,border-color .15s;animation:feedin .4s ease';
       node.onmouseover = function(){ this.style.background='rgba(247,147,26,.04)'; this.style.borderColor='rgba(247,147,26,.15)'; };
       node.onmouseout  = function(){ this.style.background=''; this.style.borderColor=''; };
+      const minsLabel = item.mins != null ? ('⚡ ' + item.mins + ' мин') : '⚡ —';
+      const planColor = item.plan === 'premium' ? 'var(--a)' : 'var(--m)';
+      const planLabel = item.plan === 'premium' ? 'PREMIUM' : 'FREE';
       node.innerHTML =
         '<div class="feed-txid"><span style="color:var(--a)">' + short + '</span></div>' +
         '<div style="display:flex;align-items:center;gap:8px">' +
-          '<span style="font-family:var(--mono);font-size:.58rem;color:' + (item.plan==='premium'?'var(--a)':'var(--m)') + '">' + (item.plan==='premium'?'PREMIUM':'FREE') + '</span>' +
-          '<span class="feed-badge-conf" title="Время с момента ускорения до подтверждения">⚡ ' + item.mins + ' мин</span>' +
+          '<span style="font-family:var(--mono);font-size:.58rem;color:' + planColor + '">' + planLabel + '</span>' +
+          '<span class="feed-badge-conf" title="Время ускорения до подтверждения">' + minsLabel + '</span>' +
           '<span class="feed-time" data-ts="' + item.ts + '">' + agoStr + '</span>' +
           '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--m)" stroke-width="2" style="flex-shrink:0"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>' +
         '</div>';
@@ -3362,10 +3365,24 @@ async function fbFeedAdd(txid, planType, mins, accelTs) {
 
 async function syncGlobalFeed() {
   // FIX v14.3: всегда рендерим из localStorage — даже если Firebase offline
+  // FIX v14.4: строим ленту из tx_history (все ускорения) + turbotx_feed (подтверждённые)
   try {
-    const lf = JSON.parse(localStorage.getItem('turbotx_feed') || '[]');
-    if (lf.length) renderFeedFromData(lf);
-  } catch(e) {}
+    const hist = JSON.parse(localStorage.getItem('tx_history') || '[]');
+    const feed = JSON.parse(localStorage.getItem('turbotx_feed') || '[]');
+    const feedIds = new Set(feed.map(i => i.txid));
+    // Добавляем записи из истории которых нет в feed (как неподтверждённые или свежие)
+    const histItems = hist.slice(0, 20).map(h => ({
+      txid: h.txid,
+      plan: h.plan || 'free',
+      mins: h.accelMs ? Math.max(1, Math.round(h.accelMs / 60000)) : (h.confs >= 1 ? Math.max(1, Math.round((Date.now() - h.ts) / 60000)) : null),
+      ts: h.confirmedAt || h.ts,
+    })).filter(i => i.txid && !feedIds.has(i.txid));
+    const merged = [...feed, ...histItems].sort((a,b) => (b.ts||0)-(a.ts||0)).slice(0, 20);
+    if (merged.length) renderFeedFromData(merged);
+    else if (feed.length) renderFeedFromData(feed);
+  } catch(e) {
+    try { const lf = JSON.parse(localStorage.getItem('turbotx_feed') || '[]'); if (lf.length) renderFeedFromData(lf); } catch(_) {}
+  }
   // Firebase дополнительно — только если доступен
   if (!_fbReady || _fbDead) return;
   try {
@@ -3593,7 +3610,20 @@ setInterval(async () => {
 }, 60000);
 
 setInterval(function() { if (_fbReady && !_fbDead) syncGlobalQueue(); }, 30000);
-setInterval(function() { syncGlobalFeed(); }, 40000); // FIX: всегда — LS доступен offline
+setInterval(function() { syncGlobalFeed(); }, 15000); // FIX v14.4: 15s — быстрее обновление ленты
+
+// Обновляем "X мин назад" каждые 60 сек без полного перерендера
+setInterval(function() {
+  document.querySelectorAll('.feed-time[data-ts]').forEach(function(el) {
+    var ts = parseInt(el.dataset.ts || '0');
+    if (!ts) return;
+    var ago = Math.round((Date.now() - ts) / 60000);
+    var _en = typeof _currentLang !== 'undefined' && _currentLang === 'en';
+    el.textContent = ago < 1 ? (_en ? 'just now' : 'только что')
+      : ago < 60 ? (ago + (_en ? ' min ago' : ' мин назад'))
+      : (Math.floor(ago/60) + (_en ? ' h ago' : ' ч назад'));
+  });
+}, 60000);
 setInterval(function() { if (_fbReady && !_fbDead) syncCounterFromFirebase(); }, 90000);
 
 // ── FIREBASE SSE ──────────────────────────────────────────────
@@ -4177,6 +4207,8 @@ async function go() {
 
   addToQueue(txid, plan);
   setTxidCooldown(txid, plan);
+  // FIX v14.4: обновляем ленту сразу после ускорения — не ждём 15с интервала
+  setTimeout(function() { if (typeof syncGlobalFeed === 'function') syncGlobalFeed(); }, 800);
   if (plan === 'free') { 
     incrementGlobalUsed().then(serverUsed => { updateFreeUI(serverUsed); });
   }
