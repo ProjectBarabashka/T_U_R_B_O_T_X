@@ -4013,6 +4013,15 @@ async function monitorQueue() {
     updateHistoryConfs(item.txid, confs);
     sendPushNotification(item.txid);
     switchFeedTab('confirmed');
+    // FIX v14.4: останавливаем волны для этой TX — конфирмация = конец
+    if (typeof _wStop === 'function') _wStop(item.txid);
+    if (typeof _wClear === 'function') _wClear(item.txid);
+    try { localStorage.removeItem('ttx_wave_v2_' + item.txid); } catch(_) {}
+    if (window._waves && window._waves[item.txid]) window._waves[item.txid].done = true;
+    // Если это активная TX — ставим глобальный флаг
+    if (localStorage.getItem('turbotx_tracker_txid') === item.txid) {
+      window._wDone = true;
+    }
   }
 
   if (changed) {
@@ -4735,6 +4744,26 @@ async function _wFire(txid) {
   if (!state) { _wStop(txid); return; }
   if (state.nextWave > _MAX_WAVES_LST) { _wStop(txid); _wClear(txid); return; }
   if (Date.now() < state.nextWaveAt) return;
+
+  // FIX v14.4: проверяем подтверждение из блокчейна ПЕРЕД отправкой волны
+  // Если TX уже в блоке — немедленно останавливаем всё
+  try {
+    const cr = await fetch('https://mempool.space/api/tx/' + txid + '/status', { signal: AbortSignal.timeout(5000) });
+    if (cr.ok) {
+      const cs = await cr.json();
+      if (cs.confirmed) {
+        _wStop(txid); _wClear(txid);
+        // Синхронизируем UI — _wDone, история, лента
+        window._wDone = true;
+        if (window._waves && window._waves[txid]) window._waves[txid].done = true;
+        updateHistoryConfs && updateHistoryConfs(txid, 1);
+        if (typeof syncGlobalFeed === 'function') setTimeout(() => syncGlobalFeed(), 500);
+        console.log('[TurboTX] TX подтверждена — волны остановлены');
+        return;
+      }
+    }
+  } catch(_) { /* если mempool недоступен — продолжаем */ }
+
   try {
     const r = await fetch('/api/repeat', {
       method: 'POST',
@@ -4744,6 +4773,10 @@ async function _wFire(txid) {
     const data = await r.json();
     if (data.confirmed) {
       _wStop(txid); _wClear(txid);
+      window._wDone = true;
+      if (window._waves && window._waves[txid]) window._waves[txid].done = true;
+      updateHistoryConfs && updateHistoryConfs(txid, 1);
+      if (typeof syncGlobalFeed === 'function') setTimeout(() => syncGlobalFeed(), 500);
       console.log('[TurboTX] TX подтверждена на волне', state.nextWave); return;
     }
     const fired   = state.nextWave;
@@ -8166,10 +8199,10 @@ function toggleHistDetail(btn) {
 
             var st = _readState();
 
-            // Подтверждена или все волны — показываем финал
+            // FIX v14.4: null = ключ удалён (_wClear) = все волны/подтверждение
             var isDone = !st || st.active === false || st.nextWave > 10
               || (window._waves && window._waves[txid] && window._waves[txid].done)
-              || (window._wDone && (localStorage.getItem('turbotx_wave_txid') || txid) === txid);
+              || window._wDone === true;
 
             if (isDone) {
               clearInterval(_dTick);
@@ -8328,9 +8361,15 @@ function restoreLastResult() {
             if (!rbW) { clearInterval(_rbTick); return; }
             try {
               var st = JSON.parse(localStorage.getItem(_rbLsKey) || 'null');
-              if (!st || st.active === false || st.nextWave > 10) {
+              // FIX v14.4: null = LS ключ удалён (_wClear) = подтверждено/завершено
+              if (!st || st.active === false || st.nextWave > 10
+                  || (window._waves && window._waves[_rbTxid] && window._waves[_rbTxid].done)
+                  || window._wDone === true) {
                 clearInterval(_rbTick);
-                rbW.innerHTML = '<div style="padding:10px 14px;background:rgba(0,232,122,.06);border:1px solid rgba(0,232,122,.25);border-radius:10px;font-family:var(--mono);text-align:center"><div style="color:var(--g);font-size:.75rem;font-weight:700">✅ Все волны завершены · Гарантия 6 часов</div></div>';
+                const _doneMsg = (window._wDone || (window._waves && window._waves[_rbTxid] && window._waves[_rbTxid].done))
+                  ? '✅ Транзакция подтверждена! Волны остановлены.'
+                  : '✓ Все 10 волн завершены · Гарантия 6 часов';
+                rbW.innerHTML = '<div style="padding:10px 14px;background:rgba(0,232,122,.06);border:1px solid rgba(0,232,122,.25);border-radius:10px;font-family:var(--mono);text-align:center"><div style="color:var(--g);font-size:.75rem;font-weight:700">' + _doneMsg + '</div></div>';
                 return;
               }
               var msToNext = st.nextWaveAt ? Math.max(0, st.nextWaveAt - Date.now()) : 0;
