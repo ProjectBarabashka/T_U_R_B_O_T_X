@@ -8324,7 +8324,7 @@ function saveHistory(txid, plan, extra) {
       rbf:       extra?.rbf       || false,
       html:      extra?.html      || null,  // полный rb.innerHTML для восстановления
     });
-    localStorage.setItem('tx_history', JSON.stringify(filtered.slice(0, 50)));
+    localStorage.setItem('tx_history', JSON.stringify(filtered.slice(0, 500)));
   } catch(e) {}
 }
 
