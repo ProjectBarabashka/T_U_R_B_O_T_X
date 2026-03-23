@@ -3249,7 +3249,7 @@ function _feedRenderPage(page, animate) {
 
   // Анимация fade
   if (animate) {
-    el.style.transition = 'opacity .25s';
+    el.style.transition = 'opacity .3s ease';
     el.style.opacity = '0';
   }
 
@@ -3285,26 +3285,32 @@ function _feedRenderPage(page, animate) {
     }
 
     if (animate) {
+      setTimeout(function() { el.style.opacity = '1'; }, 30);
+    } else {
       el.style.opacity = '1';
     }
-  }, animate ? 200 : 0);
+  }, animate ? 300 : 0);
 }
 
 function _feedStartRotation() {
-  if (_feedRotTimer) return; // уже запущен — не перезапускаем
-  const totalPages = Math.ceil(_feedAll.length / _feedPageSize);
-  if (totalPages <= 1) return;
+  if (_feedRotTimer) return;
   _feedRotTimer = setInterval(function() {
     if (document.hidden) return;
+    if (!_feedAll.length) return;
     const pages = Math.ceil(_feedAll.length / _feedPageSize);
-    if (pages <= 1) { clearInterval(_feedRotTimer); _feedRotTimer = null; return; }
-    _feedRenderPage(_feedPage + 1, true);
-  }, 7000); // каждые 7 секунд
+    if (pages <= 1) {
+      // Только одна страница — просто обновляем времена
+      _feedRefreshTimes();
+      return;
+    }
+    // _feedPage = -1 означает: новые данные, сбросить на 0
+    var nextPage = (_feedPage < 0) ? 0 : (_feedPage + 1) % pages;
+    _feedRenderPage(nextPage, true);
+  }, 10000); // каждые 10 секунд
 }
 
 function renderFeedFromData(feed) {
   if (!Array.isArray(feed)) return;
-  // Дедупликация по txid, сортировка по времени (новые сначала)
   const seen = new Set();
   const newAll = feed.filter(function(item) {
     if (!item || !item.txid) return false;
@@ -3313,20 +3319,21 @@ function renderFeedFromData(feed) {
     seen.add(id); return true;
   }).sort(function(a, b) { return (b.ts||0) - (a.ts||0); });
 
-  // FIX v14.4: определяем появились ли новые записи в начале
-  var topChanged = !_feedAll.length
-    || !newAll.length
-    || sanitizeTxid(newAll[0].txid) !== sanitizeTxid(_feedAll[0].txid);
+  // Проверяем: появились ли реально новые записи которых не было
+  var prevIds = new Set(_feedAll.map(function(i){ return sanitizeTxid(i.txid); }));
+  var hasNew = newAll.some(function(i){ return !prevIds.has(sanitizeTxid(i.txid)); });
 
   _feedAll = newAll;
 
-  // Если новые записи — прыгаем на страницу 0, иначе остаёмся на текущей
-  if (topChanged) _feedPage = 0;
-  _feedRenderPage(_feedPage, false);
-
-  // Перезапускаем ротацию только если таймера нет (первый запуск) или изменился размер
-  const totalPages = Math.ceil(_feedAll.length / _feedPageSize);
-  if (!_feedRotTimer && totalPages > 1) _feedStartRotation();
+  if (!_feedRotTimer) {
+    // Первый запуск — рисуем сразу и стартуем ротацию
+    _feedRenderPage(0, false);
+    _feedStartRotation();
+  } else if (hasNew) {
+    // Новые записи появились — покажем стр.0 при следующей смене (не прерывая текущую)
+    _feedPage = -1; // следующий тик перейдёт на 0
+  }
+  // Иначе — данные те же, просто обновляем _feedAll молча, рендер не трогаем
 }
 
 function _feedRefreshTimes() {
@@ -3663,7 +3670,7 @@ setInterval(async () => {
 }, 60000);
 
 setInterval(function() { if (_fbReady && !_fbDead) syncGlobalQueue(); }, 30000);
-setInterval(function() { syncGlobalFeed(); }, 15000);
+setInterval(function() { syncGlobalFeed(); }, 60000); // данные из истории меняются редко
 setInterval(function() { _feedRefreshTimes(); }, 60000);
 setInterval(function() { if (_fbReady && !_fbDead) syncCounterFromFirebase(); }, 90000);
 
