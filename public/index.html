@@ -3210,77 +3210,130 @@ updateResetTimer();
 setInterval(function(){ if(!document.hidden) updateResetTimer(); }, 1000);
 
 // ── RENDER FEED ────────────────────────────────────────────────
-function renderFeedFromData(feed) {
+// ── FEED ENGINE v14.4 — пагинация 8шт + авто-ротация ─────────
+var _feedPage     = 0;    // текущая страница (0-based)
+var _feedPageSize = 8;    // элементов на страницу
+var _feedAll      = [];   // весь список (отсортированный)
+var _feedRotTimer = null; // таймер авто-ротации
+
+function _feedAgoStr(ts) {
+  var ago = Math.round((Date.now() - ts) / 60000);
+  var _en = typeof _currentLang !== 'undefined' && _currentLang === 'en';
+  return ago < 1 ? (_en ? 'just now' : 'только что')
+    : ago < 60 ? (ago + (_en ? ' min ago' : ' мин назад'))
+    : (Math.floor(ago/60) + (_en ? ' h ago' : ' ч назад'));
+}
+
+function _feedRenderPage(page, animate) {
   const el = document.getElementById('feed-items');
   if (!el) return;
-  if (!Array.isArray(feed) || !feed.length) {
-    if (!el.querySelector('.feed-item')) {
-      el.innerHTML = '<div class="feed-empty" style="font-family:var(--mono);font-size:.72rem;color:var(--m);text-align:center;padding:18px 0">Нет подтверждённых транзакций</div>';
-      const cc0 = document.getElementById('confirmed-count');
-      if (cc0) cc0.textContent = '0';
-    }
-    el.style.opacity = '1';
+  const total = _feedAll.length;
+  if (!total) {
+    el.innerHTML = '<div class="feed-empty" style="font-family:var(--mono);font-size:.72rem;color:var(--m);text-align:center;padding:18px 0">Нет ускорений в истории</div>';
+    const cc0 = document.getElementById('confirmed-count');
+    if (cc0) cc0.textContent = '0';
     return;
   }
+  // Ограничиваем страницу
+  const maxPage = Math.max(0, Math.ceil(total / _feedPageSize) - 1);
+  if (page > maxPage) page = 0;
+  if (page < 0) page = maxPage;
+  _feedPage = page;
+
+  const start = page * _feedPageSize;
+  const slice = _feedAll.slice(start, start + _feedPageSize);
+
+  // Счётчик
   const cc = document.getElementById('confirmed-count');
-  if (cc && cnt > 0) cc.textContent = cnt.toLocaleString('ru');
-  else if (cc) cc.textContent = feed.length;
+  if (cc) cc.textContent = (typeof cnt !== 'undefined' && cnt > 0) ? cnt.toLocaleString('ru') : total;
 
-  // Удаляем пустой placeholder если есть
-  const empty = el.querySelector('.feed-empty');
-  if (empty) empty.remove();
+  // Анимация fade
+  if (animate) {
+    el.style.transition = 'opacity .25s';
+    el.style.opacity = '0';
+  }
 
-  const newIds = feed.map(item => sanitizeTxid(item.txid || ''));
+  setTimeout(function() {
+    el.innerHTML = slice.map(function(item) {
+      var safeTxid = sanitizeTxid(item.txid || '');
+      var short = safeTxid.slice(0,6) + '...' + safeTxid.slice(-4);
+      var ago = _feedAgoStr(item.ts || Date.now());
+      var mins = item.mins != null ? ('⚡ ' + item.mins + ' мин') : '⚡ —';
+      var planColor = item.plan === 'premium' ? 'var(--a)' : 'var(--m)';
+      var planLabel = item.plan === 'premium' ? 'PREMIUM' : 'FREE';
+      return '<a class="feed-item" href="https://mempool.space/tx/' + safeTxid + '" target="_blank" rel="noopener noreferrer"'
+        + ' style="text-decoration:none;cursor:pointer;transition:background .15s"'
+        + ' onmouseover="this.style.background=\'rgba(247,147,26,.04)\'" onmouseout="this.style.background=\'\'">'
+        + '<div class="feed-txid"><span style="color:var(--a)">' + short + '</span></div>'
+        + '<div style="display:flex;align-items:center;gap:8px">'
+        + '<span style="font-family:var(--mono);font-size:.58rem;color:' + planColor + '">' + planLabel + '</span>'
+        + '<span class="feed-badge-conf">' + mins + '</span>'
+        + '<span class="feed-time" data-ts="' + (item.ts||0) + '">' + ago + '</span>'
+        + '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--m)" stroke-width="2" style="flex-shrink:0"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>'
+        + '</div></a>';
+    }).join('');
 
-  // Удаляем элементы которых больше нет в новом списке
-  Array.from(el.querySelectorAll('.feed-item')).forEach(function(a) {
-    if (!newIds.includes(a.dataset.txid)) a.remove();
-  });
-
-  // Добавляем/обновляем элементы
-  feed.forEach(function(item, i) {
-    const safeTxid = sanitizeTxid(item.txid || '');
-    const ago = Math.round((Date.now() - item.ts) / 60000);
-    const _en2 = typeof _currentLang !== 'undefined' && _currentLang === 'en';
-    const agoStr = ago < 1 ? (_en2 ? 'just now' : 'только что')
-      : ago < 60 ? (ago + (_en2 ? ' min ago' : ' мин назад'))
-      : (Math.floor(ago/60) + (_en2 ? ' h ago' : ' ч назад'));
-    const short = safeTxid.slice(0,6) + '...' + safeTxid.slice(-4);
-
-    let node = el.querySelector('.feed-item[data-txid="' + safeTxid + '"]');
-    if (!node) {
-      // Новый элемент — создаём и вставляем с анимацией
-      node = document.createElement('a');
-      node.className = 'feed-item';
-      node.dataset.txid = safeTxid;
-      node.href = 'https://mempool.space/tx/' + safeTxid;
-      node.target = '_blank';
-      node.rel = 'noopener noreferrer';
-      node.title = 'Открыть на mempool.space';
-      node.style.cssText = 'text-decoration:none;cursor:pointer;transition:background .15s,border-color .15s;animation:feedin .4s ease';
-      node.onmouseover = function(){ this.style.background='rgba(247,147,26,.04)'; this.style.borderColor='rgba(247,147,26,.15)'; };
-      node.onmouseout  = function(){ this.style.background=''; this.style.borderColor=''; };
-      const minsLabel = item.mins != null ? ('⚡ ' + item.mins + ' мин') : '⚡ —';
-      const planColor = item.plan === 'premium' ? 'var(--a)' : 'var(--m)';
-      const planLabel = item.plan === 'premium' ? 'PREMIUM' : 'FREE';
-      node.innerHTML =
-        '<div class="feed-txid"><span style="color:var(--a)">' + short + '</span></div>' +
-        '<div style="display:flex;align-items:center;gap:8px">' +
-          '<span style="font-family:var(--mono);font-size:.58rem;color:' + planColor + '">' + planLabel + '</span>' +
-          '<span class="feed-badge-conf" title="Время ускорения до подтверждения">' + minsLabel + '</span>' +
-          '<span class="feed-time" data-ts="' + item.ts + '">' + agoStr + '</span>' +
-          '<svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--m)" stroke-width="2" style="flex-shrink:0"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>' +
-        '</div>';
-      const items = el.querySelectorAll('.feed-item');
-      items[i] ? el.insertBefore(node, items[i]) : el.appendChild(node);
-    } else {
-      // Уже существует — тихо обновляем только время, без перерисовки
-      const timeEl = node.querySelector('.feed-time');
-      if (timeEl) timeEl.textContent = agoStr;
+    // Индикатор страниц если больше одной
+    const totalPages = Math.ceil(total / _feedPageSize);
+    if (totalPages > 1) {
+      var dots = '<div style="display:flex;justify-content:center;gap:5px;padding:8px 0 4px">';
+      for (var d = 0; d < totalPages; d++) {
+        dots += '<div style="width:' + (d === _feedPage ? '16px' : '5px') + ';height:5px;border-radius:3px;background:' + (d === _feedPage ? 'var(--a)' : 'rgba(255,255,255,.15)') + ';transition:all .3s"></div>';
+      }
+      dots += '</div>';
+      el.insertAdjacentHTML('beforeend', dots);
     }
-  });
 
-  el.style.opacity = '1';
+    if (animate) {
+      el.style.opacity = '1';
+    }
+  }, animate ? 200 : 0);
+}
+
+function _feedStartRotation() {
+  if (_feedRotTimer) return; // уже запущен — не перезапускаем
+  const totalPages = Math.ceil(_feedAll.length / _feedPageSize);
+  if (totalPages <= 1) return;
+  _feedRotTimer = setInterval(function() {
+    if (document.hidden) return;
+    const pages = Math.ceil(_feedAll.length / _feedPageSize);
+    if (pages <= 1) { clearInterval(_feedRotTimer); _feedRotTimer = null; return; }
+    _feedRenderPage(_feedPage + 1, true);
+  }, 7000); // каждые 7 секунд
+}
+
+function renderFeedFromData(feed) {
+  if (!Array.isArray(feed)) return;
+  // Дедупликация по txid, сортировка по времени (новые сначала)
+  const seen = new Set();
+  const newAll = feed.filter(function(item) {
+    if (!item || !item.txid) return false;
+    var id = sanitizeTxid(item.txid);
+    if (seen.has(id)) return false;
+    seen.add(id); return true;
+  }).sort(function(a, b) { return (b.ts||0) - (a.ts||0); });
+
+  // FIX v14.4: определяем появились ли новые записи в начале
+  var topChanged = !_feedAll.length
+    || !newAll.length
+    || sanitizeTxid(newAll[0].txid) !== sanitizeTxid(_feedAll[0].txid);
+
+  _feedAll = newAll;
+
+  // Если новые записи — прыгаем на страницу 0, иначе остаёмся на текущей
+  if (topChanged) _feedPage = 0;
+  _feedRenderPage(_feedPage, false);
+
+  // Перезапускаем ротацию только если таймера нет (первый запуск) или изменился размер
+  const totalPages = Math.ceil(_feedAll.length / _feedPageSize);
+  if (!_feedRotTimer && totalPages > 1) _feedStartRotation();
+}
+
+function _feedRefreshTimes() {
+  document.querySelectorAll('.feed-time[data-ts]').forEach(function(el) {
+    var ts = parseInt(el.dataset.ts || '0');
+    if (ts) el.textContent = _feedAgoStr(ts);
+  });
 }
 
 // ── GLOBAL QUEUE ──────────────────────────────────────────────
@@ -3598,9 +3651,9 @@ function updateFreeUI_local() {
 }
 // FIX: defer initGlobalSync until all functions are defined (startConfTracker, renderHistory)
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initGlobalSync);
+  document.addEventListener('DOMContentLoaded', function() { initGlobalSync(); setTimeout(_feedStartRotation, 2000); });
 } else {
-  setTimeout(initGlobalSync, 0);
+  setTimeout(function() { initGlobalSync(); setTimeout(_feedStartRotation, 2000); }, 0);
 }
 
 setInterval(async () => {
@@ -3610,20 +3663,8 @@ setInterval(async () => {
 }, 60000);
 
 setInterval(function() { if (_fbReady && !_fbDead) syncGlobalQueue(); }, 30000);
-setInterval(function() { syncGlobalFeed(); }, 15000); // FIX v14.4: 15s — быстрее обновление ленты
-
-// Обновляем "X мин назад" каждые 60 сек без полного перерендера
-setInterval(function() {
-  document.querySelectorAll('.feed-time[data-ts]').forEach(function(el) {
-    var ts = parseInt(el.dataset.ts || '0');
-    if (!ts) return;
-    var ago = Math.round((Date.now() - ts) / 60000);
-    var _en = typeof _currentLang !== 'undefined' && _currentLang === 'en';
-    el.textContent = ago < 1 ? (_en ? 'just now' : 'только что')
-      : ago < 60 ? (ago + (_en ? ' min ago' : ' мин назад'))
-      : (Math.floor(ago/60) + (_en ? ' h ago' : ' ч назад'));
-  });
-}, 60000);
+setInterval(function() { syncGlobalFeed(); }, 15000);
+setInterval(function() { _feedRefreshTimes(); }, 60000);
 setInterval(function() { if (_fbReady && !_fbDead) syncCounterFromFirebase(); }, 90000);
 
 // ── FIREBASE SSE ──────────────────────────────────────────────
@@ -6822,40 +6863,20 @@ function initFeed() {
 }
 
 function addFeedItem(txid, planType, minutes) {
-  const el = document.getElementById('feed-items');
-  if (!el) return;
-  const short = txid.slice(0,6) + '...' + txid.slice(-4);
-  const empty = el.querySelector('.feed-empty');
-  if (empty) empty.remove();
-  const newItem = document.createElement('a');
-  newItem.className = 'feed-item';
-  newItem.href = 'https://mempool.space/tx/' + txid;
-  newItem.target = '_blank';
-  newItem.rel = 'noopener noreferrer';
-  newItem.dataset.ts = Date.now();
-  newItem.title = 'Открыть ' + txid + ' на mempool.space';
-  newItem.style.textDecoration = 'none';
-  newItem.innerHTML = `
-    <div class="feed-txid"><span style="color:var(--a)">${short}</span></div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <span style="font-family:var(--mono);font-size:.58rem;color:${planType==='premium'?'var(--a)':'var(--m)'}">${planType.toUpperCase()}</span>
-      <span class="feed-badge-conf" title="Время с момента ускорения до подтверждения">⚡ ${minutes} мин</span>
-      <span class="feed-time" data-ts="${Date.now()}">только что</span>
-      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="var(--m)" stroke-width="2" style="flex-shrink:0;margin-left:2px"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-    </div>`;
-  el.prepend(newItem);
-  while (el.children.length > 50) el.removeChild(el.lastChild);
+  var newItem = { txid: txid, plan: planType, mins: minutes, ts: Date.now() };
+  _feedAll = [newItem].concat(_feedAll.filter(function(i) { return i.txid !== txid; }));
+  _feedPage = 0;
+  _feedRenderPage(0, true);
+  // Перезапускаем ротацию с чистого листа (новый элемент в начале)
+  if (_feedRotTimer) { clearInterval(_feedRotTimer); _feedRotTimer = null; }
+  _feedStartRotation();
   const _cc = document.getElementById('confirmed-count');
-  if (_cc) _cc.textContent = el.querySelectorAll('.feed-item').length;
+  if (_cc) _cc.textContent = (typeof cnt !== 'undefined' && cnt > 0) ? cnt.toLocaleString('ru') : _feedAll.length;
 }
 
 setInterval(function() {
-  document.querySelectorAll('.feed-time[data-ts]').forEach(el => {
-    const ago = Math.round((Date.now() - parseInt(el.dataset.ts)) / 60000);
-    if (ago < 1) el.textContent = _currentLang==='en'?'just now':'только что';
-    else if (ago < 60) el.textContent = ago + _currentLang==='en'?' min ago':' мин назад';
-    else el.textContent = Math.floor(ago/60) + _currentLang==='en'?' h ago':' ч назад';
-  });
+  // Обновляем времена на текущей странице
+  _feedRefreshTimes();
 }, 60000);
 
 initFeed();
