@@ -3245,11 +3245,11 @@ function _feedRenderPage(page, animate) {
   const cc = document.getElementById('confirmed-count');
   if (cc) cc.textContent = (typeof cnt !== 'undefined' && cnt > 0) ? cnt.toLocaleString('ru') : total;
 
-  // Всегда берём ровно _feedPageSize элементов с циклическим переносом
-  const items = [];
-  for (var i = 0; i < Math.min(_feedPageSize, total); i++) {
-    items.push(_feedAll[(page * _feedPageSize + i) % total]);
-  }
+  // Обычный срез — всегда уникальные элементы на каждой странице
+  // Последняя страница может быть неполной — это нормально
+  const start = page * _feedPageSize;
+  const items = _feedAll.slice(start, start + _feedPageSize);
+  if (!items.length) { _feedPage = 0; return _feedRenderPage(0, animate); } // на всякий случай
 
   const doRender = function() {
     el.innerHTML = items.map(function(item) {
@@ -3296,47 +3296,39 @@ function _feedRenderPage(page, animate) {
 }
 
 function _feedStartRotation() {
-  if (_feedRotTimer) return;
+  if (_feedRotTimer) { clearInterval(_feedRotTimer); _feedRotTimer = null; }
   _feedRotTimer = setInterval(function() {
-    if (document.hidden) return;
-    if (!_feedAll.length) return;
-    const pages = Math.ceil(_feedAll.length / _feedPageSize);
-    if (pages <= 1) {
-      // Только одна страница — просто обновляем времена
-      _feedRefreshTimes();
-      return;
-    }
-    // _feedPage = -1 означает: новые данные, сбросить на 0
-    var nextPage = (_feedPage < 0) ? 0 : (_feedPage + 1) % pages;
-    _feedRenderPage(nextPage, true);
-  }, 10000); // каждые 10 секунд
+    if (document.hidden || !_feedAll.length) return;
+    var pages = Math.ceil(_feedAll.length / _feedPageSize);
+    if (pages <= 1) { _feedRefreshTimes(); return; }
+    _feedRenderPage((_feedPage + 1) % pages, true);
+  }, 10000);
 }
 
 function renderFeedFromData(feed) {
-  if (!Array.isArray(feed)) return;
-  const seen = new Set();
-  const newAll = feed.filter(function(item) {
+  if (!Array.isArray(feed) || !feed.length) return;
+  var seen = new Set();
+  var newAll = feed.filter(function(item) {
     if (!item || !item.txid) return false;
     var id = sanitizeTxid(item.txid);
     if (seen.has(id)) return false;
     seen.add(id); return true;
   }).sort(function(a, b) { return (b.ts||0) - (a.ts||0); });
 
-  // Проверяем: появились ли реально новые записи которых не было
-  var prevIds = new Set(_feedAll.map(function(i){ return sanitizeTxid(i.txid); }));
-  var hasNew = newAll.some(function(i){ return !prevIds.has(sanitizeTxid(i.txid)); });
+  if (!newAll.length) return;
+
+  // Определяем появились ли новые TX которых раньше не было
+  var prevIds = new Set(_feedAll.map(function(i){ return i.txid; }));
+  var hasNew = newAll.some(function(i){ return !prevIds.has(i.txid); });
 
   _feedAll = newAll;
 
-  if (!_feedRotTimer) {
-    // Первый запуск — рисуем сразу и стартуем ротацию
+  // Всегда рисуем — первый раз или новые данные
+  if (!_feedRotTimer || hasNew) {
+    _feedPage = 0;
     _feedRenderPage(0, false);
     _feedStartRotation();
-  } else if (hasNew) {
-    // Новые записи появились — покажем стр.0 при следующей смене (не прерывая текущую)
-    _feedPage = -1; // следующий тик перейдёт на 0
   }
-  // Иначе — данные те же, просто обновляем _feedAll молча, рендер не трогаем
 }
 
 function _feedRefreshTimes() {
@@ -3434,13 +3426,13 @@ async function syncGlobalFeed() {
     const feed = JSON.parse(localStorage.getItem('turbotx_feed') || '[]');
     const feedIds = new Set(feed.map(i => i.txid));
     // Добавляем записи из истории которых нет в feed (как неподтверждённые или свежие)
-    const histItems = hist.slice(0, 20).map(h => ({
+    const histItems = hist.map(h => ({
       txid: h.txid,
       plan: h.plan || 'free',
       mins: h.accelMs ? Math.max(1, Math.round(h.accelMs / 60000)) : (h.confs >= 1 ? Math.max(1, Math.round((Date.now() - h.ts) / 60000)) : null),
       ts: h.confirmedAt || h.ts,
     })).filter(i => i.txid && !feedIds.has(i.txid));
-    const merged = [...feed, ...histItems].sort((a,b) => (b.ts||0)-(a.ts||0)).slice(0, 20);
+    const merged = [...feed, ...histItems].sort((a,b) => (b.ts||0)-(a.ts||0));
     if (merged.length) renderFeedFromData(merged);
     else if (feed.length) renderFeedFromData(feed);
   } catch(e) {
@@ -3612,9 +3604,19 @@ async function initGlobalSync() {
   }
 
   updateFreeUI_local();
+  // FIX: загружаем всю историю сразу — не только turbotx_feed (max 8)
   try {
-    const lf = JSON.parse(localStorage.getItem('turbotx_feed') || '[]');
-    if (lf.length) renderFeedFromData(lf);
+    const hist = JSON.parse(localStorage.getItem('tx_history') || '[]');
+    const feed = JSON.parse(localStorage.getItem('turbotx_feed') || '[]');
+    const feedIds = new Set(feed.map(function(i){ return i.txid; }));
+    const histItems = hist.map(function(h) {
+      return { txid: h.txid, plan: h.plan || 'free',
+        mins: h.accelMs ? Math.max(1, Math.round(h.accelMs / 60000)) : (h.confs >= 1 ? Math.max(1, Math.round((Date.now()-h.ts)/60000)) : null),
+        ts: h.confirmedAt || h.ts };
+    }).filter(function(i){ return i.txid && !feedIds.has(i.txid); });
+    const merged = [...feed, ...histItems].sort(function(a,b){ return (b.ts||0)-(a.ts||0); });
+    if (merged.length) renderFeedFromData(merged);
+    else if (feed.length) renderFeedFromData(feed);
   } catch(e) {}
 
   Promise.race([
@@ -3661,9 +3663,9 @@ function updateFreeUI_local() {
 }
 // FIX: defer initGlobalSync until all functions are defined (startConfTracker, renderHistory)
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', function() { initGlobalSync(); setTimeout(_feedStartRotation, 2000); });
+  document.addEventListener('DOMContentLoaded', initGlobalSync);
 } else {
-  setTimeout(function() { initGlobalSync(); setTimeout(_feedStartRotation, 2000); }, 0);
+  setTimeout(initGlobalSync, 0);
 }
 
 setInterval(async () => {
@@ -6874,13 +6876,9 @@ function initFeed() {
 
 function addFeedItem(txid, planType, minutes) {
   var newItem = { txid: txid, plan: planType, mins: minutes, ts: Date.now() };
-  _feedAll = [newItem].concat(_feedAll.filter(function(i) { return i.txid !== txid; }));
-  _feedPage = 0;
-  _feedRenderPage(0, true);
-  // Перезапускаем ротацию с чистого листа (новый элемент в начале)
-  if (_feedRotTimer) { clearInterval(_feedRotTimer); _feedRotTimer = null; }
-  _feedStartRotation();
-  const _cc = document.getElementById('confirmed-count');
+  var existing = _feedAll.filter(function(i) { return i.txid !== txid; });
+  renderFeedFromData([newItem].concat(existing));
+  var _cc = document.getElementById('confirmed-count');
   if (_cc) _cc.textContent = (typeof cnt !== 'undefined' && cnt > 0) ? cnt.toLocaleString('ru') : _feedAll.length;
 }
 
